@@ -1,16 +1,14 @@
+import l1EmeraldGlade from '../assets/images/l1_emerald_glade_1795615998066.jpg';
+import l1MoonpetalWoods from '../assets/images/l1_moonpetal_woods_1795615998830.jpg';
+import l1StarlitSanctuary from '../assets/images/l1_starlit_sanctuary_1795615999076.jpg';
+import l2AmberDusk from '../assets/images/l2_amber_dusk_1795615999375.jpg';
+import l2CrystalHollow from '../assets/images/l2_crystal_hollow_1795615999652.jpg';
+import l2GoldenSummit from '../assets/images/l2_golden_summit_1795616001942.jpg';
 import type { LevelId } from './types';
 
 const BACKDROP_PATHS: Record<LevelId, [string, string, string]> = {
-  1: [
-    '/src/assets/images/l1_emerald_glade_1795615998066.jpg',
-    '/src/assets/images/l1_moonpetal_woods_1795615998830.jpg',
-    '/src/assets/images/l1_starlit_sanctuary_1795615999076.jpg',
-  ],
-  2: [
-    '/src/assets/images/l2_amber_dusk_1795615999375.jpg',
-    '/src/assets/images/l2_crystal_hollow_1795615999652.jpg',
-    '/src/assets/images/l2_golden_summit_1795616001942.jpg',
-  ],
+  1: [l1EmeraldGlade, l1MoonpetalWoods, l1StarlitSanctuary],
+  2: [l2AmberDusk, l2CrystalHollow, l2GoldenSummit],
 };
 
 class BackdropCache {
@@ -67,7 +65,6 @@ export function drawParallaxBackdrop(
   const drawH = img.naturalHeight * scale;
   const drawY = (viewH - drawH) * 0.42;
 
-  // Seamless mirrored tiling across horizontal parallax scroll
   const parallaxX = cameraX * 0.14;
   const period = drawW * 2;
   const baseOffset = ((parallaxX % period) + period) % period;
