@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { GameHUD } from './components/GameHUD';
 import { GameModals } from './components/GameModals';
+import { PortraitPrompt } from './components/PortraitPrompt';
 import { TouchControls } from './components/TouchControls';
 import { audioEngine } from './game/audio';
 import { ForestGameEngine } from './game/engine';
@@ -32,13 +33,23 @@ function detectCoarsePointer(): boolean {
   return window.matchMedia('(pointer: coarse)').matches;
 }
 
+function detectPortraitViewport(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.innerHeight > window.innerWidth;
+}
+
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<ForestGameEngine | null>(null);
+  const autoPausedByPortraitRef = useRef(false);
 
   const [hud, setHud] = useState<HudSnapshot>(INITIAL_HUD);
   const [muted, setMuted] = useState(false);
   const [isTouchDevice, setIsTouchDevice] = useState<boolean>(detectCoarsePointer);
+  const [isPortrait, setIsPortrait] = useState<boolean>(detectPortraitViewport);
+  const [portraitDismissed, setPortraitDismissed] = useState(false);
+
+  const showPortraitPrompt = isTouchDevice && isPortrait && !portraitDismissed;
 
   const handleToggleMute = useCallback(() => {
     audioEngine.init();
@@ -46,6 +57,27 @@ export default function App() {
     audioEngine.setEnabled(nextEnabled);
     setMuted(!nextEnabled);
   }, []);
+
+  const handleDismissPortrait = useCallback(() => {
+    setPortraitDismissed(true);
+    if (autoPausedByPortraitRef.current) {
+      autoPausedByPortraitRef.current = false;
+      engineRef.current?.resumeGame();
+    }
+  }, []);
+
+  useEffect(() => {
+    const engine = engineRef.current;
+    if (!engine) return;
+
+    if (showPortraitPrompt && hud.phase === 'PLAYING') {
+      autoPausedByPortraitRef.current = true;
+      engine.pauseGame();
+    } else if (!isPortrait && autoPausedByPortraitRef.current) {
+      autoPausedByPortraitRef.current = false;
+      engine.resumeGame();
+    }
+  }, [showPortraitPrompt, isPortrait, hud.phase]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -65,7 +97,15 @@ export default function App() {
       setIsTouchDevice(true);
     };
 
-    const handleResize = () => engine.resize();
+    const syncOrientation = () => {
+      const portraitNow = window.innerHeight > window.innerWidth;
+      setIsPortrait(portraitNow);
+      if (!portraitNow) {
+        setPortraitDismissed(false);
+      }
+      engine.resize();
+    };
+
     const handleBlur = () => engine.clearHeldInputs();
     const handleVisibility = () => {
       if (document.hidden) {
@@ -132,7 +172,8 @@ export default function App() {
 
     pointerQuery.addEventListener('change', handlePointerMediaChange);
     window.addEventListener('touchstart', handleFirstTouch, { passive: true });
-    window.addEventListener('resize', handleResize);
+    window.addEventListener('resize', syncOrientation);
+    window.addEventListener('orientationchange', syncOrientation);
     window.addEventListener('blur', handleBlur);
     document.addEventListener('visibilitychange', handleVisibility);
     window.addEventListener('keydown', handleKeyDown);
@@ -141,7 +182,8 @@ export default function App() {
     return () => {
       pointerQuery.removeEventListener('change', handlePointerMediaChange);
       window.removeEventListener('touchstart', handleFirstTouch);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('resize', syncOrientation);
+      window.removeEventListener('orientationchange', syncOrientation);
       window.removeEventListener('blur', handleBlur);
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('keydown', handleKeyDown);
@@ -177,7 +219,7 @@ export default function App() {
       />
 
       <TouchControls
-        visible={hud.phase === 'PLAYING' && isTouchDevice}
+        visible={hud.phase === 'PLAYING' && isTouchDevice && !showPortraitPrompt}
         onLeftChange={(held) => {
           if (engineRef.current) engineRef.current.input.left = held;
         }}
@@ -187,6 +229,11 @@ export default function App() {
         onJumpDown={() => engineRef.current?.triggerJump()}
         onJumpUp={() => engineRef.current?.releaseJump()}
         onPulse={() => engineRef.current?.triggerPulse()}
+      />
+
+      <PortraitPrompt
+        visible={showPortraitPrompt}
+        onContinueAnyway={handleDismissPortrait}
       />
     </main>
   );
