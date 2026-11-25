@@ -227,6 +227,25 @@ export interface WoodlandButterfly {
   color: string;
 }
 
+export type MagicalCreatureKind = 'fairy' | 'mermaid' | 'fox' | 'owl';
+
+export interface MagicalCreature {
+  id: number;
+  kind: MagicalCreatureKind;
+  x: number;
+  y: number;
+  homeX: number;
+  homeY: number;
+  emerge: number;
+  emergedOnce: boolean;
+  blessed: boolean;
+  blessTimer: number;
+  phase: number;
+  facing: number;
+  huePrimary: string;
+  hueAccent: string;
+}
+
 export interface Particle {
   x: number;
   y: number;

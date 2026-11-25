@@ -248,6 +248,23 @@ function ForestGameView() {
       }
     };
 
+    const preventGesture = (e: Event) => {
+      e.preventDefault();
+    };
+    const preventMultiTouchMove = (e: TouchEvent) => {
+      if (e.touches.length > 1) {
+        e.preventDefault();
+      }
+    };
+    const preventCtrlWheel = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        e.preventDefault();
+      }
+    };
+    const preventDblClick = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
     if (pointerQuery) {
       if (typeof pointerQuery.addEventListener === 'function') {
         pointerQuery.addEventListener('change', handlePointerMediaChange);
@@ -256,6 +273,12 @@ function ForestGameView() {
       }
     }
     window.addEventListener('touchstart', handleFirstTouch, { passive: true });
+    document.addEventListener('gesturestart', preventGesture, { passive: false });
+    document.addEventListener('gesturechange', preventGesture, { passive: false });
+    document.addEventListener('gestureend', preventGesture, { passive: false });
+    document.addEventListener('touchmove', preventMultiTouchMove, { passive: false });
+    window.addEventListener('wheel', preventCtrlWheel, { passive: false });
+    document.addEventListener('dblclick', preventDblClick);
     window.addEventListener('resize', syncOrientation);
     window.addEventListener('orientationchange', syncOrientation);
     window.addEventListener('blur', handleBlur);
@@ -272,6 +295,12 @@ function ForestGameView() {
         }
       }
       window.removeEventListener('touchstart', handleFirstTouch);
+      document.removeEventListener('gesturestart', preventGesture);
+      document.removeEventListener('gesturechange', preventGesture);
+      document.removeEventListener('gestureend', preventGesture);
+      document.removeEventListener('touchmove', preventMultiTouchMove);
+      window.removeEventListener('wheel', preventCtrlWheel);
+      document.removeEventListener('dblclick', preventDblClick);
       window.removeEventListener('resize', syncOrientation);
       window.removeEventListener('orientationchange', syncOrientation);
       window.removeEventListener('blur', handleBlur);
@@ -284,8 +313,13 @@ function ForestGameView() {
   }, []);
 
   return (
-    <main className="relative h-dvh w-screen overflow-hidden bg-[#050d14]">
-      <canvas ref={canvasRef} className="block h-full w-full" />
+    <main className="relative h-dvh w-screen overflow-hidden bg-[#050d14]" style={{ touchAction: 'none' }}>
+      <canvas
+        ref={canvasRef}
+        className="block h-full w-full"
+        style={{ touchAction: 'none' }}
+        onTouchStart={(e) => e.preventDefault()}
+      />
 
       <GameHUD
         hud={hud}

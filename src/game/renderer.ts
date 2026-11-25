@@ -3,6 +3,7 @@ import type {
   CollectibleItem,
   GlowMushroom,
   LevelId,
+  MagicalCreature,
   MovingPlatform,
   Particle,
   Platform,
@@ -265,7 +266,22 @@ export function renderForestScene(
   }
 
   drawTerrain(ctx, levelId, groundTop, groundBot, rimCol, cameraX, cameraY, virtualW, virtualH);
+
+  for (const c of world.creatures) {
+    if (c.kind !== 'mermaid' || c.homeX + 100 < cameraX || c.homeX - 100 > cameraX + virtualW) {
+      continue;
+    }
+    drawMermaidPool(ctx, c, time);
+  }
+
   drawGrassAndFlowers(ctx, world, levelId, cameraX, virtualW);
+
+  for (const c of world.creatures) {
+    if (c.homeX + 90 < cameraX || c.homeX - 90 > cameraX + virtualW) continue;
+    if (c.emerge > 0.04) {
+      drawMagicalCreature(ctx, c, time);
+    }
+  }
 
   for (const item of world.collectibles) {
     if (item.collected || item.x + 50 < cameraX || item.x - 50 > cameraX + virtualW) continue;
@@ -1269,6 +1285,324 @@ function drawButterfly(
   ctx.ellipse(-3, -2, wing, 3.2, -0.4, 0, Math.PI * 2);
   ctx.ellipse(3, -2, wing, 3.2, 0.4, 0, Math.PI * 2);
   ctx.fill();
+  ctx.restore();
+}
+
+function drawMermaidPool(
+  ctx: CanvasRenderingContext2D,
+  c: MagicalCreature,
+  time: number
+): void {
+  ctx.save();
+  const px = c.homeX;
+  const py = c.homeY + 4;
+
+  const poolGlow = ctx.createRadialGradient(px, py, 6, px, py, 68);
+  poolGlow.addColorStop(0, 'rgba(115, 250, 238, 0.55)');
+  poolGlow.addColorStop(0.65, 'rgba(72, 185, 225, 0.25)');
+  poolGlow.addColorStop(1, 'rgba(40, 110, 150, 0)');
+  ctx.fillStyle = poolGlow;
+  ctx.beginPath();
+  ctx.ellipse(px, py, 68, 15, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = 'rgba(28, 92, 122, 0.72)';
+  ctx.beginPath();
+  ctx.ellipse(px, py, 50, 10, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Animated water ripples
+  const rip = (time * 0.9 + c.phase) % 1;
+  ctx.strokeStyle = `rgba(195, 255, 250, ${0.55 * (1 - rip)})`;
+  ctx.lineWidth = 1.4;
+  ctx.beginPath();
+  ctx.ellipse(px, py, 16 + rip * 34, 4 + rip * 6, 0, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Floating bubbles over the pool
+  for (let i = 0; i < 3; i++) {
+    const bProgress = (time * 0.55 + i * 0.33 + c.phase) % 1;
+    const bx = px + Math.sin(time * 2 + i * 2) * 18;
+    const by = py - bProgress * 28;
+    ctx.fillStyle = `rgba(215, 255, 255, ${0.5 * (1 - bProgress)})`;
+    ctx.beginPath();
+    ctx.arc(bx, by, 1.8 + (i % 2) * 0.9, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawMagicalCreature(
+  ctx: CanvasRenderingContext2D,
+  c: MagicalCreature,
+  time: number
+): void {
+  ctx.save();
+  ctx.globalAlpha = clamp(c.emerge * 1.25, 0, 1);
+
+  if (c.kind === 'mermaid') {
+    // Clip just below the lagoon pool surface so she gracefully emerges out of water
+    ctx.beginPath();
+    ctx.rect(c.homeX - 80, c.homeY - 140, 160, 146);
+    ctx.clip();
+
+    const aura = ctx.createRadialGradient(c.x, c.y - 24, 3, c.x, c.y - 24, 38);
+    aura.addColorStop(0, 'rgba(180, 255, 245, 0.55)');
+    aura.addColorStop(1, 'rgba(120, 220, 255, 0)');
+    ctx.fillStyle = aura;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y - 24, 38, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.translate(c.x, c.y);
+    ctx.scale(c.facing, 1);
+
+    // Shimmering curved mermaid tail & fluke
+    const tailWag = Math.sin(time * 3.2 + c.phase) * 4;
+    ctx.fillStyle = c.huePrimary;
+    ctx.beginPath();
+    ctx.moveTo(-6, -16);
+    ctx.quadraticCurveTo(-14, -4, -18 + tailWag * 0.4, 7);
+    ctx.quadraticCurveTo(-6, 12, 4, 4);
+    ctx.quadraticCurveTo(6, -6, 5, -16);
+    ctx.closePath();
+    ctx.fill();
+
+    // Fin fluke
+    ctx.fillStyle = c.hueAccent;
+    ctx.globalAlpha *= 0.9;
+    ctx.beginPath();
+    ctx.moveTo(-18 + tailWag * 0.4, 6);
+    ctx.quadraticCurveTo(-30 + tailWag, 2, -26 + tailWag, 14);
+    ctx.quadraticCurveTo(-18 + tailWag * 0.5, 11, -14 + tailWag * 0.4, 8);
+    ctx.fill();
+    ctx.globalAlpha = clamp(c.emerge * 1.25, 0, 1);
+
+    // Flowing sea-hair
+    ctx.fillStyle = c.huePrimary;
+    ctx.beginPath();
+    ctx.moveTo(-2, -39);
+    ctx.quadraticCurveTo(-16, -34, -14 + Math.sin(time * 2.8) * 3, -15);
+    ctx.quadraticCurveTo(-5, -20, -2, -31);
+    ctx.fill();
+
+    // Torso & shell bodice
+    ctx.fillStyle = '#ffe9de';
+    ctx.beginPath();
+    ctx.ellipse(0, -24, 5.2, 8.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = c.hueAccent;
+    ctx.beginPath();
+    ctx.ellipse(1, -24, 5.2, 3.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Waving arm
+    const waveAng = Math.sin(time * 5 + c.phase) * 0.35;
+    ctx.save();
+    ctx.translate(4, -27);
+    ctx.rotate(waveAng - 0.5);
+    ctx.strokeStyle = '#ffe9de';
+    ctx.lineWidth = 2.6;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(8, -6);
+    ctx.stroke();
+    ctx.restore();
+
+    // Head & Pearl Crown
+    ctx.fillStyle = '#ffe9de';
+    ctx.beginPath();
+    ctx.arc(1, -37, 6.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff9d6';
+    ctx.beginPath();
+    ctx.arc(1, -43.5, 2.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#123642';
+    ctx.beginPath();
+    ctx.arc(3.4, -37.2, 1.1, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (c.kind === 'fairy') {
+    const aura = ctx.createRadialGradient(c.x, c.y - 10, 2, c.x, c.y - 10, 28);
+    aura.addColorStop(0, 'rgba(255, 248, 210, 0.72)');
+    aura.addColorStop(0.55, `${c.huePrimary}44`);
+    aura.addColorStop(1, 'rgba(255, 255, 255, 0)');
+    ctx.fillStyle = aura;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y - 10, 28, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.translate(c.x, c.y - 10);
+    ctx.scale(c.facing, 1);
+
+    // Fluttering translucent fairy wings
+    const wingBeat = 0.55 + 0.45 * Math.sin(time * 18 + c.phase);
+    ctx.fillStyle = c.huePrimary;
+    ctx.globalAlpha = clamp(c.emerge, 0, 1) * 0.75;
+    ctx.beginPath();
+    ctx.ellipse(-6, -4, 9 * wingBeat + 2, 4.5, -0.55, 0, Math.PI * 2);
+    ctx.ellipse(-5, 3, 6.5 * wingBeat + 1.5, 3.2, 0.45, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = clamp(c.emerge * 1.25, 0, 1);
+
+    // Petal dress & luminous head
+    ctx.fillStyle = c.huePrimary;
+    ctx.beginPath();
+    ctx.moveTo(0, -5);
+    ctx.lineTo(-5.5, 7);
+    ctx.lineTo(5.5, 7);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#fff6ea';
+    ctx.beginPath();
+    ctx.arc(0.5, -9, 4.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Glowing wand spark
+    ctx.strokeStyle = '#ffeeb8';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(3, -1);
+    ctx.lineTo(10, -7);
+    ctx.stroke();
+    ctx.fillStyle = c.hueAccent;
+    ctx.beginPath();
+    ctx.arc(10.5, -7.5, 2.2 + Math.sin(time * 8) * 0.6, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (c.kind === 'fox') {
+    const aura = ctx.createRadialGradient(c.x, c.y - 14, 2, c.x, c.y - 14, 30);
+    aura.addColorStop(0, `${c.hueAccent}55`);
+    aura.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = aura;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y - 14, 30, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.translate(c.x, c.y);
+    ctx.scale(c.facing, 1);
+
+    // Twin spirit tails
+    const wag = Math.sin(time * 4.2 + c.phase) * 4;
+    ctx.fillStyle = c.hueAccent;
+    ctx.beginPath();
+    ctx.moveTo(-6, -10);
+    ctx.quadraticCurveTo(-22, -20 + wag, -20, -28 + wag);
+    ctx.quadraticCurveTo(-12, -22, -4, -12);
+    ctx.fill();
+
+    ctx.fillStyle = c.huePrimary;
+    ctx.beginPath();
+    ctx.moveTo(-5, -8);
+    ctx.quadraticCurveTo(-20, -10 - wag * 0.6, -22, -18 - wag * 0.6);
+    ctx.quadraticCurveTo(-12, -16, -4, -10);
+    ctx.fill();
+
+    // Body
+    ctx.fillStyle = c.huePrimary;
+    ctx.beginPath();
+    ctx.ellipse(0, -10, 8.5, 10, 0.15, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Chest fluff
+    ctx.fillStyle = '#fff9eb';
+    ctx.beginPath();
+    ctx.ellipse(4, -10, 4, 6.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Head & pointed ears
+    ctx.fillStyle = c.huePrimary;
+    ctx.beginPath();
+    ctx.arc(4, -22, 6.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(-1, -26);
+    ctx.lineTo(-4, -36);
+    ctx.lineTo(3, -28);
+    ctx.moveTo(4, -27);
+    ctx.lineTo(7, -36);
+    ctx.lineTo(9, -26);
+    ctx.fill();
+
+    // Bright eye & nose
+    ctx.fillStyle = '#152530';
+    ctx.beginPath();
+    ctx.arc(7, -22.5, 1.3, 0, Math.PI * 2);
+    ctx.arc(10.5, -20.5, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    // Starlight Owl
+    const aura = ctx.createRadialGradient(c.x, c.y - 12, 2, c.x, c.y - 12, 28);
+    aura.addColorStop(0, 'rgba(220, 245, 255, 0.45)');
+    aura.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = aura;
+    ctx.beginPath();
+    ctx.arc(c.x, c.y - 12, 28, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.translate(c.x, c.y - 12);
+    const wingOpen = c.blessTimer > 0 ? Math.abs(Math.sin(time * 9)) * 7 + 4 : 1.5;
+
+    // Wings
+    ctx.fillStyle = c.huePrimary;
+    ctx.beginPath();
+    ctx.ellipse(-9 - wingOpen * 0.4, 0, 5 + wingOpen * 0.6, 8, 0.4, 0, Math.PI * 2);
+    ctx.ellipse(9 + wingOpen * 0.4, 0, 5 + wingOpen * 0.6, 8, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Body
+    ctx.fillStyle = c.huePrimary;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 8.5, 11.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Ear tufts
+    ctx.beginPath();
+    ctx.moveTo(-6, -8);
+    ctx.lineTo(-9, -15);
+    ctx.lineTo(-2, -10);
+    ctx.moveTo(6, -8);
+    ctx.lineTo(9, -15);
+    ctx.lineTo(2, -10);
+    ctx.fill();
+
+    // Luminous starry eyes & beak
+    ctx.fillStyle = c.hueAccent;
+    ctx.beginPath();
+    ctx.arc(-3.2, -4, 2.2, 0, Math.PI * 2);
+    ctx.arc(3.2, -4, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#132433';
+    ctx.beginPath();
+    ctx.arc(-3.2, -4, 1, 0, Math.PI * 2);
+    ctx.arc(3.2, -4, 1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffd27a';
+    ctx.beginPath();
+    ctx.moveTo(-1.8, -1.8);
+    ctx.lineTo(1.8, -1.8);
+    ctx.lineTo(0, 1.4);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Subtle unblessed sparkle hint or celebratory rising stars
+  if (!c.blessed && c.emerge > 0.65) {
+    const bob = Math.sin(time * 4 + c.phase) * 3;
+    ctx.fillStyle = '#ffe99e';
+    ctx.beginPath();
+    ctx.arc(0, c.kind === 'fairy' ? -22 + bob : c.kind === 'owl' ? -24 + bob : -52 + bob, 2.3, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (c.blessTimer > 0) {
+    const p = 1 - c.blessTimer / 2.2;
+    ctx.fillStyle = `rgba(255, 232, 150, ${1 - p})`;
+    ctx.beginPath();
+    ctx.arc(-8, -32 - p * 26, 2.6, 0, Math.PI * 2);
+    ctx.arc(8, -28 - p * 30, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   ctx.restore();
 }
 

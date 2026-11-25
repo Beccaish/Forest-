@@ -7,6 +7,7 @@ import type {
   GlowMushroom,
   GrassTuft,
   LevelId,
+  MagicalCreature,
   MidTree,
   Mountain,
   MovingPlatform,
@@ -326,6 +327,7 @@ export interface WorldData {
   floatingSpores: FloatingSpore[];
   thornWisps: ThornWisp[];
   butterflies: WoodlandButterfly[];
+  creatures: MagicalCreature[];
 }
 
 export function generateWorld(levelId: LevelId = 1): WorldData {
@@ -833,6 +835,159 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
     });
   }
 
+  const creatures: MagicalCreature[] = [];
+  let creatureId = 1;
+
+  const fairyConfigs: Array<[number, number]> =
+    levelId === 1
+      ? [
+          [410, -72], [1160, -90], [1980, -82], [2820, -95],
+          [3640, -88], [4620, -96], [5540, -84], [6620, -92],
+        ]
+      : levelId === 2
+        ? [
+            [460, -80], [1240, -98], [2020, -85], [2880, -94],
+            [3840, -90], [4720, -96], [5680, -88], [6680, -95],
+          ]
+        : [
+            [440, -84], [1180, -95], [1940, -92], [2780, -96],
+            [3680, -90], [4580, -98], [5520, -90], [6640, -95],
+          ];
+
+  for (const [fx, dy] of fairyConfigs) {
+    const gy = getTerrainY(fx, levelId) + dy;
+    const isAlt = creatureId % 2 === 0;
+    creatures.push({
+      id: creatureId++,
+      kind: 'fairy',
+      x: fx,
+      y: gy,
+      homeX: fx,
+      homeY: gy,
+      emerge: 0,
+      emergedOnce: false,
+      blessed: false,
+      blessTimer: 0,
+      phase: rng() * Math.PI * 2,
+      facing: isAlt ? -1 : 1,
+      huePrimary:
+        levelId === 1
+          ? isAlt
+            ? '#7cfce7'
+            : '#ff9ee8'
+          : levelId === 2
+            ? isAlt
+              ? '#ffd67a'
+              : '#ff94c2'
+            : isAlt
+              ? '#9ef5ff'
+              : '#d5b8ff',
+      hueAccent: levelId === 1 ? '#ffe89c' : levelId === 2 ? '#ffe6a8' : '#ffffff',
+    });
+  }
+
+  const mermaidXs =
+    levelId === 1
+      ? [740, 1840, 3160, 4430, 5880]
+      : levelId === 2
+        ? [920, 2240, 3680, 5040, 6240]
+        : [810, 2080, 3440, 4880, 6160];
+
+  for (const mx of mermaidXs) {
+    const gy = getTerrainY(mx, levelId);
+    const isAlt = creatureId % 2 === 0;
+    creatures.push({
+      id: creatureId++,
+      kind: 'mermaid',
+      x: mx,
+      y: gy,
+      homeX: mx,
+      homeY: gy,
+      emerge: 0,
+      emergedOnce: false,
+      blessed: false,
+      blessTimer: 0,
+      phase: rng() * Math.PI * 2,
+      facing: -1,
+      huePrimary:
+        levelId === 1
+          ? isAlt
+            ? '#4ee6cf'
+            : '#6bb8ff'
+          : levelId === 2
+            ? isAlt
+              ? '#d48cff'
+              : '#ff8ea8'
+            : isAlt
+              ? '#78e3ff'
+              : '#b8a6ff',
+      hueAccent: '#fff0c4',
+    });
+  }
+
+  const foxXs =
+    levelId === 1
+      ? [980, 2520, 4120, 6280]
+      : levelId === 2
+        ? [680, 2580, 4280, 6460]
+        : [1040, 2560, 4160, 6420];
+
+  for (const fxx of foxXs) {
+    const gy = getTerrainY(fxx, levelId);
+    creatures.push({
+      id: creatureId++,
+      kind: 'fox',
+      x: fxx,
+      y: gy,
+      homeX: fxx,
+      homeY: gy,
+      emerge: 0,
+      emergedOnce: false,
+      blessed: false,
+      blessTimer: 0,
+      phase: rng() * Math.PI * 2,
+      facing: creatureId % 2 === 0 ? 1 : -1,
+      huePrimary:
+        levelId === 1 ? '#ffd085' : levelId === 2 ? '#ff9d76' : '#c2efff',
+      hueAccent:
+        levelId === 1 ? '#7cfce7' : levelId === 2 ? '#ffe399' : '#c7b8ff',
+    });
+  }
+
+  const owlSpots: Array<[number, number]> =
+    levelId === 1
+      ? [
+          [620, -145], [2480, -145], [4950, -145], [6820, -145],
+        ]
+      : levelId === 2
+        ? [
+            [540, -145], [2620, -145], [4780, -145], [6780, -145],
+          ]
+        : [
+            [580, -145], [2420, -145], [4690, -145], [6840, -145],
+          ];
+
+  for (const [ox, ody] of owlSpots) {
+    const oy = getTerrainY(ox, levelId) + ody;
+    creatures.push({
+      id: creatureId++,
+      kind: 'owl',
+      x: ox,
+      y: oy,
+      homeX: ox,
+      homeY: oy,
+      emerge: 0,
+      emergedOnce: false,
+      blessed: false,
+      blessTimer: 0,
+      phase: rng() * Math.PI * 2,
+      facing: -1,
+      huePrimary:
+        levelId === 1 ? '#cbe8ff' : levelId === 2 ? '#e5c4ff' : '#e6f9ff',
+      hueAccent: '#ffe299',
+    });
+  }
+
   return {
     levelId,
     stars,
@@ -855,5 +1010,6 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
     floatingSpores,
     thornWisps,
     butterflies,
+    creatures,
   };
 }

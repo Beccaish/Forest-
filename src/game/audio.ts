@@ -1,3 +1,5 @@
+import type { MagicalCreatureKind } from './types';
+
 const PENTATONIC_NOTES = [
   261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25, 783.99,
 ];
@@ -233,6 +235,27 @@ class ForestAudioEngine {
   playEquip(): void {
     this.playTone(440.0, 0.28, 0.045, 'triangle');
     window.setTimeout(() => this.playTone(659.25, 0.35, 0.04, 'sine'), 55);
+  }
+
+  playCreaturePop(kind: MagicalCreatureKind): void {
+    if (!this.enabled || !this.ctx) return;
+    if (kind === 'mermaid') {
+      [523.25, 659.25, 783.99].forEach((f, i) => {
+        window.setTimeout(() => this.playTone(f, 0.55, 0.036, 'sine'), i * 55);
+      });
+    } else if (kind === 'fairy') {
+      this.playTone(880.0, 0.32, 0.032, 'sine');
+      window.setTimeout(() => this.playTone(1174.66, 0.42, 0.028, 'sine'), 50);
+    } else {
+      this.playTone(440.0, 0.35, 0.034, 'triangle');
+      window.setTimeout(() => this.playTone(587.33, 0.4, 0.03, 'sine'), 65);
+    }
+  }
+
+  playCreatureBless(): void {
+    [587.33, 783.99, 987.77].forEach((f, i) => {
+      window.setTimeout(() => this.playTone(f, 0.65, 0.042, 'sine'), i * 55);
+    });
   }
 }
 

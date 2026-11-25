@@ -54,6 +54,9 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
     <div
       className="pointer-events-none fixed inset-x-0 bottom-0 z-15 flex items-end justify-between px-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] pb-[max(1rem,env(safe-area-inset-bottom))]"
       style={{ touchAction: 'none' }}
+      onTouchStart={(e) => e.preventDefault()}
+      onTouchEnd={(e) => e.preventDefault()}
+      onDoubleClick={(e) => e.preventDefault()}
     >
       {/* Left Thumb: Slide-friendly Left / Right Directional Rocker */}
       <div
@@ -117,6 +120,8 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
           }}
           onPointerUp={() => setPulseActive(false)}
           onPointerCancel={() => setPulseActive(false)}
+          onTouchStart={(e) => e.preventDefault()}
+          onTouchEnd={(e) => e.preventDefault()}
           className={`flex h-14 w-14 flex-col items-center justify-center rounded-full border border-[#ffe194]/45 text-[#ffe194] shadow-lg transition-transform ${
             pulseActive
               ? 'scale-95 bg-[#ffe194]/30'
@@ -153,6 +158,8 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
             setJumpActive(false);
             onJumpUp();
           }}
+          onTouchStart={(e) => e.preventDefault()}
+          onTouchEnd={(e) => e.preventDefault()}
           className={`flex h-16 w-16 flex-col items-center justify-center rounded-full border border-[#8cf8e8]/45 text-[#e8fcf9] shadow-lg transition-transform ${
             jumpActive
               ? 'scale-95 bg-[#56e3cc]/40'

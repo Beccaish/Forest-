@@ -13,6 +13,7 @@ import type {
   GamePhase,
   HudSnapshot,
   LevelId,
+  MagicalCreature,
   Particle,
   PlayerState,
   PulseRing,
@@ -364,6 +365,26 @@ export class ForestGameEngine {
         this.spawnDust(w.x, w.y, '#9ef7ff', 10);
       }
     }
+    for (const c of this.world.creatures) {
+      if (Math.hypot(c.homeX - this.player.x, c.homeY - (this.player.y - 22)) < pulseMaxR) {
+        c.emerge = Math.max(c.emerge, 0.72);
+        this.blessCreature(c);
+      }
+    }
+  }
+
+  private blessCreature(c: MagicalCreature): void {
+    if (c.blessed) return;
+    c.blessed = true;
+    c.blessTimer = 2.2;
+    const reward = c.kind === 'mermaid' ? 15 : 10;
+    this.earnDewdrops(reward);
+    if (c.kind === 'mermaid' && this.player.petals < this.player.maxPetals) {
+      this.player.petals++;
+    }
+    audioEngine.playCreatureBless();
+    this.spawnDust(c.x, c.y - 22, c.hueAccent, 18);
+    this.emitHudSnapshot();
   }
 
   private awakenLantern(l: SpiritLantern): void {
@@ -711,6 +732,46 @@ export class ForestGameEngine {
       bf.vy *= 0.95;
       bf.x += bf.vx * dt;
       bf.y += bf.vy * dt;
+    }
+
+    // Fairies, Mermaids, Spirit Foxes, and Starlight Owls that pop up as you play
+    for (const c of this.world.creatures) {
+      const distHome = Math.hypot(c.homeX - p.x, c.homeY - (p.y - 20));
+      const wantEmerge = distHome < 310 || (c.emergedOnce && distHome < 540) ? 1 : 0;
+      c.emerge = lerp(c.emerge, wantEmerge, Math.min(1, dt * 4.2));
+      if (c.blessTimer > 0) c.blessTimer = Math.max(0, c.blessTimer - dt);
+
+      if (!c.emergedOnce && c.emerge > 0.28) {
+        c.emergedOnce = true;
+        audioEngine.playCreaturePop(c.kind);
+        this.spawnDust(c.homeX, c.homeY - 18, c.huePrimary, 12);
+      }
+
+      c.facing = p.x >= c.homeX ? 1 : -1;
+      if (c.kind === 'fairy') {
+        c.x = c.homeX + Math.sin(this.time * 1.9 + c.phase) * 26;
+        c.y = c.homeY + (1 - c.emerge) * 34 + Math.cos(this.time * 2.6 + c.phase) * 12;
+      } else if (c.kind === 'mermaid') {
+        c.x = c.homeX;
+        c.y =
+          c.homeY +
+          (1 - c.emerge) * 46 -
+          c.emerge * (6 + Math.sin(this.time * 2.4 + c.phase) * 3.5);
+      } else if (c.kind === 'fox') {
+        const hop =
+          c.blessTimer > 0
+            ? Math.abs(Math.sin(this.time * 9)) * 12
+            : Math.max(0, Math.sin(this.time * 3.1 + c.phase)) * 4;
+        c.x = c.homeX + Math.sin(this.time * 0.9 + c.phase) * 12 * c.emerge;
+        c.y = c.homeY + (1 - c.emerge) * 28 - hop;
+      } else {
+        c.x = c.homeX;
+        c.y = c.homeY + (1 - c.emerge) * 22 + Math.sin(this.time * 2.1 + c.phase) * 5;
+      }
+
+      if (!c.blessed && c.emerge > 0.55 && Math.hypot(c.x - p.x, c.y - (p.y - 20)) < 58) {
+        this.blessCreature(c);
+      }
     }
 
     for (const w of this.world.thornWisps) {
