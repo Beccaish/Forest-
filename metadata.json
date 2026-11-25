@@ -1,0 +1,6 @@
+{
+  "name": "Whispering Grove",
+  "description": "A luminous 2D forest exploration game where you guide a woodland spirit through layered sunlit glades, bioluminescent moonpetal woods, and a starlit sanctuary.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,97 @@
+import type { LevelId } from './types';
+
+const BACKDROP_PATHS: Record<LevelId, [string, string, string]> = {
+  1: [
+    '/src/assets/images/l1_emerald_glade_1795615998066.jpg',
+    '/src/assets/images/l1_moonpetal_woods_1795615998830.jpg',
+    '/src/assets/images/l1_starlit_sanctuary_1795615999076.jpg',
+  ],
+  2: [
+    '/src/assets/images/l2_amber_dusk_1795615999375.jpg',
+    '/src/assets/images/l2_crystal_hollow_1795615999652.jpg',
+    '/src/assets/images/l2_golden_summit_1795616001942.jpg',
+  ],
+};
+
+class BackdropCache {
+  private images = new Map<string, HTMLImageElement>();
+
+  preloadAll(): void {
+    ([1, 2] as LevelId[]).forEach((lvl) => {
+      BACKDROP_PATHS[lvl].forEach((src) => {
+        if (!this.images.has(src)) {
+          const img = new Image();
+          img.referrerPolicy = 'no-referrer';
+          img.src = src;
+          this.images.set(src, img);
+        }
+      });
+    });
+  }
+
+  getImage(levelId: LevelId, biomeIdx: number): HTMLImageElement | null {
+    const paths = BACKDROP_PATHS[levelId];
+    const src = paths[Math.max(0, Math.min(2, biomeIdx))];
+    let img = this.images.get(src);
+    if (!img) {
+      img = new Image();
+      img.referrerPolicy = 'no-referrer';
+      img.src = src;
+      this.images.set(src, img);
+    }
+    if (img.complete && img.naturalWidth > 0) {
+      return img;
+    }
+    return null;
+  }
+}
+
+export const backdropCache = new BackdropCache();
+
+/**
+ * Draws a landscape forest backdrop image with smooth cover scaling and
+ * seamless mirrored horizontal parallax scrolling.
+ */
+export function drawParallaxBackdrop(
+  ctx: CanvasRenderingContext2D,
+  img: HTMLImageElement,
+  cameraX: number,
+  viewW: number,
+  viewH: number,
+  alpha: number
+): void {
+  if (alpha <= 0.005) return;
+
+  const scale = Math.max(viewW / img.naturalWidth, viewH / img.naturalHeight) * 1.06;
+  const drawW = img.naturalWidth * scale;
+  const drawH = img.naturalHeight * scale;
+  const drawY = (viewH - drawH) * 0.42;
+
+  // Seamless mirrored tiling across horizontal parallax scroll
+  const parallaxX = cameraX * 0.14;
+  const period = drawW * 2;
+  const baseOffset = ((parallaxX % period) + period) % period;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
+
+  for (let tile = -1; tile <= 2; tile++) {
+    const xPos = tile * drawW - (baseOffset % drawW);
+    if (xPos + drawW < -2 || xPos > viewW + 2) continue;
+
+    const tileIndex = Math.floor(parallaxX / drawW) + tile;
+    const mirrored = Math.abs(tileIndex) % 2 === 1;
+
+    if (mirrored) {
+      ctx.save();
+      ctx.translate(xPos + drawW, drawY);
+      ctx.scale(-1, 1);
+      ctx.drawImage(img, 0, 0, drawW + 1, drawH);
+      ctx.restore();
+    } else {
+      ctx.drawImage(img, xPos, drawY, drawW + 1, drawH);
+    }
+  }
+
+  ctx.restore();
+}
