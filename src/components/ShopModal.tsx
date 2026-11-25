@@ -21,6 +21,7 @@ type CategoryFilter = 'all' | ShopCategory;
 
 const CATEGORY_TABS: { id: CategoryFilter; label: string }[] = [
   { id: 'all', label: 'All' },
+  { id: 'power', label: 'Super Powers' },
   { id: 'hat', label: 'Headwear' },
   { id: 'cloak', label: 'Cloaks' },
   { id: 'charm', label: 'Relics & Gear' },
@@ -32,8 +33,11 @@ const CLOAK_PALETTES: Record<
 > = {
   default: { fill: '#226d68', highlight: '#7cfce7', scarf: '#7cfce7' },
   sunset_ember: { fill: '#a14328', highlight: '#ffb86c', scarf: '#ff9654' },
+  sakura_petal: { fill: '#b24b88', highlight: '#ff9ee4', scarf: '#ffd68a' },
   starweave_mantle: { fill: '#3b4291', highlight: '#b8beff', scarf: '#98a2ff' },
+  ocean_tide: { fill: '#14698a', highlight: '#48e5ff', scarf: '#7cfce7' },
   prism_aurora: { fill: '#197b84', highlight: '#94ffe6', scarf: '#e4b3ff' },
+  shadow_velvet: { fill: '#45286e', highlight: '#c28cff', scarf: '#ffe18c' },
 };
 
 const DewdropIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
@@ -51,6 +55,44 @@ const DewdropIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
 
 const ItemIcon: React.FC<{ id: ShopItemId }> = ({ id }) => {
   switch (id) {
+    case 'super_sky_leap':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M16 5L22 14H18V23H14V14H10L16 5Z" fill="#7cfce7" />
+          <ellipse cx="16" cy="25" rx="9" ry="2.6" stroke="#ffe194" strokeWidth="1.6" />
+        </svg>
+      );
+    case 'super_nova_pulse':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <circle cx="16" cy="16" r="9.5" stroke="#ffd86b" strokeWidth="1.8" strokeDasharray="3 3" />
+          <path
+            d="M16 6L18.5 13.5L26 16L18.5 18.5L16 26L13.5 18.5L6 16L13.5 13.5L16 6Z"
+            fill="#ffe89e"
+          />
+        </svg>
+      );
+    case 'super_star_magnet':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <circle cx="16" cy="16" r="10" stroke="#ff9ee8" strokeWidth="1.7" strokeDasharray="4 3" />
+          <circle cx="16" cy="16" r="4.5" fill="#ff9ee8" />
+          <circle cx="9" cy="10" r="1.8" fill="#ffe194" />
+          <circle cx="24" cy="21" r="1.8" fill="#7cfce7" />
+        </svg>
+      );
+    case 'super_phoenix_wings':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path
+            d="M16 18C12 12 6 9 4 11C6 16 10 19 15 21C16 21 16 21 17 21C22 19 26 16 28 11C26 9 20 12 16 18Z"
+            fill="#ff935c"
+            stroke="#ffe082"
+            strokeWidth="1.4"
+          />
+          <circle cx="16" cy="18" r="2.6" fill="#fff0c2" />
+        </svg>
+      );
     case 'moss_crown':
       return (
         <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
@@ -65,6 +107,16 @@ const ItemIcon: React.FC<{ id: ShopItemId }> = ({ id }) => {
           <circle cx="16" cy="10.5" r="2.6" fill="#ffd97d" />
         </svg>
       );
+    case 'sunflower_crown':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M6 21C8 14 24 14 26 21" stroke="#ffbf3f" strokeWidth="2.4" strokeLinecap="round" />
+          <circle cx="10" cy="14" r="3" fill="#ffe678" />
+          <circle cx="16" cy="11" r="3.6" fill="#ffe678" />
+          <circle cx="22" cy="14" r="3" fill="#ffe678" />
+          <circle cx="16" cy="11" r="1.6" fill="#b5541c" />
+        </svg>
+      );
     case 'moon_halo':
       return (
         <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
@@ -73,6 +125,18 @@ const ItemIcon: React.FC<{ id: ShopItemId }> = ({ id }) => {
             d="M16 5.5C13.5 7 13.5 10.5 16 12C13.2 11.8 11.4 10 11.4 8.2C11.4 6.5 13.4 5.4 16 5.5Z"
             fill="#e6fcff"
           />
+        </svg>
+      );
+    case 'coral_tiara':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path
+            d="M7 22L5 12L12 17L16 8L20 17L27 12L25 22Z"
+            fill="#ff85b3"
+            stroke="#ffd4e7"
+            strokeWidth="1.2"
+          />
+          <circle cx="16" cy="17" r="2.3" fill="#7cfce7" />
         </svg>
       );
     case 'frost_antlers':
@@ -93,6 +157,14 @@ const ItemIcon: React.FC<{ id: ShopItemId }> = ({ id }) => {
           <circle cx="16" cy="22" r="2.3" fill="#b4f5ff" />
         </svg>
       );
+    case 'astral_wizard':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <ellipse cx="16" cy="23" rx="11" ry="3" fill="#4e2978" stroke="#d8a6ff" strokeWidth="1.5" />
+          <path d="M9 22L17 7L23 22Z" fill="#4e2978" stroke="#d8a6ff" strokeWidth="1.5" />
+          <circle cx="17" cy="7" r="2.2" fill="#ffe58f" />
+        </svg>
+      );
     case 'sunset_ember':
       return (
         <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
@@ -103,6 +175,18 @@ const ItemIcon: React.FC<{ id: ShopItemId }> = ({ id }) => {
             strokeWidth="1.6"
           />
           <path d="M9 11H23" stroke="#ff9654" strokeWidth="2.6" strokeLinecap="round" />
+        </svg>
+      );
+    case 'sakura_petal':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path
+            d="M10 8L22 8L25 24C20 26 12 26 7 24L10 8Z"
+            fill="#b24b88"
+            stroke="#ff9ee4"
+            strokeWidth="1.6"
+          />
+          <circle cx="16" cy="16" r="2.2" fill="#ffd68a" />
         </svg>
       );
     case 'starweave_mantle':
@@ -119,6 +203,18 @@ const ItemIcon: React.FC<{ id: ShopItemId }> = ({ id }) => {
           <circle cx="17" cy="13" r="1" fill="#e8ecff" />
         </svg>
       );
+    case 'ocean_tide':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path
+            d="M10 8L22 8L25 24C20 26 12 26 7 24L10 8Z"
+            fill="#14698a"
+            stroke="#48e5ff"
+            strokeWidth="1.6"
+          />
+          <path d="M9 17C13 15 19 19 23 17" stroke="#b8f8ff" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      );
     case 'prism_aurora':
       return (
         <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
@@ -130,6 +226,18 @@ const ItemIcon: React.FC<{ id: ShopItemId }> = ({ id }) => {
           />
           <path d="M10 15C14 13 18 17 22 14" stroke="#ffe194" strokeWidth="1.6" strokeLinecap="round" />
           <path d="M9 20C13 18 18 22 23 19" stroke="#e4b3ff" strokeWidth="1.4" strokeLinecap="round" />
+        </svg>
+      );
+    case 'shadow_velvet':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path
+            d="M10 8L22 8L25 24C20 26 12 26 7 24L10 8Z"
+            fill="#45286e"
+            stroke="#c28cff"
+            strokeWidth="1.6"
+          />
+          <circle cx="16" cy="11" r="2" fill="#ffe18c" />
         </svg>
       );
     case 'firefly_sprite':
@@ -153,6 +261,15 @@ const ItemIcon: React.FC<{ id: ShopItemId }> = ({ id }) => {
           <circle cx="22" cy="11" r="2" fill="#ffe194" />
         </svg>
       );
+    case 'mini_owl':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <ellipse cx="16" cy="17" rx="7" ry="8.5" fill="#d9f6ff" stroke="#89dcff" strokeWidth="1.4" />
+          <circle cx="13.2" cy="14.5" r="1.5" fill="#13263a" />
+          <circle cx="18.8" cy="14.5" r="1.5" fill="#13263a" />
+          <path d="M14.6 17L17.4 17L16 19.2Z" fill="#ffd27a" />
+        </svg>
+      );
     case 'sanctuary_heart':
       return (
         <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
@@ -173,13 +290,14 @@ const AvatarPreviewSvg: React.FC<{ loadout: PlayerLoadout }> = ({ loadout }) => 
   const cloakPalette = CLOAK_PALETTES[loadout.cloak ?? 'default'] ?? CLOAK_PALETTES.default;
   const hat = loadout.hat;
   const charm = loadout.charm;
+  const power = loadout.power;
 
   return (
     <svg
       viewBox="0 0 180 180"
       className="h-36 w-36 sm:h-44 sm:w-44 rounded-lg border border-[#7cfce7]/25"
       role="img"
-      aria-label="Spirit avatar preview with equipped or tried-on wearables and relics"
+      aria-label="Spirit avatar preview with equipped or tried-on wearables, relics, and Super Powers"
     >
       <defs>
         <linearGradient id="forestStageSky" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -201,13 +319,11 @@ const AvatarPreviewSvg: React.FC<{ loadout: PlayerLoadout }> = ({ loadout }) => 
       <rect x="0" y="0" width="180" height="180" rx="10" fill="url(#forestStageSky)" />
       <polygon points="36,0 82,0 138,160 66,160" fill="url(#sunbeamStage)" />
 
-      {/* Distant tree silhouettes */}
       <path d="M10 155V55Q20 40 30 55V155Z" fill="#10383a" opacity="0.65" />
       <path d="M148 155V48Q160 32 172 48V155Z" fill="#10383a" opacity="0.65" />
       <circle cx="22" cy="52" r="24" fill="#184b49" opacity="0.7" />
       <circle cx="158" cy="46" r="26" fill="#184b49" opacity="0.7" />
 
-      {/* Ambient stars & fireflies */}
       <circle cx="44" cy="30" r="1.6" fill="#ffe89e" opacity="0.85" />
       <circle cx="132" cy="26" r="1.8" fill="#a8fff0" opacity="0.85" />
       <circle cx="28" cy="96" r="1.4" fill="#ff9ee8" opacity="0.75" />
@@ -224,6 +340,27 @@ const AvatarPreviewSvg: React.FC<{ loadout: PlayerLoadout }> = ({ loadout }) => 
       <circle cx="136" cy="156" r="2.6" fill="#7cfce7" />
       <circle cx="149" cy="152" r="2.2" fill="#ffd67a" />
 
+      {/* Super Powers (behind spirit) */}
+      {power === 'super_phoenix_wings' && (
+        <g>
+          <ellipse cx="56" cy="98" rx="22" ry="11" transform="rotate(-24 56 98)" fill="#ff8648" fillOpacity="0.85" stroke="#ffe082" strokeWidth="1.6" />
+          <ellipse cx="124" cy="98" rx="22" ry="11" transform="rotate(24 124 98)" fill="#ff8648" fillOpacity="0.85" stroke="#ffe082" strokeWidth="1.6" />
+        </g>
+      )}
+      {power === 'super_nova_pulse' && (
+        <circle cx="90" cy="96" r="54" stroke="#ffd86b" strokeOpacity="0.65" strokeWidth="2.4" fill="none" />
+      )}
+      {power === 'super_star_magnet' && (
+        <g>
+          <circle cx="90" cy="96" r="56" stroke="#ff9ee8" strokeOpacity="0.7" strokeWidth="2" strokeDasharray="6 5" fill="none" />
+          <circle cx="36" cy="82" r="3" fill="#ffe194" />
+          <circle cx="144" cy="108" r="3" fill="#7cfce7" />
+        </g>
+      )}
+      {power === 'super_sky_leap' && (
+        <ellipse cx="90" cy="140" rx="28" ry="6" stroke="#7cfce7" strokeOpacity="0.8" strokeWidth="2" fill="none" />
+      )}
+
       {/* Flowing scarf */}
       <path
         d="M80 94C64 96 50 105 38 100C46 112 63 110 82 102Z"
@@ -231,7 +368,7 @@ const AvatarPreviewSvg: React.FC<{ loadout: PlayerLoadout }> = ({ loadout }) => 
         fillOpacity="0.92"
       />
 
-      {/* Sanctuary Heart aura if active */}
+      {/* Charms */}
       {charm === 'sanctuary_heart' && (
         <g>
           <circle
@@ -251,13 +388,22 @@ const AvatarPreviewSvg: React.FC<{ loadout: PlayerLoadout }> = ({ loadout }) => 
         </g>
       )}
 
-      {/* Firefly companion if active */}
       {charm === 'firefly_sprite' && (
         <g>
           <circle cx="44" cy="64" r="12" fill="#ffe18c" fillOpacity="0.3" />
           <ellipse cx="40" cy="60" rx="4" ry="2.2" transform="rotate(-24 40 60)" fill="#dffff8" />
           <ellipse cx="48" cy="60" rx="4" ry="2.2" transform="rotate(24 48 60)" fill="#dffff8" />
           <circle cx="44" cy="64" r="3.8" fill="#ffe18c" />
+        </g>
+      )}
+
+      {charm === 'mini_owl' && (
+        <g>
+          <circle cx="44" cy="66" r="13" fill="#a8ebff" fillOpacity="0.22" />
+          <ellipse cx="44" cy="67" rx="7" ry="8.5" fill="#dff7ff" stroke="#8ce0ff" strokeWidth="1.2" />
+          <circle cx="41.5" cy="64.5" r="1.4" fill="#13263a" />
+          <circle cx="46.5" cy="64.5" r="1.4" fill="#13263a" />
+          <path d="M42.8 66.5L45.2 66.5L44 68.5Z" fill="#ffd27a" />
         </g>
       )}
 
@@ -294,6 +440,18 @@ const AvatarPreviewSvg: React.FC<{ loadout: PlayerLoadout }> = ({ loadout }) => 
           fill="none"
         />
       )}
+      {loadout.cloak === 'ocean_tide' && (
+        <path
+          d="M71 116C82 111 98 121 109 115"
+          stroke="#aef8ff"
+          strokeWidth="1.8"
+          strokeLinecap="round"
+          fill="none"
+        />
+      )}
+      {loadout.cloak === 'shadow_velvet' && (
+        <circle cx="90" cy="96" r="3" fill="#ffe18c" />
+      )}
 
       {/* Spirit Head & Hood */}
       <circle cx="90" cy="74" r="17" fill="#e9fffc" />
@@ -324,6 +482,15 @@ const AvatarPreviewSvg: React.FC<{ loadout: PlayerLoadout }> = ({ loadout }) => 
           <circle cx="90" cy="54" r="3" fill="#ffd97d" />
         </g>
       )}
+      {hat === 'sunflower_crown' && (
+        <g>
+          <path d="M74 62C78 55 102 55 106 62" stroke="#ffbf3f" strokeWidth="3" strokeLinecap="round" fill="none" />
+          <circle cx="80" cy="56" r="3.4" fill="#ffe678" />
+          <circle cx="90" cy="53" r="4.2" fill="#ffe678" />
+          <circle cx="100" cy="56" r="3.4" fill="#ffe678" />
+          <circle cx="90" cy="53" r="1.9" fill="#b5541c" />
+        </g>
+      )}
       {hat === 'moon_halo' && (
         <g>
           <ellipse cx="90" cy="49" rx="16" ry="4.5" stroke="#9ef4ff" strokeWidth="2.2" fill="none" />
@@ -333,10 +500,28 @@ const AvatarPreviewSvg: React.FC<{ loadout: PlayerLoadout }> = ({ loadout }) => 
           />
         </g>
       )}
+      {hat === 'coral_tiara' && (
+        <g>
+          <path
+            d="M76 61L73 47L83 54L90 42L97 54L107 47L104 61Z"
+            fill="#ff85b3"
+            stroke="#ffd4e7"
+            strokeWidth="1.2"
+          />
+          <circle cx="90" cy="54" r="2.8" fill="#7cfce7" />
+        </g>
+      )}
       {hat === 'frost_antlers' && (
         <g stroke="#c7b8ff" strokeWidth="2.6" strokeLinecap="round" fill="none">
           <path d="M81 59C77 50 73 43 68 35M76 49L69 47M78 44L83 40" />
           <path d="M99 59C103 50 107 43 112 35M104 49L111 47M102 44L97 40" />
+        </g>
+      )}
+      {hat === 'astral_wizard' && (
+        <g>
+          <ellipse cx="90" cy="59" rx="22" ry="5" fill="#47266b" stroke="#d8a6ff" strokeWidth="1.8" />
+          <path d="M77 58L91 31L103 58Z" fill="#47266b" stroke="#d8a6ff" strokeWidth="1.8" />
+          <circle cx="91" cy="31" r="3" fill="#ffe58f" />
         </g>
       )}
     </svg>
@@ -372,7 +557,8 @@ export const ShopModal: React.FC<ShopModalProps> = ({
     previewLoadout !== null &&
     (previewLoadout.hat !== progress.equipped.hat ||
       previewLoadout.cloak !== progress.equipped.cloak ||
-      previewLoadout.charm !== progress.equipped.charm);
+      previewLoadout.charm !== progress.equipped.charm ||
+      previewLoadout.power !== progress.equipped.power);
 
   const ownedSet = new Set(progress.ownedIds);
   const filteredItems =
@@ -407,6 +593,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({
     return { name, differsFromEquipped };
   };
 
+  const powerInfo = formatSlotLabel('power', 'None');
   const hatInfo = formatSlotLabel('hat', 'None');
   const cloakInfo = formatSlotLabel('cloak', 'Default');
   const charmInfo = formatSlotLabel('charm', 'None');
@@ -478,6 +665,16 @@ export const ShopModal: React.FC<ShopModalProps> = ({
                       Reset
                     </button>
                   )}
+                </div>
+                <div className="flex justify-between gap-2 border-t border-[#7cfce7]/14 pt-2">
+                  <span className="text-[#9fd1c9]">Power</span>
+                  <span
+                    className={`font-medium text-right ${
+                      powerInfo.differsFromEquipped ? 'text-[#ffd884]' : 'text-[#ffe39a]'
+                    }`}
+                  >
+                    {powerInfo.name}
+                  </span>
                 </div>
                 <div className="flex justify-between gap-2 border-t border-[#7cfce7]/14 pt-2">
                   <span className="text-[#9fd1c9]">Headwear</span>
@@ -552,8 +749,8 @@ export const ShopModal: React.FC<ShopModalProps> = ({
                             ? 'rgba(86, 227, 204, 0.7)'
                             : `${item.accentColor}44`,
                         background: tryingOn
-                          ? `linear-gradient(145deg, rgba(16, 48, 60, 0.94), rgba(20, 32, 58, 0.94))`
-                          : `linear-gradient(145deg, rgba(12, 34, 46, 0.88), rgba(16, 26, 46, 0.88))`,
+                          ? 'linear-gradient(145deg, rgba(16, 48, 60, 0.94), rgba(20, 32, 58, 0.94))'
+                          : 'linear-gradient(145deg, rgba(12, 34, 46, 0.88), rgba(16, 26, 46, 0.88))',
                       }}
                       className="rounded-lg border p-3.5 sm:p-4 flex flex-col justify-between gap-3 transition-colors"
                     >

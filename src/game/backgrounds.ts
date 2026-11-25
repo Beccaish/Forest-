@@ -33,7 +33,8 @@ class BackdropCache {
 
   getImage(levelId: LevelId, biomeIdx: number): HTMLImageElement | null {
     const paths = BACKDROP_PATHS[levelId];
-    const src = paths[Math.max(0, Math.min(2, biomeIdx))];
+    const mappedIdx = biomeIdx <= 0 ? 0 : biomeIdx >= 3 ? 2 : 1;
+    const src = paths[mappedIdx];
     let img = this.images.get(src);
     if (!img) {
       img = new Image();

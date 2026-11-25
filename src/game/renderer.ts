@@ -1,6 +1,7 @@
 import { backdropCache, drawParallaxBackdrop } from './backgrounds';
 import type {
   CollectibleItem,
+  ForestBaddie,
   GlowMushroom,
   LevelId,
   MagicalCreature,
@@ -132,6 +133,29 @@ export function renderForestScene(
   depthVeil.addColorStop(1, 'rgba(4, 10, 18, 0.42)');
   ctx.fillStyle = depthVeil;
   ctx.fillRect(0, 0, viewW, viewH);
+
+  // Enchanted Underwater Caustics & Bioluminescent Lagoon Wash
+  if (b.weights.underwater > 0.02) {
+    ctx.save();
+    ctx.fillStyle = `rgba(12, 92, 118, ${0.26 * b.weights.underwater})`;
+    ctx.fillRect(0, 0, viewW, viewH);
+    ctx.globalAlpha = 0.22 * b.weights.underwater;
+    for (let r = 0; r < 6; r++) {
+      const rx = ((r * 260 + Math.sin(time * 0.7 + r) * 70 - cameraX * 0.12) % (viewW + 260)) - 80;
+      const grad = ctx.createLinearGradient(rx, 0, rx + 90, viewH * 0.85);
+      grad.addColorStop(0, '#9efffa');
+      grad.addColorStop(1, 'rgba(120, 248, 255, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(rx, 0);
+      ctx.lineTo(rx + 65, 0);
+      ctx.lineTo(rx + 185, viewH * 0.9);
+      ctx.lineTo(rx + 60, viewH * 0.9);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
 
   // 3. Twinkling Starfield Accent
   const starVis =
@@ -296,6 +320,13 @@ export function renderForestScene(
   for (const wisp of world.thornWisps) {
     if (wisp.x + 80 < cameraX || wisp.x - 80 > cameraX + virtualW) continue;
     drawThornWisp(ctx, wisp, time);
+  }
+
+  for (const baddie of world.baddies) {
+    if (baddie.homeX + 90 < cameraX || baddie.homeX - 90 > cameraX + virtualW) continue;
+    if (baddie.emerge > 0.04) {
+      drawForestBaddie(ctx, baddie, time);
+    }
   }
 
   for (const pu of pulses) {
@@ -1236,7 +1267,7 @@ function drawCollectible(
     ctx.lineTo(0, 12);
     ctx.closePath();
     ctx.fill();
-  } else {
+  } else if (item.kind === 'starseed') {
     // Rotating 4-Pointed Astral Star Seed (grants temporary Triple Jump!)
     const halo = ctx.createRadialGradient(item.x, item.y, 2, item.x, item.y, 32);
     halo.addColorStop(0, 'rgba(215, 245, 255, 0.92)');
@@ -1266,6 +1297,68 @@ function drawCollectible(
     ctx.fillStyle = '#fff5b8';
     ctx.beginPath();
     ctx.arc(0, 0, 2.8, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (item.kind === 'highjump') {
+    // Sky-Spring Feather (grants +5 Higher Jumps!)
+    const halo = ctx.createRadialGradient(item.x, item.y, 2, item.x, item.y, 32);
+    halo.addColorStop(0, 'rgba(155, 255, 225, 0.9)');
+    halo.addColorStop(0.5, 'rgba(255, 225, 130, 0.42)');
+    halo.addColorStop(1, 'rgba(155, 255, 225, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(item.x, item.y, 32, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.translate(item.x, item.y);
+    const bounce = Math.sin(time * 4 + item.phase) * 2.5;
+    ctx.translate(0, bounce);
+
+    ctx.fillStyle = '#8cf8e8';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(0, -13);
+    ctx.quadraticCurveTo(9, -3, 0, 12);
+    ctx.quadraticCurveTo(-9, -3, 0, -13);
+    ctx.fill();
+    ctx.stroke();
+
+    // Upward golden chevron
+    ctx.strokeStyle = '#ffe18c';
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-5, 2);
+    ctx.lineTo(0, -5);
+    ctx.lineTo(5, 2);
+    ctx.stroke();
+  } else {
+    // Collectible Flying Flower (activate for 5s of free flight & item magnet!)
+    const halo = ctx.createRadialGradient(item.x, item.y, 2, item.x, item.y, 34);
+    halo.addColorStop(0, 'rgba(255, 190, 240, 0.95)');
+    halo.addColorStop(0.5, 'rgba(255, 225, 145, 0.45)');
+    halo.addColorStop(1, 'rgba(255, 160, 225, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(item.x, item.y, 34, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.translate(item.x, item.y);
+    const flutter = Math.sin(time * 6 + item.phase) * 0.16;
+    ctx.rotate(flutter);
+    for (let i = 0; i < 6; i++) {
+      const ang = (i * Math.PI * 2) / 6;
+      ctx.save();
+      ctx.rotate(ang);
+      ctx.fillStyle = i % 2 === 0 ? '#ff9ee8' : '#ffe294';
+      ctx.beginPath();
+      ctx.ellipse(0, -7.5, 4.2, 6.8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(0, 0, 3.8, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -1606,6 +1699,160 @@ function drawMagicalCreature(
   ctx.restore();
 }
 
+function drawForestBaddie(ctx: CanvasRenderingContext2D, b: ForestBaddie, time: number): void {
+  ctx.save();
+
+  // Clip below terrain surface so they emerge smoothly out of the moss/earth
+  ctx.beginPath();
+  ctx.rect(b.x - 56, b.homeY - 96, 112, 98);
+  ctx.clip();
+
+  const stunned = b.stunnedTimer > 0;
+  ctx.globalAlpha = Math.min(1, b.emerge * 1.15) * (stunned ? 0.55 : 1);
+
+  // Subtle warning ground glow before fully popped up
+  if (!stunned && b.emerge > 0.15) {
+    const aura = ctx.createRadialGradient(b.x, b.y - 16, 2, b.x, b.y - 16, 28);
+    aura.addColorStop(0, b.kind === 'gnome' ? 'rgba(255, 108, 120, 0.32)' : 'rgba(210, 96, 255, 0.32)');
+    aura.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = aura;
+    ctx.beginPath();
+    ctx.arc(b.x, b.y - 16, 28, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  ctx.translate(b.x, b.y);
+  ctx.scale(b.facing, stunned ? 0.82 : 1);
+  const waddle = stunned ? 0 : Math.sin(time * 7 + b.phase) * 1.4;
+  ctx.translate(0, waddle);
+
+  if (b.kind === 'gnome') {
+    // Little boots
+    ctx.fillStyle = '#24172b';
+    ctx.beginPath();
+    ctx.ellipse(-5, -2.5, 4.2, 2.6, 0, 0, Math.PI * 2);
+    ctx.ellipse(5, -2.5, 4.2, 2.6, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Dark shadow cloak
+    ctx.fillStyle = '#281d38';
+    ctx.beginPath();
+    ctx.moveTo(-12, -3);
+    ctx.quadraticCurveTo(-10, -21, 0, -23);
+    ctx.quadraticCurveTo(10, -21, 12, -3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Pointy beard
+    ctx.fillStyle = '#cfd9e8';
+    ctx.beginPath();
+    ctx.moveTo(-6, -15);
+    ctx.quadraticCurveTo(0, -14, 7, -15);
+    ctx.lineTo(1, -5);
+    ctx.closePath();
+    ctx.fill();
+
+    // Face & mischievous yellow eyes
+    ctx.fillStyle = '#3d2847';
+    ctx.beginPath();
+    ctx.ellipse(1, -18, 6.8, 5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = stunned ? '#b5b8c9' : '#ffe36e';
+    ctx.beginPath();
+    ctx.arc(3.8, -18.5, 1.5, 0, Math.PI * 2);
+    ctx.arc(0.4, -18.5, 1.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Tall crimson mushroom-cap gnome hat with spotted dots
+    ctx.fillStyle = '#c92e54';
+    ctx.beginPath();
+    ctx.moveTo(-13, -19);
+    ctx.quadraticCurveTo(0, -23, 13, -19);
+    ctx.quadraticCurveTo(8, -36, -1, -40);
+    ctx.quadraticCurveTo(-10, -33, -13, -19);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#fff3d1';
+    ctx.beginPath();
+    ctx.arc(-4.5, -24.5, 1.9, 0, Math.PI * 2);
+    ctx.arc(3.5, -26, 2.2, 0, Math.PI * 2);
+    ctx.arc(-0.5, -32.5, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+  } else {
+    // Bramble Imp: thorny violet body, jagged curved horns, glowing magenta eyes
+    ctx.fillStyle = '#3b1c4f';
+    ctx.beginPath();
+    ctx.moveTo(-12, -2);
+    ctx.lineTo(-14, -12);
+    ctx.lineTo(-9, -15);
+    ctx.lineTo(-11, -24);
+    ctx.lineTo(0, -26);
+    ctx.lineTo(11, -24);
+    ctx.lineTo(9, -15);
+    ctx.lineTo(14, -12);
+    ctx.lineTo(12, -2);
+    ctx.closePath();
+    ctx.fill();
+
+    // Bramble leaf/thorn collar
+    ctx.strokeStyle = '#9b59d6';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(-11, -14);
+    ctx.lineTo(0, -10);
+    ctx.lineTo(11, -14);
+    ctx.stroke();
+
+    // Curved jagged horns
+    ctx.fillStyle = '#d1a8ff';
+    ctx.beginPath();
+    ctx.moveTo(-5, -24);
+    ctx.quadraticCurveTo(-11, -34, -4, -37);
+    ctx.quadraticCurveTo(-5, -30, -1, -25);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.moveTo(5, -24);
+    ctx.quadraticCurveTo(12, -34, 6, -37);
+    ctx.quadraticCurveTo(6, -30, 2, -25);
+    ctx.closePath();
+    ctx.fill();
+
+    // Glowing magenta eyes & grin
+    ctx.fillStyle = stunned ? '#b5b8c9' : '#ff68cf';
+    ctx.beginPath();
+    ctx.arc(4.2, -17, 1.8, 0, Math.PI * 2);
+    ctx.arc(-1.2, -17, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#ffd2ee';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(2, -13.5, 3.6, 0.15, Math.PI - 0.15);
+    ctx.stroke();
+  }
+
+  ctx.restore();
+
+  // Dizzy stars overhead when stunned/defeated
+  if (stunned) {
+    ctx.save();
+    for (let s = 0; s < 3; s++) {
+      const ang = time * 5.2 + (s * Math.PI * 2) / 3;
+      const sx = b.x + Math.cos(ang) * 14;
+      const sy = b.y - 38 + Math.sin(ang) * 4;
+      ctx.fillStyle = '#ffe58f';
+      ctx.beginPath();
+      ctx.arc(sx, sy, 2.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
 function drawThornWisp(ctx: CanvasRenderingContext2D, w: ThornWisp, time: number): void {
   ctx.save();
   const stunned = w.stunnedTimer > 0;
@@ -1670,15 +1917,27 @@ function drawPlayer(
     scarfColor = '#ffb86c';
     cloakFill = '#ffe2c2';
     cloakTrim = '#ff866b';
+  } else if (equipped.cloak === 'sakura_petal') {
+    scarfColor = '#ff9ee4';
+    cloakFill = '#ffe3f6';
+    cloakTrim = '#ffd280';
   } else if (equipped.cloak === 'starweave_mantle') {
     scarfColor = '#a6a8ff';
     cloakFill = '#dcdbff';
     cloakTrim = '#6e72e8';
+  } else if (equipped.cloak === 'ocean_tide') {
+    scarfColor = '#48e5ff';
+    cloakFill = '#d4fbff';
+    cloakTrim = '#29b6f6';
   } else if (equipped.cloak === 'prism_aurora') {
     const hueShift = 0.5 + 0.5 * Math.sin(time * 3);
     scarfColor = hueShift > 0.5 ? '#7cfce7' : '#e0b3ff';
     cloakFill = '#ecfeff';
     cloakTrim = hueShift > 0.5 ? '#7cfce7' : '#c79eff';
+  } else if (equipped.cloak === 'shadow_velvet') {
+    scarfColor = '#c28cff';
+    cloakFill = '#48346e';
+    cloakTrim = '#ffd87a';
   }
 
   if (boosted) scarfColor = '#ffe08c';
@@ -1744,7 +2003,88 @@ function drawPlayer(
     ctx.fill();
   }
 
-  if (player.gliding) {
+  // Starlight Owlet companion orbiting beside player
+  if (equipped.charm === 'mini_owl') {
+    const ox = player.x - player.facing * 26 + Math.sin(time * 2.4) * 5;
+    const oy = bodyY - 22 + Math.cos(time * 3.8) * 5;
+    ctx.save();
+    ctx.fillStyle = 'rgba(168, 235, 255, 0.25)';
+    ctx.beginPath();
+    ctx.arc(ox, oy, 13, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#dff7ff';
+    ctx.beginPath();
+    ctx.ellipse(ox, oy, 5.5, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    const wingY = Math.sin(time * 12) * 2;
+    ctx.fillStyle = '#99e2ff';
+    ctx.beginPath();
+    ctx.ellipse(ox - 5, oy + wingY * 0.4, 3, 4.5, 0.4, 0, Math.PI * 2);
+    ctx.ellipse(ox + 5, oy + wingY * 0.4, 3, 4.5, -0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#122638';
+    ctx.beginPath();
+    ctx.arc(ox - 2, oy - 2, 1.1, 0, Math.PI * 2);
+    ctx.arc(ox + 2, oy - 2, 1.1, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Super Power Auras & Wings
+  if (equipped.power === 'super_star_magnet') {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255, 158, 232, 0.55)';
+    ctx.lineWidth = 1.6;
+    ctx.setLineDash([5, 6]);
+    ctx.beginPath();
+    ctx.arc(player.x, bodyY, 34 + Math.sin(time * 4) * 3, time * 1.4, time * 1.4 + Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  } else if (equipped.power === 'super_nova_pulse') {
+    ctx.save();
+    const novaR = 32 + Math.sin(time * 5) * 3;
+    ctx.strokeStyle = 'rgba(255, 216, 107, 0.5)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(player.x, bodyY, novaR, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  } else if (equipped.power === 'super_sky_leap') {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(124, 252, 231, 0.65)';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.ellipse(player.x, player.y - 4, 16 + Math.sin(time * 6) * 2, 4, 0, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  } else if (equipped.power === 'super_phoenix_wings') {
+    const flap = Math.sin(time * (player.gliding || player.flyingTimer > 0 ? 13 : 5)) * 5;
+    const span = player.gliding || player.flyingTimer > 0 ? 22 : 14;
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 134, 72, 0.85)';
+    ctx.strokeStyle = '#ffe082';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.ellipse(player.x - span * 0.72, bodyY - 8 + flap * 0.4, span * 0.75, 6.5, -0.4, 0, Math.PI * 2);
+    ctx.ellipse(player.x + span * 0.72, bodyY - 8 + flap * 0.4, span * 0.75, 6.5, 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  if (player.flyingTimer > 0) {
+    const flap = Math.sin(time * 18) * 5;
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 178, 236, 0.85)';
+    ctx.strokeStyle = '#ffe399';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.ellipse(player.x - 16, bodyY - 8 + flap * 0.4, 15, 7.5, -0.45, 0, Math.PI * 2);
+    ctx.ellipse(player.x + 16, bodyY - 8 + flap * 0.4, 15, 7.5, 0.45, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (player.gliding) {
     ctx.fillStyle = boosted
       ? 'rgba(255, 226, 155, 0.78)'
       : astralJump
@@ -1836,6 +2176,22 @@ function drawPlayer(
     ctx.arc(1, -41, 2.5, 0, Math.PI * 2);
     ctx.arc(6, -39, 2.1, 0, Math.PI * 2);
     ctx.fill();
+  } else if (equipped.hat === 'sunflower_crown') {
+    ctx.strokeStyle = '#ffbf3f';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(1, -33, 8.5, Math.PI * 1.1, Math.PI * 1.9);
+    ctx.stroke();
+    ctx.fillStyle = '#ffe678';
+    ctx.beginPath();
+    ctx.arc(-5, -39, 2.5, 0, Math.PI * 2);
+    ctx.arc(1, -42, 3, 0, Math.PI * 2);
+    ctx.arc(7, -39, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#b5541c';
+    ctx.beginPath();
+    ctx.arc(1, -42, 1.4, 0, Math.PI * 2);
+    ctx.fill();
   } else if (equipped.hat === 'moon_halo') {
     const bob = Math.sin(time * 3.4) * 1.6;
     ctx.save();
@@ -1849,6 +2205,24 @@ function drawPlayer(
     ctx.fillStyle = '#fff5b8';
     ctx.beginPath();
     ctx.arc(9, -46 + bob, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else if (equipped.hat === 'coral_tiara') {
+    ctx.save();
+    ctx.fillStyle = '#ff85b3';
+    ctx.beginPath();
+    ctx.moveTo(-6, -36);
+    ctx.lineTo(-8, -45);
+    ctx.lineTo(-2, -39);
+    ctx.lineTo(1, -48);
+    ctx.lineTo(4, -39);
+    ctx.lineTo(10, -45);
+    ctx.lineTo(7, -36);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#7cfce7';
+    ctx.beginPath();
+    ctx.arc(1, -40, 2.1, 0, Math.PI * 2);
     ctx.fill();
     ctx.restore();
   } else if (equipped.hat === 'frost_antlers') {
@@ -1872,6 +2246,27 @@ function drawPlayer(
     ctx.moveTo(9, -45);
     ctx.lineTo(6, -51);
     ctx.stroke();
+    ctx.restore();
+  } else if (equipped.hat === 'astral_wizard') {
+    ctx.save();
+    ctx.fillStyle = '#47266b';
+    ctx.strokeStyle = '#d8a6ff';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.ellipse(1, -36, 13, 3.2, -0.05, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-7, -36);
+    ctx.quadraticCurveTo(-2, -52, 4, -56);
+    ctx.quadraticCurveTo(6, -44, 8, -36);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#ffe58f';
+    ctx.beginPath();
+    ctx.arc(4, -55, 2.2, 0, Math.PI * 2);
+    ctx.fill();
     ctx.restore();
   }
 

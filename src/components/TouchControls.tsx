@@ -2,20 +2,24 @@ import React, { useRef, useState } from 'react';
 
 interface TouchControlsProps {
   visible: boolean;
+  flyingFlowers: number;
   onLeftChange: (held: boolean) => void;
   onRightChange: (held: boolean) => void;
   onJumpDown: () => void;
   onJumpUp: () => void;
   onPulse: () => void;
+  onFly: () => void;
 }
 
 export const TouchControls: React.FC<TouchControlsProps> = ({
   visible,
+  flyingFlowers,
   onLeftChange,
   onRightChange,
   onJumpDown,
   onJumpUp,
   onPulse,
+  onFly,
 }) => {
   const padRef = useRef<HTMLDivElement | null>(null);
   const movePointerId = useRef<number | null>(null);
@@ -24,6 +28,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
   const [activeDir, setActiveDir] = useState<'left' | 'right' | null>(null);
   const [jumpActive, setJumpActive] = useState(false);
   const [pulseActive, setPulseActive] = useState(false);
+  const [flyActive, setFlyActive] = useState(false);
 
   if (!visible) return null;
 
@@ -108,8 +113,33 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
         </div>
       </div>
 
-      {/* Right Thumb: Pulse + Jump/Glide */}
+      {/* Right Thumb: Fly (when collected) + Pulse + Jump/Glide */}
       <div className="pointer-events-auto flex items-end gap-3" style={{ touchAction: 'none' }}>
+        {flyingFlowers > 0 && (
+          <button
+            type="button"
+            aria-label="Activate Flying Flower"
+            onPointerDown={(e) => {
+              e.preventDefault();
+              setFlyActive(true);
+              onFly();
+            }}
+            onPointerUp={() => setFlyActive(false)}
+            onPointerCancel={() => setFlyActive(false)}
+            onTouchStart={(e) => e.preventDefault()}
+            onTouchEnd={(e) => e.preventDefault()}
+            className={`flex h-14 w-14 flex-col items-center justify-center rounded-full border border-[#ff9ce3]/60 text-[#ffd6f4] shadow-lg transition-transform ${
+              flyActive ? 'scale-95 bg-[#ff9ce3]/30' : 'bg-[#2a0b28]/82'
+            }`}
+            style={{ touchAction: 'none' }}
+          >
+            <span className="text-sm leading-none">✿</span>
+            <span className="mt-0.5 text-[10px] font-medium tracking-wide text-[#ffd6f4] tabular-nums">
+              Fly×{flyingFlowers}
+            </span>
+          </button>
+        )}
+
         <button
           type="button"
           aria-label="Spirit Pulse"

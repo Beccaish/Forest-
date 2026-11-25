@@ -7,6 +7,7 @@ interface GameHUDProps {
   isTouchDevice: boolean;
   onToggleMute: () => void;
   onPause: () => void;
+  onFly: () => void;
 }
 
 export const GameHUD: React.FC<GameHUDProps> = ({
@@ -15,6 +16,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
   isTouchDevice,
   onToggleMute,
   onPause,
+  onFly,
 }) => {
   if (hud.phase !== 'PLAYING') return null;
 
@@ -186,11 +188,59 @@ export const GameHUD: React.FC<GameHUDProps> = ({
                 <span className="font-medium text-[#c7b8ff]">Triple Jump</span>
               </>
             )}
+            {hud.highJumpCharges > 0 && (
+              <>
+                <span className="text-white/35" aria-hidden="true">·</span>
+                <span className="font-medium text-[#7cfce7] tabular-nums">
+                  High Jumps {hud.highJumpCharges}
+                </span>
+              </>
+            )}
+            {hud.flyingTimeLeft > 0 ? (
+              <>
+                <span className="text-white/35" aria-hidden="true">·</span>
+                <span className="font-medium text-[#ff9ce3] tabular-nums">
+                  Flying {hud.flyingTimeLeft.toFixed(1)}s
+                </span>
+              </>
+            ) : (
+              hud.flyingFlowers > 0 && (
+                <>
+                  <span className="text-white/35" aria-hidden="true">·</span>
+                  <span className="font-medium text-[#ffb4ea] tabular-nums">
+                    Fly Flower ×{hud.flyingFlowers} (F)
+                  </span>
+                </>
+              )
+            )}
+            {hud.equipped.power && (
+              <>
+                <span className="text-white/35" aria-hidden="true">·</span>
+                <span className="font-medium text-[#ffe39a]">
+                  {hud.equipped.power === 'super_sky_leap'
+                    ? 'Skybound Leap'
+                    : hud.equipped.power === 'super_nova_pulse'
+                      ? 'Solar Nova'
+                      : hud.equipped.power === 'super_star_magnet'
+                        ? 'Cosmic Magnet'
+                        : 'Phoenix Wings'}
+                </span>
+              </>
+            )}
           </div>
         </div>
 
         {/* Top-Right Interactive Actions */}
         <div className="pointer-events-auto flex shrink-0 items-center gap-2">
+          {hud.flyingFlowers > 0 && (
+            <button
+              type="button"
+              onClick={onFly}
+              className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#ff9ce3]/55 bg-[#2e0c2b]/80 px-3 py-2 text-xs font-semibold text-[#ffd6f4] transition-colors hover:border-[#ff9ce3] hover:bg-[#461341]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff9ce3] tabular-nums"
+            >
+              Fly · {hud.flyingFlowers}
+            </button>
+          )}
           <button
             type="button"
             onClick={onToggleMute}
@@ -212,7 +262,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
       {!isTouchDevice && (
         <div className="flex justify-center">
           <p className="text-xs tracking-wide text-[#cbeae5]/80 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
-            A D Move · Space Jump &amp; Glide · E Pulse · M Mute · Esc Pause
+            A D Move · Space Jump &amp; Glide · E Pulse · F Fly · M Mute · Esc Pause
           </p>
         </div>
       )}

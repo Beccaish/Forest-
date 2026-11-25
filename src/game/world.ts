@@ -4,6 +4,7 @@ import type {
   FarTree,
   FgSilhouette,
   FloatingSpore,
+  ForestBaddie,
   GlowMushroom,
   GrassTuft,
   LevelId,
@@ -20,13 +21,14 @@ import type {
   StoneArch,
   ThornWisp,
   Waterfall,
+  WeatherKind,
   WindStream,
   WoodlandButterfly,
 } from './types';
 
-export const WORLD_WIDTH = 7800;
+export const WORLD_WIDTH = 11400;
 export const BASE_GROUND_Y = 560;
-export const SANCTUARY_X = 7380;
+export const SANCTUARY_X = 10920;
 
 export const LEVEL_NAMES: Record<LevelId, string> = {
   1: 'Whispering Woods',
@@ -51,6 +53,22 @@ export const LEVEL_BIOMES: Record<LevelId, BiomeConfig[]> = {
       rim: '#69f0bd',
       particle: '#ffd889',
       mist: '#75e6c8',
+    },
+    {
+      name: 'Sunken Coral Grotto',
+      weatherLabel: 'Enchanted Underwater',
+      weatherKind: 'UNDERWATER',
+      skyTop: '#041d2e',
+      skyMid: '#0b4459',
+      skyBot: '#18707d',
+      mountain: '#093445',
+      farTree: '#072a38',
+      midTree: '#051f2b',
+      groundTop: '#16636e',
+      groundBot: '#04131c',
+      rim: '#7efcf2',
+      particle: '#a8fff6',
+      mist: '#59e5f5',
     },
     {
       name: 'Moonpetal Biolume Woods',
@@ -119,6 +137,22 @@ export const LEVEL_BIOMES: Record<LevelId, BiomeConfig[]> = {
       mist: '#b58eff',
     },
     {
+      name: 'Frostpetal Whisper Woods',
+      weatherLabel: 'Enchanted Snowfall',
+      weatherKind: 'SNOW',
+      skyTop: '#141e38',
+      skyMid: '#2b3e66',
+      skyBot: '#5e76a3',
+      mountain: '#202f52',
+      farTree: '#182442',
+      midTree: '#111930',
+      groundTop: '#425985',
+      groundBot: '#090e1c',
+      rim: '#d6f7ff',
+      particle: '#ffffff',
+      mist: '#c2e4ff',
+    },
+    {
       name: 'Golden Crown Summit',
       weatherLabel: 'Golden Blossom Flurry',
       weatherKind: 'STARLIGHT_FLURRY',
@@ -138,8 +172,8 @@ export const LEVEL_BIOMES: Record<LevelId, BiomeConfig[]> = {
   3: [
     {
       name: 'Silver Frostwood',
-      weatherLabel: 'Frost Leaf Drift',
-      weatherKind: 'DRIFTING_LEAVES',
+      weatherLabel: 'Glistening Snowfall',
+      weatherKind: 'SNOW',
       skyTop: '#122238',
       skyMid: '#244566',
       skyBot: '#537ea3',
@@ -151,6 +185,22 @@ export const LEVEL_BIOMES: Record<LevelId, BiomeConfig[]> = {
       rim: '#9ef5ff',
       particle: '#d9fbff',
       mist: '#a1e1ff',
+    },
+    {
+      name: 'Astral Reef Lagoon',
+      weatherLabel: 'Deep Reef Underwater',
+      weatherKind: 'UNDERWATER',
+      skyTop: '#071430',
+      skyMid: '#12385c',
+      skyBot: '#1d6b80',
+      mountain: '#0d2b4a',
+      farTree: '#0a223b',
+      midTree: '#07182b',
+      groundTop: '#1d5b75',
+      groundBot: '#040e1c',
+      rim: '#8cfaff',
+      particle: '#b8f4ff',
+      mist: '#66d9ff',
     },
     {
       name: 'Celestial Skywood Isles',
@@ -170,7 +220,7 @@ export const LEVEL_BIOMES: Record<LevelId, BiomeConfig[]> = {
     },
     {
       name: 'Astral Heartwood Grove',
-      weatherLabel: 'Astral Blossom Snow',
+      weatherLabel: 'Astral Blossom Flurry',
       weatherKind: 'STARLIGHT_FLURRY',
       skyTop: '#050b1f',
       skyMid: '#12244d',
@@ -205,6 +255,14 @@ function createRng(seed: number): () => number {
   };
 }
 
+export interface WeatherWeights {
+  leaves: number;
+  rain: number;
+  flurry: number;
+  snow: number;
+  underwater: number;
+}
+
 export interface BiomeBlend {
   idxA: number;
   idxB: number;
@@ -212,19 +270,25 @@ export interface BiomeBlend {
   b: BiomeConfig;
   mix: number;
   mainIndex: number;
-  weights: {
-    leaves: number;
-    rain: number;
-    flurry: number;
-  };
+  weights: WeatherWeights;
+}
+
+function addWeatherWeight(weights: WeatherWeights, kind: WeatherKind, amount: number): void {
+  if (kind === 'DRIFTING_LEAVES') weights.leaves += amount;
+  else if (kind === 'SOFT_RAIN') weights.rain += amount;
+  else if (kind === 'STARLIGHT_FLURRY') weights.flurry += amount;
+  else if (kind === 'SNOW') weights.snow += amount;
+  else weights.underwater += amount;
 }
 
 export function getBiomeBlend(x: number, levelId: LevelId = 1): BiomeBlend {
   const biomes = LEVEL_BIOMES[levelId];
-  const t1Start = 2050;
-  const t1End = 2950;
-  const t2Start = 4750;
-  const t2End = 5650;
+  const t1Start = 2250;
+  const t1End = 3050;
+  const t2Start = 5050;
+  const t2End = 5850;
+  const t3Start = 7850;
+  const t3End = 8650;
 
   let idxA = 0;
   let idxB = 0;
@@ -244,25 +308,31 @@ export function getBiomeBlend(x: number, levelId: LevelId = 1): BiomeBlend {
     idxA = 1;
     idxB = 2;
     mix = smoothstep((x - t2Start) / (t2End - t2Start));
-  } else {
+  } else if (x < t3Start) {
     idxA = idxB = 2;
+    mix = 0;
+  } else if (x < t3End) {
+    idxA = 2;
+    idxB = 3;
+    mix = smoothstep((x - t3Start) / (t3End - t3Start));
+  } else {
+    idxA = idxB = 3;
     mix = 0;
   }
 
-  let leaves = 0;
-  let rain = 0;
-  let flurry = 0;
+  const weights: WeatherWeights = {
+    leaves: 0,
+    rain: 0,
+    flurry: 0,
+    snow: 0,
+    underwater: 0,
+  };
 
-  if (idxA === 0 && idxB === 0) leaves = 1;
-  else if (idxA === 0 && idxB === 1) {
-    leaves = 1 - mix;
-    rain = mix;
-  } else if (idxA === 1 && idxB === 1) rain = 1;
-  else if (idxA === 1 && idxB === 2) {
-    rain = 1 - mix;
-    flurry = mix;
+  if (idxA === idxB) {
+    addWeatherWeight(weights, biomes[idxA].weatherKind, 1);
   } else {
-    flurry = 1;
+    addWeatherWeight(weights, biomes[idxA].weatherKind, 1 - mix);
+    addWeatherWeight(weights, biomes[idxB].weatherKind, mix);
   }
 
   return {
@@ -272,13 +342,13 @@ export function getBiomeBlend(x: number, levelId: LevelId = 1): BiomeBlend {
     b: biomes[idxB],
     mix,
     mainIndex: mix > 0.5 ? idxB : idxA,
-    weights: { leaves, rain, flurry },
+    weights,
   };
 }
 
 export function getTerrainY(x: number, levelId: LevelId = 1): number {
   const startFlat = clamp((x - 180) / 300, 0, 1);
-  const endFlat = clamp((7250 - x) / 380, 0, 1);
+  const endFlat = clamp((10780 - x) / 420, 0, 1);
   const hillScale = startFlat * endFlat;
 
   if (levelId === 3) {
@@ -328,6 +398,7 @@ export interface WorldData {
   thornWisps: ThornWisp[];
   butterflies: WoodlandButterfly[];
   creatures: MagicalCreature[];
+  baddies: ForestBaddie[];
 }
 
 export function generateWorld(levelId: LevelId = 1): WorldData {
@@ -335,7 +406,7 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
   const rng = createRng(seed);
 
   const stars: Star[] = [];
-  for (let i = 0; i < 195; i++) {
+  for (let i = 0; i < 210; i++) {
     stars.push({
       x: rng() * 2000,
       y: rng() * 0.62,
@@ -347,7 +418,7 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
 
   const skyLanterns: SkyLantern[] = [];
   if (levelId === 2 || levelId === 3) {
-    for (let i = 0; i < 24; i++) {
+    for (let i = 0; i < 26; i++) {
       skyLanterns.push({
         x: rng() * 1800,
         y: 80 + rng() * 560,
@@ -367,7 +438,7 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
   }
 
   const mountains: Mountain[] = [];
-  for (let x = -200; x < 1750; x += 130 + rng() * 110) {
+  for (let x = -200; x < 2450; x += 130 + rng() * 110) {
     mountains.push({
       x,
       w: levelId === 1 ? 260 + rng() * 260 : 190 + rng() * 210,
@@ -376,7 +447,7 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
   }
 
   const farTrees: FarTree[] = [];
-  for (let x = -150; x < WORLD_WIDTH * 0.3 + 700; x += 55 + rng() * 45) {
+  for (let x = -150; x < WORLD_WIDTH * 0.32 + 700; x += 55 + rng() * 45) {
     farTrees.push({
       x,
       w: 18 + rng() * 26,
@@ -422,10 +493,10 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
 
   const waterfallXs =
     levelId === 1
-      ? [720, 1820, 3150, 4420, 5880]
+      ? [720, 1820, 3150, 4420, 5880, 7420, 8980]
       : levelId === 2
-        ? [920, 2240, 3680, 5040, 6240]
-        : [810, 2080, 3440, 4880, 6160];
+        ? [920, 2240, 3680, 5040, 6240, 7740, 9160]
+        : [810, 2080, 3440, 4880, 6160, 7680, 9120];
   const waterfalls: Waterfall[] = waterfallXs.map((wx) => ({
     x: wx,
     w: 48 + rng() * 38,
@@ -434,10 +505,10 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
 
   const archXs =
     levelId === 1
-      ? [620, 2480, 4950, 6820]
+      ? [620, 2480, 4950, 6820, 8640, 10180]
       : levelId === 2
-        ? [540, 2620, 4780, 6780]
-        : [580, 2420, 4690, 6840];
+        ? [540, 2620, 4780, 6780, 8580, 10140]
+        : [580, 2420, 4690, 6840, 8620, 10200];
   const stoneArches: StoneArch[] = archXs.map((ax) => ({
     x: ax,
     y: getTerrainY(ax, levelId),
@@ -473,6 +544,16 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
           { x: 5750, dy: -175, w: 175, type: 'branch' },
           { x: 6080, dy: -275, w: 160, type: 'spirit' },
           { x: 6420, dy: -165, w: 170, type: 'stone' },
+          { x: 6950, dy: -145, w: 165, type: 'branch' },
+          { x: 7260, dy: -245, w: 155, type: 'spirit' },
+          { x: 7620, dy: -165, w: 170, type: 'stone' },
+          { x: 7980, dy: -260, w: 160, type: 'spirit' },
+          { x: 8340, dy: -155, w: 165, type: 'branch' },
+          { x: 8740, dy: -245, w: 160, type: 'spirit' },
+          { x: 9120, dy: -165, w: 175, type: 'stone' },
+          { x: 9520, dy: -270, w: 160, type: 'spirit' },
+          { x: 9920, dy: -160, w: 170, type: 'branch' },
+          { x: 10320, dy: -230, w: 165, type: 'spirit' },
         ]
       : levelId === 2
         ? [
@@ -495,6 +576,16 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
             { x: 5740, dy: -190, w: 170, type: 'branch' },
             { x: 6110, dy: -285, w: 155, type: 'spirit' },
             { x: 6470, dy: -175, w: 165, type: 'stone' },
+            { x: 6960, dy: -155, w: 160, type: 'branch' },
+            { x: 7310, dy: -265, w: 165, type: 'spirit' },
+            { x: 7690, dy: -175, w: 160, type: 'stone' },
+            { x: 8060, dy: -275, w: 165, type: 'spirit' },
+            { x: 8450, dy: -165, w: 170, type: 'branch' },
+            { x: 8840, dy: -260, w: 160, type: 'spirit' },
+            { x: 9240, dy: -175, w: 170, type: 'stone' },
+            { x: 9630, dy: -285, w: 165, type: 'spirit' },
+            { x: 10020, dy: -170, w: 170, type: 'branch' },
+            { x: 10390, dy: -240, w: 160, type: 'spirit' },
           ]
         : [
             { x: 410, dy: -125, w: 150, type: 'stone' },
@@ -513,6 +604,15 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
             { x: 5690, dy: -290, w: 160, type: 'spirit' },
             { x: 6080, dy: -190, w: 170, type: 'branch' },
             { x: 6480, dy: -270, w: 165, type: 'spirit' },
+            { x: 6940, dy: -165, w: 160, type: 'stone' },
+            { x: 7340, dy: -275, w: 160, type: 'spirit' },
+            { x: 7740, dy: -175, w: 165, type: 'branch' },
+            { x: 8160, dy: -285, w: 165, type: 'spirit' },
+            { x: 8560, dy: -170, w: 165, type: 'stone' },
+            { x: 8960, dy: -270, w: 165, type: 'spirit' },
+            { x: 9380, dy: -180, w: 170, type: 'branch' },
+            { x: 9810, dy: -285, w: 165, type: 'spirit' },
+            { x: 10240, dy: -195, w: 170, type: 'spirit' },
           ];
 
   const platforms: Platform[] = platformDefs.map((p) => {
@@ -526,7 +626,6 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
     };
   });
 
-  // Drifting Skywood / Cloud Platforms (featured heavily in Level 3 + bonus in Level 2)
   const movingDefs: Array<{
     x: number;
     dy: number;
@@ -543,13 +642,21 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
           { x: 4540, dy: -215, w: 140, dx: 95, ampY: 0, speed: 1.35 },
           { x: 5500, dy: -235, w: 135, dx: 0, ampY: 70, speed: 1.4 },
           { x: 6280, dy: -235, w: 140, dx: 100, ampY: 0, speed: 1.25 },
+          { x: 7540, dy: -225, w: 135, dx: 100, ampY: 20, speed: 1.3 },
+          { x: 8740, dy: -235, w: 135, dx: 0, ampY: 65, speed: 1.35 },
+          { x: 9600, dy: -235, w: 140, dx: 105, ampY: 0, speed: 1.3 },
         ]
       : levelId === 2
         ? [
             { x: 2040, dy: -195, w: 130, dx: 85, ampY: 0, speed: 1.15 },
             { x: 4460, dy: -205, w: 130, dx: 0, ampY: 55, speed: 1.2 },
+            { x: 7140, dy: -210, w: 135, dx: 90, ampY: 0, speed: 1.2 },
+            { x: 9020, dy: -215, w: 135, dx: 0, ampY: 60, speed: 1.25 },
           ]
-        : [];
+        : [
+            { x: 3740, dy: -195, w: 135, dx: 75, ampY: 0, speed: 1.1 },
+            { x: 8160, dy: -205, w: 135, dx: 0, ampY: 50, speed: 1.15 },
+          ];
 
   const movingPlatforms: MovingPlatform[] = movingDefs.map((mp, idx) => {
     const baseY = getTerrainY(mp.x, levelId) + mp.dy;
@@ -568,7 +675,6 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
     };
   });
 
-  // Aerial Spirit Ring Boosters (signature Level 3 skyward mechanic + bonus in Level 2)
   const skyRingDefs: Array<[number, number]> =
     levelId === 3
       ? [
@@ -579,13 +685,21 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
           [4210, -290],
           [5120, -295],
           [5940, -305],
+          [7140, -295],
+          [8360, -300],
+          [9440, -305],
         ]
       : levelId === 2
         ? [
             [1720, -275],
             [4150, -295],
+            [7460, -295],
+            [9420, -305],
           ]
-        : [];
+        : [
+            [4080, -275],
+            [8540, -290],
+          ];
 
   const skyRings: SkyRing[] = skyRingDefs.map(([rx, dy], idx) => ({
     x: rx,
@@ -597,10 +711,10 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
 
   const mushXs =
     levelId === 1
-      ? [370, 860, 1160, 1740, 2360, 2860, 3460, 4120, 4790, 5330, 5980, 6620]
+      ? [370, 860, 1160, 1740, 2360, 2860, 3460, 4120, 4790, 5330, 5980, 6620, 7180, 7840, 8460, 9020, 9740, 10240]
       : levelId === 2
-        ? [330, 820, 1120, 1720, 2380, 2810, 3490, 4160, 4860, 5310, 6010, 6680]
-        : [350, 880, 1410, 1790, 2380, 2980, 3660, 4190, 4810, 5420, 5960, 6640];
+        ? [330, 820, 1120, 1720, 2380, 2810, 3490, 4160, 4860, 5310, 6010, 6680, 7240, 7890, 8560, 9120, 9820, 10310]
+        : [350, 880, 1410, 1790, 2380, 2980, 3660, 4190, 4810, 5420, 5960, 6640, 7210, 7920, 8620, 9220, 9860, 10360];
   const mushrooms: GlowMushroom[] = mushXs.map((mx, i) => ({
     x: mx,
     y: getTerrainY(mx, levelId),
@@ -623,10 +737,10 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
 
   const windXs =
     levelId === 1
-      ? [1410, 3140, 4440, 5620, 6280]
+      ? [1410, 3140, 4440, 5620, 6280, 7640, 9160]
       : levelId === 2
-        ? [1370, 2720, 3810, 4960, 5920, 6360]
-        : [1640, 2740, 3880, 5140, 6240];
+        ? [1370, 2720, 3810, 4960, 5920, 6360, 7720, 9280]
+        : [1640, 2740, 3880, 5140, 6240, 7780, 9420];
   const windStreams: WindStream[] = windXs.map((wx) => {
     const gy = getTerrainY(wx, levelId);
     return {
@@ -640,10 +754,10 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
 
   const lanternXs =
     levelId === 1
-      ? [820, 1680, 2540, 3380, 4300, 5180, 6020, 6940]
+      ? [820, 1680, 2540, 3380, 4300, 5180, 6020, 6940, 7920, 8920, 9960]
       : levelId === 2
-        ? [760, 1650, 2480, 3390, 4240, 5190, 6080, 6940]
-        : [790, 1690, 2510, 3370, 4280, 5210, 6120, 6960];
+        ? [760, 1650, 2480, 3390, 4240, 5190, 6080, 6940, 7960, 8980, 10020]
+        : [790, 1690, 2510, 3370, 4280, 5210, 6120, 6960, 7980, 9040, 10080];
   const lanterns: SpiritLantern[] = lanternXs.map((lx) => ({
     x: lx,
     y: getTerrainY(lx, levelId),
@@ -660,6 +774,9 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
           [3320, -205], [3645, -300], [3970, -225], [4315, -315],
           [4480, -330], [4665, -200], [5195, -190], [5490, -290],
           [5660, -315], [5835, -225], [6160, -325], [6505, -215],
+          [7030, -195], [7340, -295], [7700, -215], [8060, -310],
+          [8420, -205], [8820, -295], [9210, -215], [9600, -320],
+          [10000, -210], [10400, -280],
         ]
       : levelId === 2
         ? [
@@ -669,7 +786,9 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
             [3655, -205], [4020, -295], [4365, -220], [4730, -315],
             [4985, -310], [5140, -200], [5470, -305], [5825, -240],
             [6185, -335], [6390, -315], [6550, -225], [6850, -135],
-            [7040, -65], [7160, -110],
+            [7040, -205], [7390, -315], [7770, -225], [8140, -325],
+            [8530, -215], [8920, -310], [9320, -225], [9710, -335],
+            [10100, -220], [10470, -290],
           ]
         : [
             [270, -50], [485, -175], [745, -270], [1035, -200],
@@ -677,52 +796,85 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
             [2640, -205], [2925, -275], [3240, -315], [3615, -220],
             [3995, -325], [4395, -210], [4605, -265], [4995, -305],
             [5355, -225], [5565, -295], [5765, -340], [6155, -240],
-            [6345, -285], [6555, -320], [6845, -145], [7060, -70],
+            [6345, -285], [6555, -320], [6845, -145], [7020, -215],
+            [7420, -325], [7820, -225], [8240, -335], [8640, -220],
+            [9040, -320], [9460, -230], [9890, -335], [10320, -245],
           ];
 
   const blossomSpots: Array<[number, number]> =
     levelId === 1
       ? [
           [620, -120], [1860, -230], [2480, -125], [3560, -315],
-          [4950, -125], [6080, -340],
+          [4950, -125], [6080, -340], [7980, -310], [9520, -320],
         ]
       : levelId === 2
         ? [
             [540, -125], [1180, -320], [2620, -125], [3240, -340],
             [4650, -330], [4780, -125], [6110, -350], [6780, -125],
+            [8060, -335], [9630, -340],
           ]
         : [
             [580, -125], [1510, -305], [2420, -125], [3160, -320],
             [4690, -125], [5690, -345], [6480, -325], [6840, -125],
+            [8160, -335], [9810, -335],
           ];
 
   const crystalSpots: Array<[number, number]> =
     levelId === 1
       ? [
-          [1410, -325], [2150, -310], [3140, -345], [4440, -350], [5620, -335],
+          [1410, -325], [2150, -310], [3140, -345], [4440, -350],
+          [5620, -335], [7640, -340], [9160, -345],
         ]
       : levelId === 2
         ? [
             [1370, -345], [1840, -315], [2720, -345], [3810, -340],
-            [4960, -345], [5920, -340], [6360, -355],
+            [4960, -345], [5920, -340], [6360, -355], [7720, -345], [9280, -345],
           ]
         : [
             [1640, -345], [2180, -335], [2740, -350], [3880, -350],
-            [5140, -355], [6240, -350],
+            [5140, -355], [6240, -350], [7780, -350], [9420, -350],
           ];
 
   const starseedSpots: Array<[number, number]> =
     levelId === 1
       ? [
-          [1230, -285], [3560, -310], [6080, -340],
+          [1230, -285], [3560, -310], [6080, -340], [8740, -300], [10320, -290],
         ]
       : levelId === 2
         ? [
-            [1720, -340], [3240, -345], [4150, -355], [6110, -350],
+            [1720, -340], [3240, -345], [4150, -355], [6110, -350], [8840, -320], [10390, -300],
           ]
         : [
             [1060, -315], [1980, -330], [2720, -350], [3420, -355],
-            [4210, -350], [5120, -355], [5940, -365],
+            [4210, -350], [5120, -355], [5940, -365], [8360, -355], [9440, -360],
+          ];
+
+  // New Higher-Jump Power-ups (+5 high jumps per pickup)
+  const highJumpSpots: Array<[number, number]> =
+    levelId === 1
+      ? [
+          [520, -55], [2340, -55], [4880, -55], [7240, -55], [9320, -55],
+        ]
+      : levelId === 2
+        ? [
+            [490, -55], [2440, -55], [4920, -55], [7380, -55], [9480, -55],
+          ]
+        : [
+            [510, -55], [2360, -55], [4840, -55], [7320, -55], [9360, -55],
+          ];
+
+  // New Collectible Flying Flowers (store charge, activate anytime for 5 seconds of free flight & magnet)
+  const flyingFlowerSpots: Array<[number, number]> =
+    levelId === 1
+      ? [
+          [1510, -205], [4240, -320], [7260, -305], [9520, -330],
+        ]
+      : levelId === 2
+        ? [
+            [1840, -310], [4650, -325], [7310, -325], [9630, -345],
+          ]
+        : [
+            [1510, -310], [4320, -220], [7340, -335], [9810, -345],
           ];
 
   const collectibles: CollectibleItem[] = [
@@ -741,6 +893,14 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
     ...starseedSpots.map(([sx, dy], idx) => {
       const y = getTerrainY(sx, levelId) + dy;
       return { x: sx, y, baseY: y, kind: 'starseed' as const, collected: false, phase: idx * 1.5 };
+    }),
+    ...highJumpSpots.map(([hx, dy], idx) => {
+      const y = getTerrainY(hx, levelId) + dy;
+      return { x: hx, y, baseY: y, kind: 'highjump' as const, collected: false, phase: idx * 1.2 };
+    }),
+    ...flyingFlowerSpots.map(([fx, dy], idx) => {
+      const y = getTerrainY(fx, levelId) + dy;
+      return { x: fx, y, baseY: y, kind: 'flyingflower' as const, collected: false, phase: idx * 1.7 };
     }),
   ];
 
@@ -790,10 +950,10 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
 
   const wispXs =
     levelId === 1
-      ? [2320, 3040, 3760, 4520, 5260, 5940, 6540]
+      ? [2320, 3040, 3760, 4520, 5260, 5940, 6540, 7480, 8420, 9480, 10280]
       : levelId === 2
-        ? [1480, 2120, 2980, 3690, 4460, 5280, 6040, 6640]
-        : [1320, 2060, 2820, 3580, 4440, 5340, 6180, 6720];
+        ? [1480, 2120, 2980, 3690, 4460, 5280, 6040, 6640, 7560, 8520, 9540, 10340]
+        : [1320, 2060, 2820, 3580, 4440, 5340, 6180, 6720, 7620, 8580, 9580, 10380];
   const thornWisps: ThornWisp[] = wispXs.map((wx, idx) => {
     const gy = getTerrainY(wx, levelId);
     return {
@@ -810,7 +970,7 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
   });
 
   const butterflies: WoodlandButterfly[] = [];
-  for (let x = 320; x < 7000; x += 480 + rng() * 340) {
+  for (let x = 320; x < 10500; x += 480 + rng() * 340) {
     const gy = getTerrainY(x, levelId) - 55 - rng() * 70;
     butterflies.push({
       x,
@@ -843,15 +1003,18 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
       ? [
           [410, -72], [1160, -90], [1980, -82], [2820, -95],
           [3640, -88], [4620, -96], [5540, -84], [6620, -92],
+          [7660, -88], [8660, -92], [9680, -88],
         ]
       : levelId === 2
         ? [
             [460, -80], [1240, -98], [2020, -85], [2880, -94],
             [3840, -90], [4720, -96], [5680, -88], [6680, -95],
+            [7740, -90], [8720, -96], [9740, -90],
           ]
         : [
             [440, -84], [1180, -95], [1940, -92], [2780, -96],
             [3680, -90], [4580, -98], [5520, -90], [6640, -95],
+            [7680, -94], [8700, -96], [9780, -94],
           ];
 
   for (const [fx, dy] of fairyConfigs) {
@@ -888,10 +1051,10 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
 
   const mermaidXs =
     levelId === 1
-      ? [740, 1840, 3160, 4430, 5880]
+      ? [740, 1840, 3160, 4430, 5880, 7420, 8980]
       : levelId === 2
-        ? [920, 2240, 3680, 5040, 6240]
-        : [810, 2080, 3440, 4880, 6160];
+        ? [920, 2240, 3680, 5040, 6240, 7740, 9160]
+        : [810, 2080, 3440, 4880, 6160, 7680, 9120];
 
   for (const mx of mermaidXs) {
     const gy = getTerrainY(mx, levelId);
@@ -927,10 +1090,10 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
 
   const foxXs =
     levelId === 1
-      ? [980, 2520, 4120, 6280]
+      ? [980, 2520, 4120, 6280, 8180, 9980]
       : levelId === 2
-        ? [680, 2580, 4280, 6460]
-        : [1040, 2560, 4160, 6420];
+        ? [680, 2580, 4280, 6460, 8240, 10040]
+        : [1040, 2560, 4160, 6420, 8280, 10060];
 
   for (const fxx of foxXs) {
     const gy = getTerrainY(fxx, levelId);
@@ -957,14 +1120,14 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
   const owlSpots: Array<[number, number]> =
     levelId === 1
       ? [
-          [620, -145], [2480, -145], [4950, -145], [6820, -145],
+          [620, -145], [2480, -145], [4950, -145], [6820, -145], [8640, -145], [10180, -145],
         ]
       : levelId === 2
         ? [
-            [540, -145], [2620, -145], [4780, -145], [6780, -145],
+            [540, -145], [2620, -145], [4780, -145], [6780, -145], [8580, -145], [10140, -145],
           ]
         : [
-            [580, -145], [2420, -145], [4690, -145], [6840, -145],
+            [580, -145], [2420, -145], [4690, -145], [6840, -145], [8620, -145], [10200, -145],
           ];
 
   for (const [ox, ody] of owlSpots) {
@@ -987,6 +1150,34 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
       hueAccent: '#ffe299',
     });
   }
+
+  // Pop-Up Forest Bad Guys: Mischievous Shadow Gnomes & Bramble Imps
+  const baddieXs =
+    levelId === 1
+      ? [1120, 2060, 3260, 4220, 5420, 6460, 7540, 8680, 9620]
+      : levelId === 2
+        ? [1020, 1940, 3080, 4040, 5140, 6240, 7380, 8460, 9560, 10240]
+        : [980, 1880, 2960, 3960, 5020, 6140, 7280, 8380, 9480, 10280];
+
+  const baddies: ForestBaddie[] = baddieXs.map((bx, idx) => {
+    const gy = getTerrainY(bx, levelId);
+    return {
+      id: idx + 1,
+      kind: idx % 2 === 0 ? 'gnome' : 'bramble_imp',
+      x: bx,
+      y: gy,
+      homeX: bx,
+      homeY: gy,
+      patrolRange: 48 + (idx % 3) * 16,
+      speed: (levelId >= 2 ? 1.5 : 1.25) + (idx % 2) * 0.25,
+      emerge: 0,
+      emergedOnce: false,
+      stunnedTimer: 0,
+      pacifiedOnce: false,
+      phase: idx * 1.3,
+      facing: -1,
+    };
+  });
 
   return {
     levelId,
@@ -1011,5 +1202,6 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
     thornWisps,
     butterflies,
     creatures,
+    baddies,
   };
 }

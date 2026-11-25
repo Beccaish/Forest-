@@ -65,8 +65,12 @@ const INITIAL_HUD: HudSnapshot = {
   progressPct: 0,
   crystalBoostActive: false,
   tripleJumpActive: false,
+  highJumpCharges: 0,
+  flyingFlowers: 0,
+  flyingTimeLeft: 0,
+  underwaterActive: false,
   dewdrops: 60,
-  equipped: { hat: null, cloak: null, charm: null },
+  equipped: { hat: null, cloak: null, charm: null, power: null },
 };
 
 function detectCoarsePointer(): boolean {
@@ -234,6 +238,9 @@ function ForestGameView() {
       ) {
         engine.triggerPulse();
       }
+      if (e.code === 'KeyF' && !e.repeat) {
+        engine.activateFlyingFlower();
+      }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -327,6 +334,7 @@ function ForestGameView() {
         isTouchDevice={isTouchDevice}
         onToggleMute={handleToggleMute}
         onPause={() => engineRef.current?.pauseGame()}
+        onFly={() => engineRef.current?.activateFlyingFlower()}
       />
 
       <GameModals
@@ -353,6 +361,7 @@ function ForestGameView() {
 
       <TouchControls
         visible={hud.phase === 'PLAYING' && isTouchDevice && !showPortraitPrompt && !shopOpen}
+        flyingFlowers={hud.flyingFlowers}
         onLeftChange={(held) => {
           if (engineRef.current) engineRef.current.input.left = held;
         }}
@@ -362,6 +371,7 @@ function ForestGameView() {
         onJumpDown={() => engineRef.current?.triggerJump()}
         onJumpUp={() => engineRef.current?.releaseJump()}
         onPulse={() => engineRef.current?.triggerPulse()}
+        onFly={() => engineRef.current?.activateFlyingFlower()}
       />
 
       <PortraitPrompt

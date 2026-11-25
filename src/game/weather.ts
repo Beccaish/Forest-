@@ -41,6 +41,25 @@ interface StarFlake {
   colorIndex: number;
 }
 
+interface SnowParticle {
+  x: number;
+  y: number;
+  r: number;
+  vy: number;
+  swayPhase: number;
+  swayAmp: number;
+  alpha: number;
+}
+
+interface WaterBubble {
+  x: number;
+  y: number;
+  r: number;
+  vy: number;
+  swayPhase: number;
+  alpha: number;
+}
+
 const LEAF_PALETTES: Record<LevelId, string[]> = {
   1: ['#f5b855', '#e88b48', '#d96b43', '#8fd68f', '#ffd97d'],
   2: ['#ff7b54', '#ffb26b', '#d94854', '#f2a65a', '#ffe08a'],
@@ -58,6 +77,8 @@ export class DynamicWeatherSystem {
   private raindrops: RainDrop[] = [];
   private splashes: RainSplash[] = [];
   private flakes: StarFlake[] = [];
+  private snow: SnowParticle[] = [];
+  private bubbles: WaterBubble[] = [];
   private viewW = 1280;
   private viewH = 720;
 
@@ -104,6 +125,25 @@ export class DynamicWeatherSystem {
       twinklePhase: Math.random() * Math.PI * 2,
       colorIndex: i % 4,
     }));
+
+    this.snow = Array.from({ length: 95 }, () => ({
+      x: Math.random() * 1800,
+      y: Math.random() * 900,
+      r: 1.8 + Math.random() * 3.4,
+      vy: 34 + Math.random() * 38,
+      swayPhase: Math.random() * Math.PI * 2,
+      swayAmp: 16 + Math.random() * 26,
+      alpha: 0.45 + Math.random() * 0.45,
+    }));
+
+    this.bubbles = Array.from({ length: 68 }, () => ({
+      x: Math.random() * 1800,
+      y: Math.random() * 900,
+      r: 2.2 + Math.random() * 5.2,
+      vy: 32 + Math.random() * 44,
+      swayPhase: Math.random() * Math.PI * 2,
+      alpha: 0.28 + Math.random() * 0.46,
+    }));
   }
 
   resize(w: number, h: number): void {
@@ -121,7 +161,8 @@ export class DynamicWeatherSystem {
     worldScale = 1
   ): void {
     const breeze = Math.sin(time * 0.35) * 22 + 12;
-    const { leaves: leafW, rain: rainW, flurry: flurryW } = blend.weights;
+    const { leaves: leafW, rain: rainW, flurry: flurryW, snow: snowW, underwater: waterW } =
+      blend.weights;
 
     if (leafW > 0.01) {
       for (const l of this.leaves) {
@@ -181,6 +222,36 @@ export class DynamicWeatherSystem {
         if (f.x < -20) f.x = this.viewW + 20;
       }
     }
+
+    if (snowW > 0.01) {
+      for (const s of this.snow) {
+        const sway = Math.sin(time * 1.6 + s.swayPhase) * s.swayAmp;
+        s.x += (sway + breeze * 0.45) * dt;
+        s.y += s.vy * dt;
+
+        if (s.y > this.viewH + 20) {
+          s.y = -18 - Math.random() * 36;
+          s.x = Math.random() * (this.viewW + 80) - 40;
+        }
+        if (s.x > this.viewW + 30) s.x = -25;
+        if (s.x < -30) s.x = this.viewW + 25;
+      }
+    }
+
+    if (waterW > 0.01) {
+      for (const b of this.bubbles) {
+        const wobble = Math.sin(time * 2.3 + b.swayPhase) * 18;
+        b.x += wobble * dt;
+        b.y -= b.vy * dt;
+
+        if (b.y < -24) {
+          b.y = this.viewH + 20 + Math.random() * 30;
+          b.x = Math.random() * this.viewW;
+        }
+        if (b.x > this.viewW + 24) b.x = -20;
+        if (b.x < -24) b.x = this.viewW + 20;
+      }
+    }
   }
 
   private spawnSplash(x: number, y: number): void {
@@ -203,7 +274,8 @@ export class DynamicWeatherSystem {
     levelId: LevelId = 1
   ): void {
     const swell = 0.72 + 0.28 * Math.sin(time * 0.16);
-    const { leaves: leafW, rain: rainW, flurry: flurryW } = blend.weights;
+    const { leaves: leafW, rain: rainW, flurry: flurryW, snow: snowW, underwater: waterW } =
+      blend.weights;
     const leafPalette = LEAF_PALETTES[levelId];
     const flurryPalette = FLURRY_PALETTES[levelId];
 
@@ -266,6 +338,52 @@ export class DynamicWeatherSystem {
         ctx.fillStyle = flurryPalette[f.colorIndex];
         ctx.beginPath();
         ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    if (snowW > 0.02) {
+      const count = Math.ceil(this.snow.length * clamp(snowW * (0.85 + 0.15 * swell), 0.25, 1));
+      ctx.save();
+      for (let i = 0; i < count; i++) {
+        const s = this.snow[i];
+        ctx.globalAlpha = s.alpha * snowW;
+        ctx.fillStyle = '#f2fbff';
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fill();
+        if (s.r > 3.6) {
+          ctx.strokeStyle = `rgba(215, 248, 255, ${0.55 * snowW})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(s.x - s.r - 1.5, s.y);
+          ctx.lineTo(s.x + s.r + 1.5, s.y);
+          ctx.moveTo(s.x, s.y - s.r - 1.5);
+          ctx.lineTo(s.x, s.y + s.r + 1.5);
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+    }
+
+    if (waterW > 0.02) {
+      const count = Math.ceil(this.bubbles.length * clamp(waterW, 0.25, 1));
+      ctx.save();
+      for (let i = 0; i < count; i++) {
+        const b = this.bubbles[i];
+        const alpha = b.alpha * waterW;
+        ctx.fillStyle = `rgba(145, 248, 255, ${alpha * 0.22})`;
+        ctx.strokeStyle = `rgba(210, 255, 255, ${alpha * 0.9})`;
+        ctx.lineWidth = 1.1;
+        ctx.beginPath();
+        ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.85})`;
+        ctx.beginPath();
+        ctx.arc(b.x - b.r * 0.32, b.y - b.r * 0.32, Math.max(0.9, b.r * 0.26), 0, Math.PI * 2);
         ctx.fill();
       }
       ctx.restore();

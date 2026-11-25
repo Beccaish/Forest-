@@ -4,9 +4,20 @@ export type GamePhase = 'TITLE_MENU' | 'PLAYING' | 'PAUSED' | 'VICTORY' | 'GAME_
 
 export type LevelId = 1 | 2 | 3;
 
-export type WeatherKind = 'DRIFTING_LEAVES' | 'SOFT_RAIN' | 'STARLIGHT_FLURRY';
+export type WeatherKind =
+  | 'DRIFTING_LEAVES'
+  | 'SOFT_RAIN'
+  | 'STARLIGHT_FLURRY'
+  | 'SNOW'
+  | 'UNDERWATER';
 
-export type CollectibleKind = 'orb' | 'blossom' | 'crystal' | 'starseed';
+export type CollectibleKind =
+  | 'orb'
+  | 'blossom'
+  | 'crystal'
+  | 'starseed'
+  | 'highjump'
+  | 'flyingflower';
 
 export interface HudSnapshot {
   phase: GamePhase;
@@ -30,6 +41,10 @@ export interface HudSnapshot {
   progressPct: number;
   crystalBoostActive: boolean;
   tripleJumpActive: boolean;
+  highJumpCharges: number;
+  flyingFlowers: number;
+  flyingTimeLeft: number;
+  underwaterActive: boolean;
   dewdrops: number;
   equipped: PlayerLoadout;
 }
@@ -246,6 +261,25 @@ export interface MagicalCreature {
   hueAccent: string;
 }
 
+export type ForestBaddieKind = 'gnome' | 'bramble_imp';
+
+export interface ForestBaddie {
+  id: number;
+  kind: ForestBaddieKind;
+  x: number;
+  y: number;
+  homeX: number;
+  homeY: number;
+  patrolRange: number;
+  speed: number;
+  emerge: number;
+  emergedOnce: boolean;
+  stunnedTimer: number;
+  pacifiedOnce: boolean;
+  phase: number;
+  facing: number;
+}
+
 export interface Particle {
   x: number;
   y: number;
@@ -284,6 +318,9 @@ export interface PlayerState {
   pulseCooldown: number;
   crystalBoostTimer: number;
   extraAirJumpTimer: number;
+  highJumpCharges: number;
+  flyingFlowers: number;
+  flyingTimer: number;
   invulnTimer: number;
   petals: number;
   maxPetals: number;

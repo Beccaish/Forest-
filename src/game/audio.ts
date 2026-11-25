@@ -257,6 +257,39 @@ class ForestAudioEngine {
       window.setTimeout(() => this.playTone(f, 0.65, 0.042, 'sine'), i * 55);
     });
   }
+
+  playHighJump(): void {
+    if (!this.enabled || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(320, now);
+    osc.frequency.exponentialRampToValueAtTime(840, now + 0.24);
+    gain.gain.setValueAtTime(0.065, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.32);
+    this.playTone(987.77, 0.35, 0.032, 'triangle');
+  }
+
+  playFlyActivate(): void {
+    [440.0, 587.33, 783.99, 1046.5].forEach((f, i) => {
+      window.setTimeout(() => this.playTone(f, 0.8, 0.048, 'sine'), i * 48);
+    });
+  }
+
+  playBaddiePop(): void {
+    this.playTone(196.0, 0.18, 0.042, 'triangle');
+    window.setTimeout(() => this.playTone(155.56, 0.22, 0.036, 'sawtooth'), 55);
+  }
+
+  playStomp(): void {
+    this.playTone(293.66, 0.18, 0.06, 'triangle');
+    window.setTimeout(() => this.playTone(587.33, 0.32, 0.045, 'sine'), 45);
+  }
 }
 
 export const audioEngine = new ForestAudioEngine();

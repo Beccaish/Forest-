@@ -74,6 +74,7 @@ export class ForestGameEngine {
   private rafId: number | null = null;
   private lastFrameMs = 0;
   private hudSyncTimer = 0;
+  private phoenixRegenTimer = 0;
 
   public input: InputState = {
     left: false,
@@ -118,6 +119,9 @@ export class ForestGameEngine {
       pulseCooldown: 0,
       crystalBoostTimer: 0,
       extraAirJumpTimer: 0,
+      highJumpCharges: 0,
+      flyingFlowers: 0,
+      flyingTimer: 0,
       invulnTimer: 0,
       petals: maxPetals,
       maxPetals,
@@ -182,7 +186,11 @@ export class ForestGameEngine {
   }
 
   private earnDewdrops(amount: number): void {
-    this.shopProgress.dewdrops += amount;
+    const bonus =
+      this.shopProgress.equipped.charm === 'mini_owl'
+        ? Math.max(2, Math.round(amount * 0.4))
+        : 0;
+    this.shopProgress.dewdrops += amount + bonus;
     saveShopProgress(this.shopProgress);
   }
 
@@ -311,13 +319,29 @@ export class ForestGameEngine {
     this.input.jumpHeld = false;
   }
 
+  activateFlyingFlower(): void {
+    if (this.phase !== 'PLAYING') return;
+    const p = this.player;
+    if (p.flyingFlowers <= 0 || p.flyingTimer > 0.25) return;
+    audioEngine.init();
+    p.flyingFlowers--;
+    p.flyingTimer = this.shopProgress.equipped.power === 'super_star_magnet' ? 7.5 : 5.0;
+    p.onGround = false;
+    p.vy = -260;
+    p.squash = 1.24;
+    audioEngine.playFlyActivate();
+    this.spawnDust(p.x, p.y - 20, '#ffb8ec', 26);
+    this.emitHudSnapshot();
+  }
+
   triggerPulse(): void {
     if (this.phase !== 'PLAYING' || this.player.pulseCooldown > 0) return;
     audioEngine.init();
     const boosted = this.player.crystalBoostTimer > 0;
     const hasHeart = this.shopProgress.equipped.charm === 'sanctuary_heart';
-    const pulseMaxR = boosted ? 380 : 265;
-    this.player.pulseCooldown = boosted ? 0.3 : hasHeart ? 0.38 : 0.55;
+    const hasNova = this.shopProgress.equipped.power === 'super_nova_pulse';
+    const pulseMaxR = (boosted ? 380 : 265) + (hasNova ? 120 : 0);
+    this.player.pulseCooldown = hasNova ? 0.26 : boosted ? 0.3 : hasHeart ? 0.38 : 0.55;
     audioEngine.playPulse();
 
     this.pulses.push({
@@ -328,18 +352,19 @@ export class ForestGameEngine {
       alpha: 1,
     });
 
-    for (let i = 0; i < 22; i++) {
-      const ang = (Math.PI * 2 * i) / 22 + Math.random() * 0.2;
-      const spd = 70 + Math.random() * 140;
+    const pCount = hasNova ? 34 : 22;
+    for (let i = 0; i < pCount; i++) {
+      const ang = (Math.PI * 2 * i) / pCount + Math.random() * 0.2;
+      const spd = (hasNova ? 110 : 70) + Math.random() * 160;
       this.particles.push({
         x: this.player.x,
         y: this.player.y - 22,
         vx: Math.cos(ang) * spd,
         vy: Math.sin(ang) * spd - 20,
-        r: 2 + Math.random() * 2.5,
+        r: (hasNova ? 2.6 : 2) + Math.random() * 2.5,
         life: 0.9 + Math.random() * 0.5,
         maxLife: 1.4,
-        color: boosted || i % 2 === 1 ? '#ffe399' : '#85ffea',
+        color: hasNova || boosted || i % 2 === 1 ? '#ffe399' : '#85ffea',
       });
     }
 
@@ -361,8 +386,8 @@ export class ForestGameEngine {
     }
     for (const w of this.world.thornWisps) {
       if (Math.hypot(w.x - this.player.x, w.y - (this.player.y - 22)) < pulseMaxR) {
-        w.stunnedTimer = boosted ? 6.5 : 4.5;
-        this.spawnDust(w.x, w.y, '#9ef7ff', 10);
+        w.stunnedTimer = hasNova ? 9.0 : boosted ? 6.5 : 4.5;
+        this.spawnDust(w.x, w.y, hasNova ? '#ffe08a' : '#9ef7ff', 10);
       }
     }
     for (const c of this.world.creatures) {
@@ -370,6 +395,35 @@ export class ForestGameEngine {
         c.emerge = Math.max(c.emerge, 0.72);
         this.blessCreature(c);
       }
+    }
+    if (hasNova) {
+      for (const item of this.world.collectibles) {
+        if (item.collected) continue;
+        const dx = this.player.x - item.x;
+        const dy = this.player.y - 20 - item.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < pulseMaxR && dist > 1) {
+          const pull = Math.min(dist - 12, 165);
+          item.x += (dx / dist) * pull;
+          item.baseY += (dy / dist) * pull;
+        }
+      }
+    }
+    let baddiePacified = false;
+    for (const b of this.world.baddies) {
+      if (Math.hypot(b.x - this.player.x, b.y - 18 - (this.player.y - 22)) < pulseMaxR) {
+        b.emerge = Math.max(b.emerge, 0.75);
+        b.stunnedTimer = hasNova ? 9.5 : boosted ? 7.5 : 5.5;
+        if (!b.pacifiedOnce) {
+          b.pacifiedOnce = true;
+          this.earnDewdrops(15);
+          baddiePacified = true;
+        }
+        this.spawnDust(b.x, b.y - 20, hasNova ? '#ffe08a' : '#8cf8e8', 14);
+      }
+    }
+    if (baddiePacified) {
+      this.emitHudSnapshot();
     }
   }
 
@@ -489,10 +543,15 @@ export class ForestGameEngine {
     p.pulseCooldown = Math.max(0, p.pulseCooldown - dt);
     p.crystalBoostTimer = Math.max(0, p.crystalBoostTimer - dt);
     p.extraAirJumpTimer = Math.max(0, p.extraAirJumpTimer - dt);
+    p.flyingTimer = Math.max(0, p.flyingTimer - dt);
     p.coyoteTime = Math.max(0, p.coyoteTime - dt);
     p.jumpBuffer = Math.max(0, p.jumpBuffer - dt);
     p.invulnTimer = Math.max(0, p.invulnTimer - dt);
     p.squash = lerp(p.squash, 1, Math.min(1, dt * 12));
+
+    const playerBlend = getBiomeBlend(p.x, this.levelId);
+    const isUnderwater = playerBlend.weights.underwater > 0.45;
+    const isFlying = p.flyingTimer > 0;
 
     // Update drifting skywood / cloud moving platforms
     for (const mp of this.world.movingPlatforms) {
@@ -504,8 +563,29 @@ export class ForestGameEngine {
 
     const moveDir = (this.input.right ? 1 : 0) - (this.input.left ? 1 : 0);
     const hasBoots = this.shopProgress.equipped.charm === 'wind_boots';
+    const equippedPower = this.shopProgress.equipped.power;
+    const hasSkyLeap = equippedPower === 'super_sky_leap';
+    const hasPhoenix = equippedPower === 'super_phoenix_wings';
+
+    if (hasPhoenix && p.petals < p.maxPetals) {
+      this.phoenixRegenTimer += dt;
+      if (this.phoenixRegenTimer >= 18) {
+        this.phoenixRegenTimer = 0;
+        p.petals = Math.min(p.maxPetals, p.petals + 1);
+        this.spawnDust(p.x, p.y - 22, '#ff9c64', 18);
+        audioEngine.playBlossom();
+        this.emitHudSnapshot();
+      }
+    } else {
+      this.phoenixRegenTimer = 0;
+    }
+
     const baseSpeed = hasBoots ? 345 : 300;
-    const maxSpeed = p.crystalBoostTimer > 0 ? baseSpeed + 45 : baseSpeed;
+    const maxSpeed =
+      baseSpeed +
+      (p.crystalBoostTimer > 0 ? 45 : 0) +
+      (isFlying ? 85 : 0) +
+      (hasPhoenix && !p.onGround ? 55 : 0);
     const accel = p.onGround ? (hasBoots ? 2150 : 1950) : hasBoots ? 1420 : 1280;
     const decel = p.onGround ? 1800 : 540;
 
@@ -520,27 +600,42 @@ export class ForestGameEngine {
       p.vx -= Math.sign(p.vx) * decel * dt;
     }
 
-    if (p.jumpBuffer > 0) {
+    const hasTripleJump = p.extraAirJumpTimer > 0 || hasSkyLeap;
+    const jumpMult = hasSkyLeap ? 1.12 : 1;
+
+    if (p.jumpBuffer > 0 && !isFlying) {
       if (p.coyoteTime > 0) {
-        p.vy = -515;
+        const useHigh = p.highJumpCharges > 0;
+        if (useHigh) {
+          p.highJumpCharges--;
+          this.emitHudSnapshot();
+        }
+        p.vy = (useHigh ? -645 : -515) * jumpMult;
         p.onGround = false;
         p.coyoteTime = 0;
         p.jumpBuffer = 0;
-        p.jumpsLeft = p.extraAirJumpTimer > 0 ? 2 : 1;
-        p.squash = 1.24;
-        audioEngine.playJump(false);
-        this.spawnDust(p.x, p.y, '#88f7df', 7);
+        p.jumpsLeft = hasTripleJump ? 2 : 1;
+        p.squash = useHigh ? 1.32 : 1.24;
+        if (useHigh || hasSkyLeap) audioEngine.playHighJump();
+        else audioEngine.playJump(false);
+        this.spawnDust(p.x, p.y, useHigh ? '#ffe28a' : '#88f7df', useHigh ? 14 : 7);
       } else if (p.jumpsLeft > 0) {
-        p.vy = -465;
+        const useHigh = p.highJumpCharges > 0;
+        if (useHigh) {
+          p.highJumpCharges--;
+          this.emitHudSnapshot();
+        }
+        p.vy = (useHigh ? -585 : -465) * jumpMult;
         p.jumpsLeft--;
         p.jumpBuffer = 0;
-        p.squash = 1.2;
-        audioEngine.playJump(true);
+        p.squash = useHigh ? 1.28 : 1.2;
+        if (useHigh) audioEngine.playHighJump();
+        else audioEngine.playJump(true);
         this.spawnDust(
           p.x,
           p.y - 6,
-          p.extraAirJumpTimer > 0 ? '#c7b8ff' : '#ffe49e',
-          10
+          useHigh ? '#ffe28a' : hasTripleJump ? '#c7b8ff' : '#ffe49e',
+          useHigh ? 15 : 10
         );
       }
     }
@@ -553,9 +648,28 @@ export class ForestGameEngine {
       }
     }
 
-    p.gliding = !p.onGround && this.input.jumpHeld && (p.vy > 20 || inWind);
+    p.gliding = !isFlying && !p.onGround && this.input.jumpHeld && (p.vy > 20 || inWind);
 
-    if (inWind && (p.gliding || this.input.jumpHeld)) {
+    if (isFlying) {
+      const targetVy = this.input.jumpHeld
+        ? -295
+        : Math.sin(this.time * 5.4) * 28;
+      p.vy = lerp(p.vy, targetVy, Math.min(1, dt * 7.2));
+      p.onGround = false;
+      p.jumpBuffer = 0;
+      if (Math.random() < 0.45) {
+        this.particles.push({
+          x: p.x + (Math.random() - 0.5) * 24,
+          y: p.y - 16 + (Math.random() - 0.5) * 14,
+          vx: -p.vx * 0.2 + (Math.random() - 0.5) * 30,
+          vy: 25 + Math.random() * 35,
+          r: 1.8 + Math.random() * 2,
+          life: 0.55,
+          maxLife: 0.55,
+          color: Math.random() > 0.5 ? '#ffb5e8' : '#ffe494',
+        });
+      }
+    } else if (inWind && (p.gliding || this.input.jumpHeld)) {
       p.vy = lerp(p.vy, -245, dt * 5.2);
       if (Math.random() < 0.35) {
         this.particles.push({
@@ -570,17 +684,18 @@ export class ForestGameEngine {
         });
       }
     } else {
-      const hasBoots = this.shopProgress.equipped.charm === 'wind_boots';
-      const gravity = p.gliding ? (hasBoots ? 210 : 260) : 1220;
-      const glideCap = hasBoots ? 78 : 105;
+      const gravityBase = isUnderwater ? 820 : 1220;
+      const glideGrav = isUnderwater ? 140 : hasPhoenix ? 95 : hasBoots ? 210 : 260;
+      const gravity = p.gliding ? glideGrav : gravityBase;
+      const glideCap = isUnderwater ? 60 : hasPhoenix ? 38 : hasBoots ? 78 : 105;
       p.vy += gravity * dt;
       if (p.gliding && p.vy > glideCap) p.vy = glideCap;
-      else if (p.vy > 780) p.vy = 780;
+      else if (p.vy > (isUnderwater ? 460 : 780)) p.vy = isUnderwater ? 460 : 780;
     }
 
     const prevY = p.y;
     p.x = clamp(p.x + p.vx * dt, 30, WORLD_WIDTH - 40);
-    p.y += p.vy * dt;
+    p.y = Math.max(getTerrainY(p.x, this.levelId) - 430, p.y + p.vy * dt);
 
     let landedThisFrame = false;
 
@@ -672,7 +787,7 @@ export class ForestGameEngine {
       }
       p.onGround = true;
       p.coyoteTime = 0.12;
-      p.jumpsLeft = p.extraAirJumpTimer > 0 ? 3 : 2;
+      p.jumpsLeft = hasTripleJump ? 3 : 2;
     } else {
       p.onGround = false;
     }
@@ -810,16 +925,91 @@ export class ForestGameEngine {
       }
     }
 
-    // Collect Lumina Orbs, Sun Blossoms, Prism Crystals & Astral Star Seeds
+    // Pop-up Forest Bad Guys (Shadow Gnomes & Bramble Imps): defeat via Spirit Pulse or jumping on them!
+    for (const b of this.world.baddies) {
+      const distHome = Math.hypot(b.homeX - p.x, b.homeY - (p.y - 20));
+      const wantEmerge = distHome < 300 || (b.emergedOnce && distHome < 540) ? 1 : 0;
+      b.emerge = lerp(b.emerge, wantEmerge, Math.min(1, dt * 5));
+
+      if (!b.emergedOnce && b.emerge > 0.3) {
+        b.emergedOnce = true;
+        audioEngine.playBaddiePop();
+        this.spawnDust(b.homeX, b.homeY - 12, '#ff8aa8', 10);
+      }
+
+      if (b.stunnedTimer > 0) {
+        b.stunnedTimer = Math.max(0, b.stunnedTimer - dt);
+        continue;
+      }
+
+      const prevBx = b.x;
+      b.x = b.homeX + Math.sin(this.time * b.speed + b.phase) * b.patrolRange * b.emerge;
+      b.y = b.homeY + (1 - b.emerge) * 36;
+      if (Math.abs(b.x - prevBx) > 0.05) {
+        b.facing = b.x >= prevBx ? 1 : -1;
+      }
+
+      if (b.emerge < 0.55) continue;
+
+      // Jump / Stomp defeat check
+      if (
+        p.vy > 0 &&
+        Math.abs(p.x - b.x) < 28 &&
+        prevY <= b.y - 12 &&
+        p.y >= b.y - 34
+      ) {
+        p.vy = -505;
+        p.onGround = false;
+        p.jumpsLeft = Math.max(p.jumpsLeft, 1);
+        p.squash = 1.28;
+        b.stunnedTimer = 6.0;
+        if (!b.pacifiedOnce) {
+          b.pacifiedOnce = true;
+          this.earnDewdrops(15);
+          this.emitHudSnapshot();
+        }
+        this.hitstopTimer = 0.035;
+        this.triggerShake(4, 0.14);
+        audioEngine.playStomp();
+        this.spawnDust(b.x, b.y - 22, '#ffe194', 18);
+        continue;
+      }
+
+      // Side collision check
+      if (Math.hypot(b.x - p.x, b.y - 16 - (p.y - 20)) < 25 && p.invulnTimer <= 0) {
+        p.petals = Math.max(0, p.petals - 1);
+        p.invulnTimer = 1.4;
+        p.vx = Math.sign(p.x - b.x || -1) * 260;
+        p.vy = -310;
+        p.onGround = false;
+        this.hitstopTimer = 0.055;
+        this.triggerShake(7.5, 0.25);
+        audioEngine.playHit();
+        this.spawnDust(p.x, p.y - 20, '#ff73a3', 16);
+        this.emitHudSnapshot();
+
+        if (p.petals <= 0) {
+          this.clearHeldInputs();
+          this.phase = 'GAME_OVER';
+          this.emitHudSnapshot();
+          return;
+        }
+      }
+    }
+
+    // Collect Lumina Orbs, Sun Blossoms, Prism Crystals, Star Seeds, High Jumps & Flying Flowers
     const hasFirefly = this.shopProgress.equipped.charm === 'firefly_sprite';
+    const hasCosmicMagnet = equippedPower === 'super_star_magnet';
+    const magnetRange = Math.max(isFlying ? 200 : 0, hasCosmicMagnet ? 245 : 0, hasFirefly ? 125 : 0);
+    const magnetPull = hasCosmicMagnet ? 460 : isFlying ? 440 : 280;
     for (const item of this.world.collectibles) {
       if (item.collected) continue;
-      if (hasFirefly) {
+      if (magnetRange > 0) {
         const dx = p.x - item.x;
         const dy = p.y - 20 - item.y;
         const dist = Math.hypot(dx, dy);
-        if (dist < 120 && dist > 1) {
-          const pull = 280 * dt;
+        if (dist < magnetRange && dist > 1) {
+          const pull = magnetPull * dt;
           item.x += (dx / dist) * pull;
           item.baseY += (dy / dist) * pull;
         }
@@ -844,13 +1034,23 @@ export class ForestGameEngine {
           p.crystalBoostTimer = 6.5;
           audioEngine.playCrystal();
           this.spawnDust(item.x, item.y, '#cfa6ff', 24);
-        } else {
+        } else if (item.kind === 'starseed') {
           this.starseedsCollected++;
           this.earnDewdrops(30);
           p.extraAirJumpTimer = 10;
           p.jumpsLeft = Math.max(p.jumpsLeft, 2);
           audioEngine.playStarSeed();
           this.spawnDust(item.x, item.y, '#d4f4ff', 26);
+        } else if (item.kind === 'highjump') {
+          p.highJumpCharges = Math.min(15, p.highJumpCharges + 5);
+          this.earnDewdrops(20);
+          audioEngine.playHighJump();
+          this.spawnDust(item.x, item.y, '#9efce7', 22);
+        } else {
+          p.flyingFlowers++;
+          this.earnDewdrops(25);
+          audioEngine.playFlyActivate();
+          this.spawnDust(item.x, item.y, '#ffb8ec', 24);
         }
         this.emitHudSnapshot();
       }
@@ -980,6 +1180,10 @@ export class ForestGameEngine {
       progressPct,
       crystalBoostActive: this.player.crystalBoostTimer > 0,
       tripleJumpActive: this.player.extraAirJumpTimer > 0,
+      highJumpCharges: this.player.highJumpCharges,
+      flyingFlowers: this.player.flyingFlowers,
+      flyingTimeLeft: Math.max(0, Math.round(this.player.flyingTimer * 10) / 10),
+      underwaterActive: blend.weights.underwater > 0.45,
       dewdrops: this.shopProgress.dewdrops,
       equipped: { ...this.shopProgress.equipped },
     });
