@@ -15,6 +15,7 @@ import type {
   WindStream,
   WoodlandButterfly,
 } from './types';
+import type { PlayerLoadout } from './shop';
 import type { DynamicWeatherSystem } from './weather';
 import type { BiomeBlend, WorldData } from './world';
 import {
@@ -64,6 +65,7 @@ export interface RenderContextState {
   worldScale: number;
   time: number;
   sanctuaryAwakened: boolean;
+  equipped: PlayerLoadout;
 }
 
 export function renderForestScene(
@@ -85,6 +87,7 @@ export function renderForestScene(
     worldScale,
     time,
     sanctuaryAwakened,
+    equipped,
   } = state;
 
   const virtualW = viewW / worldScale;
@@ -294,7 +297,7 @@ export function renderForestScene(
     ctx.restore();
   }
 
-  drawPlayer(ctx, player, time);
+  drawPlayer(ctx, player, time, equipped);
 
   for (const p of particles) {
     const alpha = clamp(p.life / p.maxLife, 0, 1);
@@ -1311,7 +1314,12 @@ function drawThornWisp(ctx: CanvasRenderingContext2D, w: ThornWisp, time: number
   ctx.restore();
 }
 
-function drawPlayer(ctx: CanvasRenderingContext2D, player: PlayerState, time: number): void {
+function drawPlayer(
+  ctx: CanvasRenderingContext2D,
+  player: PlayerState,
+  time: number,
+  equipped: PlayerLoadout
+): void {
   if (player.invulnTimer > 0 && Math.floor(time * 18) % 2 === 0) {
     return;
   }
@@ -1320,9 +1328,31 @@ function drawPlayer(ctx: CanvasRenderingContext2D, player: PlayerState, time: nu
 
   const boosted = player.crystalBoostTimer > 0;
   const astralJump = player.extraAirJumpTimer > 0;
-  ctx.strokeStyle = boosted ? '#ffe08c' : astralJump ? '#c7b8ff' : '#7bfce6';
+
+  let scarfColor = '#7bfce6';
+  let cloakFill = '#e8fffb';
+  let cloakTrim: string | null = null;
+  if (equipped.cloak === 'sunset_ember') {
+    scarfColor = '#ffb86c';
+    cloakFill = '#ffe2c2';
+    cloakTrim = '#ff866b';
+  } else if (equipped.cloak === 'starweave_mantle') {
+    scarfColor = '#a6a8ff';
+    cloakFill = '#dcdbff';
+    cloakTrim = '#6e72e8';
+  } else if (equipped.cloak === 'prism_aurora') {
+    const hueShift = 0.5 + 0.5 * Math.sin(time * 3);
+    scarfColor = hueShift > 0.5 ? '#7cfce7' : '#e0b3ff';
+    cloakFill = '#ecfeff';
+    cloakTrim = hueShift > 0.5 ? '#7cfce7' : '#c79eff';
+  }
+
+  if (boosted) scarfColor = '#ffe08c';
+  else if (astralJump) scarfColor = '#c7b8ff';
+
+  ctx.strokeStyle = scarfColor;
   ctx.lineCap = 'round';
-  ctx.shadowColor = boosted ? '#ffd266' : astralJump ? '#c7b8ff' : '#6fffe9';
+  ctx.shadowColor = boosted ? '#ffd266' : astralJump ? '#c7b8ff' : scarfColor;
   ctx.shadowBlur = 12;
   for (let i = 0; i < player.scarf.length - 1; i++) {
     ctx.lineWidth = Math.max(1.5, 6.5 - i * 0.55);
@@ -1362,6 +1392,24 @@ function drawPlayer(ctx: CanvasRenderingContext2D, player: PlayerState, time: nu
     ctx.restore();
   }
 
+  // Firefly Companion (orbits near the player in world space)
+  if (equipped.charm === 'firefly_sprite') {
+    const fx = player.x - player.facing * 24 + Math.cos(time * 3.1) * 8;
+    const fy = bodyY - 14 + Math.sin(time * 4.4) * 7;
+    const fHalo = ctx.createRadialGradient(fx, fy, 1, fx, fy, 16);
+    fHalo.addColorStop(0, 'rgba(255, 240, 150, 0.95)');
+    fHalo.addColorStop(1, 'rgba(255, 210, 90, 0)');
+    ctx.fillStyle = fHalo;
+    ctx.beginPath();
+    ctx.arc(fx, fy, 16, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#fff9c4';
+    ctx.beginPath();
+    ctx.arc(fx, fy, 3.2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
   if (player.gliding) {
     ctx.fillStyle = boosted
       ? 'rgba(255, 226, 155, 0.78)'
@@ -1378,6 +1426,7 @@ function drawPlayer(ctx: CanvasRenderingContext2D, player: PlayerState, time: nu
 
   const stride = player.onGround && Math.abs(player.vx) > 25 ? Math.sin(player.runPhase) * 4 : 0;
 
+  // Legs
   ctx.strokeStyle = '#dcfcf7';
   ctx.lineWidth = 3;
   ctx.beginPath();
@@ -1387,7 +1436,18 @@ function drawPlayer(ctx: CanvasRenderingContext2D, player: PlayerState, time: nu
   ctx.lineTo(4 - stride, 0);
   ctx.stroke();
 
-  ctx.fillStyle = '#e8fffb';
+  // Windweaver Anklets (winged ankle ribbons on feet)
+  if (equipped.charm === 'wind_boots') {
+    const flap = Math.sin(time * 10) * 2;
+    ctx.fillStyle = '#8cf8e8';
+    ctx.beginPath();
+    ctx.ellipse(-7 + stride, -3 + flap * 0.4, 4.5, 2, -0.45, 0, Math.PI * 2);
+    ctx.ellipse(1 - stride, -3 - flap * 0.4, 4.5, 2, -0.45, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  // Cloak / Body
+  ctx.fillStyle = cloakFill;
   ctx.beginPath();
   ctx.moveTo(-10, -8);
   ctx.quadraticCurveTo(-7, -26, 0, -28);
@@ -1396,6 +1456,28 @@ function drawPlayer(ctx: CanvasRenderingContext2D, player: PlayerState, time: nu
   ctx.closePath();
   ctx.fill();
 
+  if (cloakTrim) {
+    ctx.strokeStyle = cloakTrim;
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(-9.5, -8.5);
+    ctx.quadraticCurveTo(0, -5.5, 9.5, -8.5);
+    ctx.stroke();
+  }
+
+  // Sanctuary Heart Charm (petal amulet on chest)
+  if (equipped.charm === 'sanctuary_heart') {
+    ctx.fillStyle = '#ff9ec7';
+    ctx.shadowColor = '#ff85ba';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.arc(3, -17, 3.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+  }
+
+  // Head & Ears (always pure luminous spirit white)
+  ctx.fillStyle = '#e8fffb';
   ctx.beginPath();
   ctx.arc(1, -29, 9, 0, Math.PI * 2);
   ctx.fill();
@@ -1406,6 +1488,58 @@ function drawPlayer(ctx: CanvasRenderingContext2D, player: PlayerState, time: nu
   ctx.moveTo(3, -36);
   ctx.quadraticCurveTo(9, -46, 7, -33);
   ctx.fill();
+
+  // Equipped Headwear
+  if (equipped.hat === 'moss_crown') {
+    ctx.strokeStyle = '#38d399';
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.arc(1, -33, 8.2, Math.PI * 1.12, Math.PI * 1.88);
+    ctx.stroke();
+    ctx.fillStyle = '#ffd87a';
+    ctx.beginPath();
+    ctx.arc(-4, -39, 2.2, 0, Math.PI * 2);
+    ctx.arc(1, -41, 2.5, 0, Math.PI * 2);
+    ctx.arc(6, -39, 2.1, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (equipped.hat === 'moon_halo') {
+    const bob = Math.sin(time * 3.4) * 1.6;
+    ctx.save();
+    ctx.strokeStyle = '#9ef4ff';
+    ctx.shadowColor = '#9ef4ff';
+    ctx.shadowBlur = 10;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.ellipse(1, -44 + bob, 9.5, 3, -0.08, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = '#fff5b8';
+    ctx.beginPath();
+    ctx.arc(9, -46 + bob, 2.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else if (equipped.hat === 'frost_antlers') {
+    ctx.save();
+    ctx.strokeStyle = '#c9f6ff';
+    ctx.shadowColor = '#9ef0ff';
+    ctx.shadowBlur = 8;
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    // Left antler branch
+    ctx.moveTo(-3, -37);
+    ctx.lineTo(-9, -47);
+    ctx.lineTo(-13, -52);
+    ctx.moveTo(-8, -45);
+    ctx.lineTo(-5, -51);
+    // Right antler branch
+    ctx.moveTo(4, -37);
+    ctx.lineTo(10, -47);
+    ctx.lineTo(13, -53);
+    ctx.moveTo(9, -45);
+    ctx.lineTo(6, -51);
+    ctx.stroke();
+    ctx.restore();
+  }
 
   ctx.shadowBlur = 0;
   ctx.fillStyle = '#09343b';

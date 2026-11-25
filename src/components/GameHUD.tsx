@@ -143,6 +143,26 @@ export const GameHUD: React.FC<GameHUDProps> = ({
               </span>
               <span className="hidden sm:inline text-xs text-[#b8e2dc]">Lanterns</span>
             </div>
+
+            <span className="text-white/30" aria-hidden="true">·</span>
+
+            {/* Dewdrops Currency */}
+            <div className="flex items-center gap-1" aria-label={`Dewdrops ${hud.dewdrops}`}>
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path
+                  d="M10 2.2C13.4 6.3 15.8 9.6 15.8 12.6C15.8 15.8 13.2 18 10 18C6.8 18 4.2 15.8 4.2 12.6C4.2 9.6 6.6 6.3 10 2.2Z"
+                  fill="#7cfce7"
+                  fillOpacity="0.34"
+                  stroke="#ffe194"
+                  strokeWidth="1.3"
+                />
+                <circle cx="8.4" cy="11.8" r="1.4" fill="#ffffff" />
+              </svg>
+              <span className="tabular-nums font-semibold text-[#ffe194]">
+                {hud.dewdrops}
+              </span>
+              <span className="hidden sm:inline text-xs text-[#b8e2dc]">Dewdrops</span>
+            </div>
           </div>
 
           {/* Row 2: Level, Active Biome & Weather */}

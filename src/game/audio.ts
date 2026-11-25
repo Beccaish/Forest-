@@ -223,6 +223,17 @@ class ForestAudioEngine {
     osc.stop(now + 0.38);
     this.playTone(783.99, 0.7, 0.04, 'triangle');
   }
+
+  playPurchase(): void {
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+      window.setTimeout(() => this.playTone(f, 0.5, 0.045, 'sine'), i * 55);
+    });
+  }
+
+  playEquip(): void {
+    this.playTone(440.0, 0.28, 0.045, 'triangle');
+    window.setTimeout(() => this.playTone(659.25, 0.35, 0.04, 'sine'), 55);
+  }
 }
 
 export const audioEngine = new ForestAudioEngine();

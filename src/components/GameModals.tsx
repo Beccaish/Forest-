@@ -12,6 +12,7 @@ interface GameModalsProps {
   onRestart: () => void;
   onRespawn: () => void;
   onToggleMute: () => void;
+  onOpenShop: () => void;
 }
 
 function formatTime(totalSeconds: number): string {
@@ -31,6 +32,7 @@ export const GameModals: React.FC<GameModalsProps> = ({
   onRestart,
   onRespawn,
   onToggleMute,
+  onOpenShop,
 }) => {
   if (hud.phase === 'PLAYING') return null;
 
@@ -139,13 +141,20 @@ export const GameModals: React.FC<GameModalsProps> = ({
             </button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={onStart}
               className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md bg-[#56e3cc] px-7 py-2.5 sm:py-3 text-sm font-semibold text-[#041b1f] transition-transform duration-150 hover:bg-[#73f5df] active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e6fffb]"
             >
               Start Game
+            </button>
+            <button
+              type="button"
+              onClick={onOpenShop}
+              className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#ffe194]/40 bg-[#081720]/85 px-5 py-2.5 sm:py-3 text-sm font-semibold text-[#ffe194] transition-colors hover:border-[#ffe194]/75 hover:bg-[#102633] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe194] tabular-nums"
+            >
+              Shop · {hud.dewdrops}
             </button>
           </div>
         </div>
@@ -197,8 +206,15 @@ export const GameModals: React.FC<GameModalsProps> = ({
             </button>
             <button
               type="button"
+              onClick={onOpenShop}
+              className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#ffe194]/40 bg-transparent px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#ffe194] transition-colors hover:bg-[#0e2430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe194] tabular-nums"
+            >
+              Shop · {hud.dewdrops}
+            </button>
+            <button
+              type="button"
               onClick={onRestart}
-              className="col-span-2 sm:col-span-1 min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#7cfce7]/25 bg-transparent px-5 py-2.5 text-xs sm:text-sm font-medium text-[#dcf7f3] transition-colors hover:bg-[#0e2430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
+              className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#7cfce7]/25 bg-transparent px-4 py-2.5 text-xs sm:text-sm font-medium text-[#dcf7f3] transition-colors hover:bg-[#0e2430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
             >
               Restart
             </button>
@@ -317,6 +333,13 @@ export const GameModals: React.FC<GameModalsProps> = ({
             className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md bg-[#56e3cc] px-7 py-2.5 sm:py-3 text-sm font-semibold text-[#041b1f] transition-colors hover:bg-[#73f5df] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e6fffb]"
           >
             Play Again
+          </button>
+          <button
+            type="button"
+            onClick={onOpenShop}
+            className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#ffe194]/45 px-5 py-2.5 sm:py-3 text-sm font-semibold text-[#ffe194] transition-colors hover:bg-[#0e2430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe194] tabular-nums"
+          >
+            Shop · {hud.dewdrops}
           </button>
         </div>
       </div>

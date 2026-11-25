@@ -1,3 +1,5 @@
+import type { PlayerLoadout } from './shop';
+
 export type GamePhase = 'TITLE_MENU' | 'PLAYING' | 'PAUSED' | 'VICTORY' | 'GAME_OVER';
 
 export type LevelId = 1 | 2 | 3;
@@ -28,6 +30,8 @@ export interface HudSnapshot {
   progressPct: number;
   crystalBoostActive: boolean;
   tripleJumpActive: boolean;
+  dewdrops: number;
+  equipped: PlayerLoadout;
 }
 
 export interface BiomeConfig {

@@ -2,9 +2,11 @@ import { Component, type ErrorInfo, type ReactNode, useCallback, useEffect, useR
 import { GameHUD } from './components/GameHUD';
 import { GameModals } from './components/GameModals';
 import { PortraitPrompt } from './components/PortraitPrompt';
+import { ShopModal } from './components/ShopModal';
 import { TouchControls } from './components/TouchControls';
 import { audioEngine } from './game/audio';
 import { ForestGameEngine } from './game/engine';
+import { loadShopProgress, type SavedShopProgress, type ShopItemId } from './game/shop';
 import type { HudSnapshot } from './game/types';
 
 class GameErrorBoundary extends Component<
@@ -63,6 +65,8 @@ const INITIAL_HUD: HudSnapshot = {
   progressPct: 0,
   crystalBoostActive: false,
   tripleJumpActive: false,
+  dewdrops: 60,
+  equipped: { hat: null, cloak: null, charm: null },
 };
 
 function detectCoarsePointer(): boolean {
@@ -82,11 +86,39 @@ function ForestGameView() {
 
   const [hud, setHud] = useState<HudSnapshot>(INITIAL_HUD);
   const [muted, setMuted] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [shopProgress, setShopProgress] = useState<SavedShopProgress>(loadShopProgress);
+  const shopOpenRef = useRef(false);
   const [isTouchDevice, setIsTouchDevice] = useState<boolean>(detectCoarsePointer);
   const [isPortrait, setIsPortrait] = useState<boolean>(detectPortraitViewport);
   const [portraitDismissed, setPortraitDismissed] = useState(false);
 
   const showPortraitPrompt = isTouchDevice && isPortrait && !portraitDismissed;
+
+  useEffect(() => {
+    shopOpenRef.current = shopOpen;
+  }, [shopOpen]);
+
+  const handleOpenShop = useCallback(() => {
+    if (engineRef.current) {
+      setShopProgress(engineRef.current.getShopProgress());
+    }
+    setShopOpen(true);
+  }, []);
+
+  const handleCloseShop = useCallback(() => {
+    setShopOpen(false);
+  }, []);
+
+  const handleBuyItem = useCallback((itemId: ShopItemId) => {
+    if (!engineRef.current) return;
+    setShopProgress(engineRef.current.buyShopItem(itemId));
+  }, []);
+
+  const handleToggleEquipItem = useCallback((itemId: ShopItemId) => {
+    if (!engineRef.current) return;
+    setShopProgress(engineRef.current.toggleEquipShopItem(itemId));
+  }, []);
 
   const handleToggleMute = useCallback(() => {
     audioEngine.init();
@@ -157,7 +189,15 @@ function ForestGameView() {
       }
 
       if (e.code === 'Escape' && !e.repeat) {
+        if (shopOpenRef.current) {
+          setShopOpen(false);
+          return;
+        }
         engine.togglePause();
+        return;
+      }
+
+      if (shopOpenRef.current) {
         return;
       }
 
@@ -266,10 +306,19 @@ function ForestGameView() {
         onRestart={() => engineRef.current?.startNewGame()}
         onRespawn={() => engineRef.current?.respawnAtLantern()}
         onToggleMute={handleToggleMute}
+        onOpenShop={handleOpenShop}
+      />
+
+      <ShopModal
+        visible={shopOpen}
+        progress={shopProgress}
+        onBuy={handleBuyItem}
+        onToggleEquip={handleToggleEquipItem}
+        onClose={handleCloseShop}
       />
 
       <TouchControls
-        visible={hud.phase === 'PLAYING' && isTouchDevice && !showPortraitPrompt}
+        visible={hud.phase === 'PLAYING' && isTouchDevice && !showPortraitPrompt && !shopOpen}
         onLeftChange={(held) => {
           if (engineRef.current) engineRef.current.input.left = held;
         }}

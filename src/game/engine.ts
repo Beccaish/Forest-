@@ -1,6 +1,14 @@
 import { audioEngine } from './audio';
 import { backdropCache } from './backgrounds';
 import { renderForestScene } from './renderer';
+import {
+  SHOP_ITEMS,
+  cloneProgress,
+  loadShopProgress,
+  saveShopProgress,
+  type SavedShopProgress,
+  type ShopItemId,
+} from './shop';
 import type {
   GamePhase,
   HudSnapshot,
@@ -50,6 +58,7 @@ export class ForestGameEngine {
   private crystalsCollected = 0;
   private starseedsCollected = 0;
   private sanctuaryAwakened = false;
+  private shopProgress: SavedShopProgress = loadShopProgress();
 
   private cameraX = 0;
   private cameraY = 0;
@@ -92,6 +101,8 @@ export class ForestGameEngine {
   private createInitialPlayer(levelId: LevelId): PlayerState {
     const startX = 130;
     const startY = getTerrainY(startX, levelId);
+    const hasHeart = this.shopProgress?.equipped.charm === 'sanctuary_heart';
+    const maxPetals = hasHeart ? 4 : 3;
     return {
       x: startX,
       y: startY,
@@ -107,14 +118,71 @@ export class ForestGameEngine {
       crystalBoostTimer: 0,
       extraAirJumpTimer: 0,
       invulnTimer: 0,
-      petals: 3,
-      maxPetals: 3,
+      petals: maxPetals,
+      maxPetals,
       checkpointX: startX,
       checkpointY: startY,
       scarf: Array.from({ length: 10 }, () => ({ x: startX, y: startY - 24 })),
       runPhase: 0,
       squash: 1,
     };
+  }
+
+  getShopProgress(): SavedShopProgress {
+    return cloneProgress(this.shopProgress);
+  }
+
+  buyShopItem(itemId: ShopItemId): SavedShopProgress {
+    const item = SHOP_ITEMS.find((i) => i.id === itemId);
+    if (!item) return this.getShopProgress();
+    if (this.shopProgress.ownedIds.includes(itemId)) {
+      return this.toggleEquipShopItem(itemId);
+    }
+    if (this.shopProgress.dewdrops < item.price) {
+      return this.getShopProgress();
+    }
+
+    audioEngine.init();
+    audioEngine.playPurchase();
+    this.shopProgress.dewdrops -= item.price;
+    this.shopProgress.ownedIds.push(itemId);
+    this.shopProgress.equipped[item.category] = itemId;
+    this.syncEquippedPlayerPerks();
+    saveShopProgress(this.shopProgress);
+    this.emitHudSnapshot();
+    return this.getShopProgress();
+  }
+
+  toggleEquipShopItem(itemId: ShopItemId): SavedShopProgress {
+    const item = SHOP_ITEMS.find((i) => i.id === itemId);
+    if (!item || !this.shopProgress.ownedIds.includes(itemId)) {
+      return this.getShopProgress();
+    }
+
+    audioEngine.init();
+    audioEngine.playEquip();
+    const currentlyEquipped = this.shopProgress.equipped[item.category] === itemId;
+    this.shopProgress.equipped[item.category] = currentlyEquipped ? null : itemId;
+    this.syncEquippedPlayerPerks();
+    saveShopProgress(this.shopProgress);
+    this.emitHudSnapshot();
+    return this.getShopProgress();
+  }
+
+  private syncEquippedPlayerPerks(): void {
+    const targetMax = this.shopProgress.equipped.charm === 'sanctuary_heart' ? 4 : 3;
+    const prevMax = this.player.maxPetals;
+    this.player.maxPetals = targetMax;
+    if (targetMax > prevMax) {
+      this.player.petals = Math.min(targetMax, this.player.petals + (targetMax - prevMax));
+    } else if (this.player.petals > targetMax) {
+      this.player.petals = targetMax;
+    }
+  }
+
+  private earnDewdrops(amount: number): void {
+    this.shopProgress.dewdrops += amount;
+    saveShopProgress(this.shopProgress);
   }
 
   start(): void {
@@ -246,8 +314,9 @@ export class ForestGameEngine {
     if (this.phase !== 'PLAYING' || this.player.pulseCooldown > 0) return;
     audioEngine.init();
     const boosted = this.player.crystalBoostTimer > 0;
+    const hasHeart = this.shopProgress.equipped.charm === 'sanctuary_heart';
     const pulseMaxR = boosted ? 380 : 265;
-    this.player.pulseCooldown = boosted ? 0.35 : 0.55;
+    this.player.pulseCooldown = boosted ? 0.3 : hasHeart ? 0.38 : 0.55;
     audioEngine.playPulse();
 
     this.pulses.push({
@@ -301,6 +370,7 @@ export class ForestGameEngine {
     if (!l.lit) {
       l.lit = true;
       audioEngine.playLantern();
+      this.earnDewdrops(25);
       this.player.checkpointX = l.x;
       this.player.checkpointY = l.y;
       this.player.petals = this.player.maxPetals;
@@ -412,8 +482,10 @@ export class ForestGameEngine {
     }
 
     const moveDir = (this.input.right ? 1 : 0) - (this.input.left ? 1 : 0);
-    const maxSpeed = p.crystalBoostTimer > 0 ? 345 : 300;
-    const accel = p.onGround ? 1950 : 1280;
+    const hasBoots = this.shopProgress.equipped.charm === 'wind_boots';
+    const baseSpeed = hasBoots ? 345 : 300;
+    const maxSpeed = p.crystalBoostTimer > 0 ? baseSpeed + 45 : baseSpeed;
+    const accel = p.onGround ? (hasBoots ? 2150 : 1950) : hasBoots ? 1420 : 1280;
     const decel = p.onGround ? 1800 : 540;
 
     if (moveDir !== 0) {
@@ -477,9 +549,11 @@ export class ForestGameEngine {
         });
       }
     } else {
-      const gravity = p.gliding ? 260 : 1220;
+      const hasBoots = this.shopProgress.equipped.charm === 'wind_boots';
+      const gravity = p.gliding ? (hasBoots ? 210 : 260) : 1220;
+      const glideCap = hasBoots ? 78 : 105;
       p.vy += gravity * dt;
-      if (p.gliding && p.vy > 105) p.vy = 105;
+      if (p.gliding && p.vy > glideCap) p.vy = glideCap;
       else if (p.vy > 780) p.vy = 780;
     }
 
@@ -676,27 +750,42 @@ export class ForestGameEngine {
     }
 
     // Collect Lumina Orbs, Sun Blossoms, Prism Crystals & Astral Star Seeds
+    const hasFirefly = this.shopProgress.equipped.charm === 'firefly_sprite';
     for (const item of this.world.collectibles) {
       if (item.collected) continue;
+      if (hasFirefly) {
+        const dx = p.x - item.x;
+        const dy = p.y - 20 - item.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 120 && dist > 1) {
+          const pull = 280 * dt;
+          item.x += (dx / dist) * pull;
+          item.baseY += (dy / dist) * pull;
+        }
+      }
       item.y = item.baseY + Math.sin(this.time * 2.8 + item.phase) * 7;
       if (Math.hypot(item.x - p.x, item.y - (p.y - 20)) < 34) {
         item.collected = true;
         if (item.kind === 'orb') {
           this.orbsCollected++;
+          this.earnDewdrops(5);
           audioEngine.playChime(this.orbsCollected % 4);
           this.spawnDust(item.x, item.y, '#9effef', 16);
         } else if (item.kind === 'blossom') {
           this.blossomsCollected++;
+          this.earnDewdrops(15);
           if (p.petals < p.maxPetals) p.petals++;
           audioEngine.playBlossom();
           this.spawnDust(item.x, item.y, '#ffd87a', 22);
         } else if (item.kind === 'crystal') {
           this.crystalsCollected++;
+          this.earnDewdrops(20);
           p.crystalBoostTimer = 6.5;
           audioEngine.playCrystal();
           this.spawnDust(item.x, item.y, '#cfa6ff', 24);
         } else {
           this.starseedsCollected++;
+          this.earnDewdrops(30);
           p.extraAirJumpTimer = 10;
           p.jumpsLeft = Math.max(p.jumpsLeft, 2);
           audioEngine.playStarSeed();
@@ -723,6 +812,7 @@ export class ForestGameEngine {
 
     if (!this.sanctuaryAwakened && Math.abs(p.x - SANCTUARY_X) < 88) {
       this.sanctuaryAwakened = true;
+      this.earnDewdrops(100);
       audioEngine.playLantern();
       window.setTimeout(() => audioEngine.playPulse(), 320);
       this.spawnDust(SANCTUARY_X, getTerrainY(SANCTUARY_X, this.levelId) - 90, '#ffe696', 45);
@@ -772,6 +862,7 @@ export class ForestGameEngine {
       worldScale: this.worldScale,
       time: this.time,
       sanctuaryAwakened: this.sanctuaryAwakened,
+      equipped: this.shopProgress.equipped,
     });
   }
 
@@ -828,6 +919,8 @@ export class ForestGameEngine {
       progressPct,
       crystalBoostActive: this.player.crystalBoostTimer > 0,
       tripleJumpActive: this.player.extraAirJumpTimer > 0,
+      dewdrops: this.shopProgress.dewdrops,
+      equipped: { ...this.shopProgress.equipped },
     });
   }
 }
