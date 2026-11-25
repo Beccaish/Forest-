@@ -200,6 +200,29 @@ class ForestAudioEngine {
       window.setTimeout(() => this.playTone(f, 1.0, 0.045, 'triangle'), i * 65);
     });
   }
+
+  playStarSeed(): void {
+    [587.33, 783.99, 987.77, 1174.66].forEach((f, i) => {
+      window.setTimeout(() => this.playTone(f, 0.95, 0.045, 'sine'), i * 50);
+    });
+  }
+
+  playSkyRing(): void {
+    if (!this.enabled || !this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(340, now);
+    osc.frequency.exponentialRampToValueAtTime(860, now + 0.28);
+    gain.gain.setValueAtTime(0.06, now);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.36);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.38);
+    this.playTone(783.99, 0.7, 0.04, 'triangle');
+  }
 }
 
 export const audioEngine = new ForestAudioEngine();

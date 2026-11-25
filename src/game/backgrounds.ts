@@ -4,18 +4,22 @@ import l1StarlitSanctuary from '../assets/images/l1_starlit_sanctuary_1795615999
 import l2AmberDusk from '../assets/images/l2_amber_dusk_1795615999375.jpg';
 import l2CrystalHollow from '../assets/images/l2_crystal_hollow_1795615999652.jpg';
 import l2GoldenSummit from '../assets/images/l2_golden_summit_1795616001942.jpg';
+import l3SilverFrostwood from '../assets/images/l3_silver_frostwood_1795619149378.jpg';
+import l3FloatingIsles from '../assets/images/l3_floating_isles_1795619149741.jpg';
+import l3PrismHeartwood from '../assets/images/l3_prism_heartwood_1795619149796.jpg';
 import type { LevelId } from './types';
 
 const BACKDROP_PATHS: Record<LevelId, [string, string, string]> = {
   1: [l1EmeraldGlade, l1MoonpetalWoods, l1StarlitSanctuary],
   2: [l2AmberDusk, l2CrystalHollow, l2GoldenSummit],
+  3: [l3SilverFrostwood, l3FloatingIsles, l3PrismHeartwood],
 };
 
 class BackdropCache {
   private images = new Map<string, HTMLImageElement>();
 
   preloadAll(): void {
-    ([1, 2] as LevelId[]).forEach((lvl) => {
+    ([1, 2, 3] as LevelId[]).forEach((lvl) => {
       BACKDROP_PATHS[lvl].forEach((src) => {
         if (!this.images.has(src)) {
           const img = new Image();

@@ -104,6 +104,24 @@ export const GameHUD: React.FC<GameHUDProps> = ({
 
             <span className="text-white/30" aria-hidden="true">·</span>
 
+            {/* Astral Star Seeds */}
+            <div className="flex items-center gap-1">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                <path
+                  d="M10 1.8L12.1 7.9L18.2 10L12.1 12.1L10 18.2L7.9 12.1L1.8 10L7.9 7.9L10 1.8Z"
+                  fill="#d9f4ff"
+                  stroke="#ffffff"
+                  strokeWidth="1"
+                />
+              </svg>
+              <span className="tabular-nums">
+                {hud.starseedsCollected}/{hud.starseedsTotal}
+              </span>
+              <span className="hidden sm:inline text-xs text-[#b8e2dc]">Star Seeds</span>
+            </div>
+
+            <span className="text-white/30" aria-hidden="true">·</span>
+
             {/* Awakened Lanterns */}
             <div className="flex items-center gap-1">
               <svg width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
@@ -140,6 +158,12 @@ export const GameHUD: React.FC<GameHUDProps> = ({
               <>
                 <span className="text-white/35" aria-hidden="true">·</span>
                 <span className="font-medium text-[#ffe18c]">Prism Surge</span>
+              </>
+            )}
+            {hud.tripleJumpActive && (
+              <>
+                <span className="text-white/35" aria-hidden="true">·</span>
+                <span className="font-medium text-[#c7b8ff]">Triple Jump</span>
               </>
             )}
           </div>

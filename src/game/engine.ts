@@ -48,6 +48,7 @@ export class ForestGameEngine {
   private orbsCollected = 0;
   private blossomsCollected = 0;
   private crystalsCollected = 0;
+  private starseedsCollected = 0;
   private sanctuaryAwakened = false;
 
   private cameraX = 0;
@@ -104,6 +105,7 @@ export class ForestGameEngine {
       gliding: false,
       pulseCooldown: 0,
       crystalBoostTimer: 0,
+      extraAirJumpTimer: 0,
       invulnTimer: 0,
       petals: 3,
       maxPetals: 3,
@@ -170,7 +172,8 @@ export class ForestGameEngine {
   }
 
   startNextLevel(): void {
-    this.startNewGame(this.levelId === 1 ? 2 : 1);
+    const next: LevelId = this.levelId === 1 ? 2 : this.levelId === 2 ? 3 : 1;
+    this.startNewGame(next);
   }
 
   resumeGame(): void {
@@ -219,6 +222,7 @@ export class ForestGameEngine {
     this.orbsCollected = 0;
     this.blossomsCollected = 0;
     this.crystalsCollected = 0;
+    this.starseedsCollected = 0;
     this.elapsedSeconds = 0;
     this.sanctuaryAwakened = false;
     this.hitstopTimer = 0;
@@ -393,10 +397,19 @@ export class ForestGameEngine {
 
     p.pulseCooldown = Math.max(0, p.pulseCooldown - dt);
     p.crystalBoostTimer = Math.max(0, p.crystalBoostTimer - dt);
+    p.extraAirJumpTimer = Math.max(0, p.extraAirJumpTimer - dt);
     p.coyoteTime = Math.max(0, p.coyoteTime - dt);
     p.jumpBuffer = Math.max(0, p.jumpBuffer - dt);
     p.invulnTimer = Math.max(0, p.invulnTimer - dt);
     p.squash = lerp(p.squash, 1, Math.min(1, dt * 12));
+
+    // Update drifting skywood / cloud moving platforms
+    for (const mp of this.world.movingPlatforms) {
+      mp.prevX = mp.x;
+      mp.prevY = mp.y;
+      mp.x = mp.baseX + Math.sin(this.time * mp.speed + mp.phase) * mp.dx;
+      mp.y = mp.baseY + Math.cos(this.time * mp.speed + mp.phase) * mp.dy;
+    }
 
     const moveDir = (this.input.right ? 1 : 0) - (this.input.left ? 1 : 0);
     const maxSpeed = p.crystalBoostTimer > 0 ? 345 : 300;
@@ -420,7 +433,7 @@ export class ForestGameEngine {
         p.onGround = false;
         p.coyoteTime = 0;
         p.jumpBuffer = 0;
-        p.jumpsLeft = 1;
+        p.jumpsLeft = p.extraAirJumpTimer > 0 ? 2 : 1;
         p.squash = 1.24;
         audioEngine.playJump(false);
         this.spawnDust(p.x, p.y, '#88f7df', 7);
@@ -430,7 +443,12 @@ export class ForestGameEngine {
         p.jumpBuffer = 0;
         p.squash = 1.2;
         audioEngine.playJump(true);
-        this.spawnDust(p.x, p.y - 6, '#ffe49e', 10);
+        this.spawnDust(
+          p.x,
+          p.y - 6,
+          p.extraAirJumpTimer > 0 ? '#c7b8ff' : '#ffe49e',
+          10
+        );
       }
     }
 
@@ -486,6 +504,41 @@ export class ForestGameEngine {
           break;
         }
       }
+
+      if (!landedThisFrame) {
+        for (const mp of this.world.movingPlatforms) {
+          if (
+            p.x >= mp.x - 10 &&
+            p.x <= mp.x + mp.w + 10 &&
+            prevY <= mp.prevY + 12 &&
+            p.y >= mp.y - 2
+          ) {
+            p.x = clamp(p.x + (mp.x - mp.prevX), 30, WORLD_WIDTH - 40);
+            p.y = mp.y;
+            p.vy = 0;
+            landedThisFrame = true;
+            break;
+          }
+        }
+      }
+    }
+
+    // Aerial Spirit Ring Boosters
+    for (const ring of this.world.skyRings) {
+      if (ring.cooldown > 0) {
+        ring.cooldown = Math.max(0, ring.cooldown - dt);
+      } else if (Math.hypot(p.x - ring.x, p.y - 20 - ring.y) < ring.r + 14) {
+        ring.cooldown = 0.85;
+        p.vy = -565;
+        p.vx = p.facing * 395;
+        p.onGround = false;
+        p.jumpsLeft = p.extraAirJumpTimer > 0 ? 2 : 1;
+        p.squash = 1.28;
+        this.hitstopTimer = 0.025;
+        this.triggerShake(4, 0.16);
+        audioEngine.playSkyRing();
+        this.spawnDust(ring.x, ring.y, '#9ef4ff', 18);
+      }
     }
 
     for (const m of this.world.mushrooms) {
@@ -500,7 +553,7 @@ export class ForestGameEngine {
         p.y = capY;
         p.vy = this.input.jumpHeld ? -710 : -610;
         p.onGround = false;
-        p.jumpsLeft = 1;
+        p.jumpsLeft = p.extraAirJumpTimer > 0 ? 2 : 1;
         p.squash = 1.32;
         m.bounce = 1;
         this.hitstopTimer = 0.032;
@@ -524,7 +577,7 @@ export class ForestGameEngine {
       }
       p.onGround = true;
       p.coyoteTime = 0.12;
-      p.jumpsLeft = 2;
+      p.jumpsLeft = p.extraAirJumpTimer > 0 ? 3 : 2;
     } else {
       p.onGround = false;
     }
@@ -622,7 +675,7 @@ export class ForestGameEngine {
       }
     }
 
-    // Collect Lumina Orbs, Sun Blossoms & Prism Crystals
+    // Collect Lumina Orbs, Sun Blossoms, Prism Crystals & Astral Star Seeds
     for (const item of this.world.collectibles) {
       if (item.collected) continue;
       item.y = item.baseY + Math.sin(this.time * 2.8 + item.phase) * 7;
@@ -637,11 +690,17 @@ export class ForestGameEngine {
           if (p.petals < p.maxPetals) p.petals++;
           audioEngine.playBlossom();
           this.spawnDust(item.x, item.y, '#ffd87a', 22);
-        } else {
+        } else if (item.kind === 'crystal') {
           this.crystalsCollected++;
           p.crystalBoostTimer = 6.5;
           audioEngine.playCrystal();
           this.spawnDust(item.x, item.y, '#cfa6ff', 24);
+        } else {
+          this.starseedsCollected++;
+          p.extraAirJumpTimer = 10;
+          p.jumpsLeft = Math.max(p.jumpsLeft, 2);
+          audioEngine.playStarSeed();
+          this.spawnDust(item.x, item.y, '#d4f4ff', 26);
         }
         this.emitHudSnapshot();
       }
@@ -740,6 +799,7 @@ export class ForestGameEngine {
     const orbsTotal = this.world.collectibles.filter((c) => c.kind === 'orb').length;
     const blossomsTotal = this.world.collectibles.filter((c) => c.kind === 'blossom').length;
     const crystalsTotal = this.world.collectibles.filter((c) => c.kind === 'crystal').length;
+    const starseedsTotal = this.world.collectibles.filter((c) => c.kind === 'starseed').length;
     const progressPct = clamp(
       Math.round(((this.player.x - 130) / (SANCTUARY_X - 130)) * 100),
       0,
@@ -756,6 +816,8 @@ export class ForestGameEngine {
       blossomsTotal,
       crystalsCollected: this.crystalsCollected,
       crystalsTotal,
+      starseedsCollected: this.starseedsCollected,
+      starseedsTotal,
       lanternsLit,
       lanternsTotal: this.world.lanterns.length,
       petals: this.player.petals,
@@ -765,6 +827,7 @@ export class ForestGameEngine {
       elapsedSeconds: Math.floor(this.elapsedSeconds),
       progressPct,
       crystalBoostActive: this.player.crystalBoostTimer > 0,
+      tripleJumpActive: this.player.extraAirJumpTimer > 0,
     });
   }
 }

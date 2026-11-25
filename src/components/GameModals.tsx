@@ -94,12 +94,12 @@ export const GameModals: React.FC<GameModalsProps> = ({
               fontSize="13.5"
               letterSpacing="2.4"
             >
-              TWO REALMS · DYNAMIC WEATHER · LUMINA &amp; RELICS
+              THREE REALMS · DYNAMIC WEATHER · LUMINA &amp; RELICS
             </text>
           </svg>
 
           <p className="mb-3 sm:mb-5 text-sm sm:text-base leading-relaxed text-[#cceae5] max-w-md">
-            Gather Lumina Orbs, Sun Blossoms, and Prism Crystals across shifting forest realms and awaken each ancient sanctuary.
+            Gather Lumina Orbs, Sun Blossoms, Prism Crystals, and Star Seeds across three forest realms and awaken each ancient sanctuary.
           </p>
 
           {/* Interactive Level Selector */}
@@ -125,6 +125,17 @@ export const GameModals: React.FC<GameModalsProps> = ({
               }`}
             >
               Level 2 · Amber &amp; Crystal Hollows
+            </button>
+            <button
+              type="button"
+              onClick={() => onSelectLevel(3)}
+              className={`min-h-[40px] whitespace-nowrap shrink-0 rounded-md px-3.5 py-2 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-[#7cfce7] ${
+                hud.levelId === 3
+                  ? 'bg-[#94e8ff] text-[#051829] font-semibold'
+                  : 'text-[#cbeae5] hover:text-white'
+              }`}
+            >
+              Level 3 · Frostbloom Skywoods
             </button>
           </div>
 
@@ -175,7 +186,7 @@ export const GameModals: React.FC<GameModalsProps> = ({
               onClick={onNextLevel}
               className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#7cfce7]/25 bg-transparent px-4 py-2.5 text-xs sm:text-sm font-medium text-[#dcf7f3] transition-colors hover:bg-[#0e2430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
             >
-              {hud.levelId === 1 ? 'Level 2' : 'Level 1'}
+              {hud.levelId === 1 ? 'Level 2' : hud.levelId === 2 ? 'Level 3' : 'Level 1'}
             </button>
             <button
               type="button"
@@ -240,10 +251,12 @@ export const GameModals: React.FC<GameModalsProps> = ({
         <p className="text-xs sm:text-sm leading-relaxed text-[#b2dcd6] mb-4 sm:mb-6">
           {hud.levelId === 1
             ? 'You awakened the Starlit Spirit Tree. Ready to journey into the Amber & Crystal Hollows?'
-            : 'You conquered the Amber & Crystal Hollows and awakened the Golden Elder Blossom Tree.'}
+            : hud.levelId === 2
+              ? 'You conquered the Amber & Crystal Hollows. Soar onward into the Frostbloom Skywoods!'
+              : 'You soared through the Frostbloom Skywoods and awakened the Astral Heartwood Sanctuary.'}
         </p>
 
-        <div className="grid grid-cols-4 gap-3 border-y border-[#7cfce7]/15 py-3 sm:py-4 mb-5 sm:mb-7">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 border-y border-[#7cfce7]/15 py-3 sm:py-4 mb-5 sm:mb-7">
           <div>
             <div className="text-base sm:text-lg font-semibold text-[#7cfce7] tabular-nums">
               {hud.orbsCollected}/{hud.orbsTotal}
@@ -263,6 +276,12 @@ export const GameModals: React.FC<GameModalsProps> = ({
             <div className="text-[11px] sm:text-xs text-[#9ac7c1]">Crystals</div>
           </div>
           <div>
+            <div className="text-base sm:text-lg font-semibold text-[#d5b8ff] tabular-nums">
+              {hud.starseedsCollected}/{hud.starseedsTotal}
+            </div>
+            <div className="text-[11px] sm:text-xs text-[#9ac7c1]">Star Seeds</div>
+          </div>
+          <div className="col-span-2 sm:col-span-1">
             <div className="text-base sm:text-lg font-semibold text-[#e9fbf8] tabular-nums">
               {hud.lanternsLit}/{hud.lanternsTotal} · {formatTime(hud.elapsedSeconds)}
             </div>
@@ -271,11 +290,15 @@ export const GameModals: React.FC<GameModalsProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-3">
-          {hud.levelId === 1 ? (
+          {hud.levelId < 3 ? (
             <button
               type="button"
               onClick={onNextLevel}
-              className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md bg-[#ffb86c] px-7 py-2.5 sm:py-3 text-sm font-semibold text-[#1f0d05] transition-colors hover:bg-[#ffc98f] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#fff0d6]"
+              className={`min-h-[44px] whitespace-nowrap shrink-0 rounded-md px-7 py-2.5 sm:py-3 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#fff0d6] ${
+                hud.levelId === 1
+                  ? 'bg-[#ffb86c] text-[#1f0d05] hover:bg-[#ffc98f]'
+                  : 'bg-[#94e8ff] text-[#051829] hover:bg-[#b5f0ff]'
+              }`}
             >
               Next Level
             </button>

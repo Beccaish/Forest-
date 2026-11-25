@@ -3,10 +3,12 @@ import type {
   CollectibleItem,
   GlowMushroom,
   LevelId,
+  MovingPlatform,
   Particle,
   Platform,
   PlayerState,
   PulseRing,
+  SkyRing,
   SpiritLantern,
   StoneArch,
   ThornWisp,
@@ -145,8 +147,10 @@ export function renderForestScene(
   // 4. Celestial Accents (Sunbeams / Sky Lanterns / Auroras)
   if (levelId === 1) {
     drawLevel1Celestials(ctx, centerWorldX, cameraX, viewW, viewH, time);
-  } else {
+  } else if (levelId === 2) {
     drawLevel2Celestials(ctx, world, centerWorldX, cameraX, viewW, viewH, time);
+  } else {
+    drawLevel3Celestials(ctx, world, centerWorldX, cameraX, viewW, viewH, time);
   }
 
   // 5. Translucent Distant Silhouettes (adds extra depth without hiding the painted backdrop)
@@ -158,7 +162,7 @@ export function renderForestScene(
     const mx = m.x - cameraX * 0.1;
     if (mx + m.w < -50 || mx > viewW + 50) continue;
     const base = viewH * 0.9;
-    if (levelId === 2) {
+    if (levelId === 2 || levelId === 3) {
       ctx.moveTo(mx, base);
       ctx.lineTo(mx + m.w * 0.48, base - m.h * 0.85);
       ctx.lineTo(mx + m.w, base);
@@ -235,6 +239,16 @@ export function renderForestScene(
   for (const p of world.platforms) {
     if (p.x + p.w + 40 < cameraX || p.x - 40 > cameraX + virtualW) continue;
     drawPlatform(ctx, p, levelId);
+  }
+
+  for (const mp of world.movingPlatforms) {
+    if (mp.x + mp.w + 50 < cameraX || mp.x - 50 > cameraX + virtualW) continue;
+    drawMovingPlatform(ctx, mp, levelId, time);
+  }
+
+  for (const ring of world.skyRings) {
+    if (ring.x + 80 < cameraX || ring.x - 80 > cameraX + virtualW) continue;
+    drawSkyRing(ctx, ring, time);
   }
 
   for (const l of world.lanterns) {
@@ -485,6 +499,87 @@ function drawLevel2Celestials(
   }
 }
 
+function drawLevel3Celestials(
+  ctx: CanvasRenderingContext2D,
+  world: WorldData,
+  centerWorldX: number,
+  cameraX: number,
+  viewW: number,
+  viewH: number,
+  time: number
+): void {
+  // Winter Prism Halo Sun in Silver Frostwood (Biome 0)
+  const sunVis = clamp(1 - (centerWorldX - 1500) / 1100, 0, 1);
+  if (sunVis > 0.01) {
+    const sx = viewW * 0.7 - cameraX * 0.012;
+    const sy = viewH * 0.25;
+    ctx.save();
+    ctx.globalAlpha = sunVis * 0.88;
+    const halo = ctx.createRadialGradient(sx, sy, 18, sx, sy, 185);
+    halo.addColorStop(0, 'rgba(225, 252, 255, 0.56)');
+    halo.addColorStop(0.5, 'rgba(135, 220, 255, 0.22)');
+    halo.addColorStop(1, 'rgba(135, 220, 255, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 185, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#effcff';
+    ctx.beginPath();
+    ctx.arc(sx, sy, 40, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Drifting Astral Sky Lanterns in Level 3
+  ctx.save();
+  for (const sl of world.skyLanterns) {
+    const lx =
+      (((sl.x - cameraX * 0.12 + Math.sin(time * 0.55 + sl.swayPhase) * 18) % viewW) + viewW) %
+      viewW;
+    const ly = (((sl.y - time * sl.vy) % (viewH * 0.78)) + viewH * 0.78) % (viewH * 0.78);
+    const glow = ctx.createRadialGradient(lx, ly, 1, lx, ly, sl.r * 3.4);
+    glow.addColorStop(0, sl.hue);
+    glow.addColorStop(1, 'rgba(150, 230, 255, 0)');
+    ctx.globalAlpha = 0.72;
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(lx, ly, sl.r * 3.4, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#edfaff';
+    ctx.beginPath();
+    ctx.arc(lx, ly, sl.r * 0.65, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Celestial Astral Aurora in Biome 1-2
+  const aurVis = clamp((centerWorldX - 3600) / 1100, 0.14, 1);
+  if (aurVis > 0.01) {
+    ctx.save();
+    ctx.globalAlpha = aurVis * 0.34;
+    for (let r = 0; r < 2; r++) {
+      const grad = ctx.createLinearGradient(0, viewH * 0.03, 0, viewH * 0.38);
+      grad.addColorStop(0, 'rgba(140, 240, 255, 0)');
+      grad.addColorStop(0.5, r === 0 ? '#8ef5ff' : '#d2a8ff');
+      grad.addColorStop(1, 'rgba(140, 240, 255, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(0, viewH * 0.34);
+      for (let x = 0; x <= viewW + 40; x += 40) {
+        const y = viewH * (0.12 + r * 0.065) + Math.sin(x * 0.005 + time * 0.7 + r * 2.1) * 32;
+        ctx.lineTo(x, y);
+      }
+      ctx.lineTo(viewW, viewH * 0.44);
+      ctx.lineTo(0, viewH * 0.44);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
 function drawWaterfalls(
   ctx: CanvasRenderingContext2D,
   world: WorldData,
@@ -494,7 +589,8 @@ function drawWaterfalls(
   viewH: number,
   time: number
 ): void {
-  const tint = levelId === 1 ? '145, 252, 245' : '212, 175, 255';
+  const tint =
+    levelId === 1 ? '145, 252, 245' : levelId === 2 ? '212, 175, 255' : '165, 235, 255';
   for (const wf of world.waterfalls) {
     const wx = wf.x - cameraX * 0.45;
     if (wx + wf.w < -40 || wx - wf.w > viewW + 40) continue;
@@ -563,7 +659,11 @@ function drawMidTrees(
       const vLen = 55 + ((v * 23) % 45);
       const sway = Math.sin(time * 1.4 + t.vineSeed + v) * 8;
       ctx.strokeStyle =
-        levelId === 1 ? 'rgba(90, 210, 185, 0.28)' : 'rgba(230, 165, 130, 0.28)';
+        levelId === 1
+          ? 'rgba(90, 210, 185, 0.28)'
+          : levelId === 2
+            ? 'rgba(230, 165, 130, 0.28)'
+            : 'rgba(155, 232, 255, 0.3)';
       ctx.lineWidth = 1.6;
       ctx.beginPath();
       ctx.moveTo(vx, vy);
@@ -592,7 +692,9 @@ function drawNearTrees(
   const trunkCol =
     levelId === 1
       ? lerpColor('#07171a', '#06081a', b.mix > 0 ? 0.5 : 0)
-      : lerpColor('#170b0f', '#0d071c', b.mix > 0 ? 0.5 : 0);
+      : levelId === 2
+        ? lerpColor('#170b0f', '#0d071c', b.mix > 0 ? 0.5 : 0)
+        : lerpColor('#0e1c2e', '#0a1026', b.mix > 0 ? 0.5 : 0);
   for (const t of world.nearTrees) {
     const tx = t.x - cameraX * 0.72;
     if (tx + 120 < 0 || tx - 120 > viewW) continue;
@@ -613,7 +715,11 @@ function drawNearTrees(
       const hGlow = ctx.createRadialGradient(hx, hy, 2, hx, hy, 22);
       hGlow.addColorStop(
         0,
-        levelId === 1 ? 'rgba(130, 255, 225, 0.85)' : 'rgba(255, 200, 130, 0.85)'
+        levelId === 1
+          ? 'rgba(130, 255, 225, 0.85)'
+          : levelId === 2
+            ? 'rgba(255, 200, 130, 0.85)'
+            : 'rgba(160, 240, 255, 0.88)'
       );
       hGlow.addColorStop(1, 'rgba(130, 255, 225, 0)');
       ctx.fillStyle = hGlow;
@@ -626,11 +732,13 @@ function drawNearTrees(
 
 function drawStoneArch(ctx: CanvasRenderingContext2D, a: StoneArch, levelId: LevelId): void {
   ctx.save();
-  ctx.fillStyle = levelId === 1 ? '#182b36' : '#2b1c2e';
+  ctx.fillStyle = levelId === 1 ? '#182b36' : levelId === 2 ? '#2b1c2e' : '#1b2b44';
   ctx.strokeStyle =
     levelId === 1
       ? `rgba(120, 245, 225, ${0.25 + a.glow * 0.6})`
-      : `rgba(255, 195, 125, ${0.25 + a.glow * 0.6})`;
+      : levelId === 2
+        ? `rgba(255, 195, 125, ${0.25 + a.glow * 0.6})`
+        : `rgba(155, 232, 255, ${0.25 + a.glow * 0.6})`;
   ctx.lineWidth = 2;
 
   ctx.fillRect(a.x - a.w * 0.5, a.y - a.h + 25, 24, a.h - 15);
@@ -647,7 +755,9 @@ function drawStoneArch(ctx: CanvasRenderingContext2D, a: StoneArch, levelId: Lev
   ctx.fillStyle =
     levelId === 1
       ? `rgba(130, 255, 232, ${0.3 + a.glow * 0.7})`
-      : `rgba(255, 210, 140, ${0.3 + a.glow * 0.7})`;
+      : levelId === 2
+        ? `rgba(255, 210, 140, ${0.3 + a.glow * 0.7})`
+        : `rgba(180, 242, 255, ${0.3 + a.glow * 0.7})`;
   for (let r = 0; r < 3; r++) {
     ctx.beginPath();
     ctx.arc(a.x - a.w * 0.5 + 12, a.y - 40 - r * 32, 3, 0, Math.PI * 2);
@@ -664,7 +774,8 @@ function drawWindStream(
   time: number
 ): void {
   ctx.save();
-  const rgb = levelId === 1 ? '155, 255, 240' : '255, 210, 165';
+  const rgb =
+    levelId === 1 ? '155, 255, 240' : levelId === 2 ? '255, 210, 165' : '175, 235, 255';
   for (let i = 0; i < 4; i++) {
     const offset = (time * 95 + i * 75) % (w.yBot - w.yTop);
     const py = w.yBot - offset;
@@ -683,39 +794,130 @@ function drawWindStream(
 function drawPlatform(ctx: CanvasRenderingContext2D, p: Platform, levelId: LevelId): void {
   ctx.save();
   if (p.type === 'branch') {
-    ctx.fillStyle = levelId === 1 ? '#183333' : '#36211e';
+    ctx.fillStyle = levelId === 1 ? '#183333' : levelId === 2 ? '#36211e' : '#1c324a';
     ctx.beginPath();
     ctx.roundRect(p.x, p.y, p.w, 16, 8);
     ctx.fill();
-    ctx.fillStyle = levelId === 1 ? '#38a68a' : '#d98448';
+    ctx.fillStyle = levelId === 1 ? '#38a68a' : levelId === 2 ? '#d98448' : '#7ad6ef';
     ctx.beginPath();
     ctx.roundRect(p.x + 4, p.y, p.w - 8, 5, 3);
     ctx.fill();
   } else if (p.type === 'stone') {
-    ctx.fillStyle = levelId === 1 ? '#243c4a' : '#34244a';
+    ctx.fillStyle = levelId === 1 ? '#243c4a' : levelId === 2 ? '#34244a' : '#25395c';
     ctx.beginPath();
     ctx.roundRect(p.x, p.y, p.w, 18, 6);
     ctx.fill();
     ctx.strokeStyle =
-      levelId === 1 ? 'rgba(130, 245, 225, 0.45)' : 'rgba(220, 175, 255, 0.45)';
+      levelId === 1
+        ? 'rgba(130, 245, 225, 0.45)'
+        : levelId === 2
+          ? 'rgba(220, 175, 255, 0.45)'
+          : 'rgba(165, 238, 255, 0.5)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
   } else {
     ctx.fillStyle =
       levelId === 1
         ? `rgba(98, 245, 225, ${0.18 + p.glow * 0.28})`
-        : `rgba(255, 200, 130, ${0.18 + p.glow * 0.28})`;
+        : levelId === 2
+          ? `rgba(255, 200, 130, ${0.18 + p.glow * 0.28})`
+          : `rgba(170, 225, 255, ${0.2 + p.glow * 0.3})`;
     ctx.strokeStyle =
       levelId === 1
         ? `rgba(165, 255, 242, ${0.5 + p.glow * 0.5})`
-        : `rgba(255, 224, 158, ${0.5 + p.glow * 0.5})`;
+        : levelId === 2
+          ? `rgba(255, 224, 158, ${0.5 + p.glow * 0.5})`
+          : `rgba(210, 245, 255, ${0.55 + p.glow * 0.45})`;
     ctx.lineWidth = 2;
-    ctx.shadowColor = levelId === 1 ? '#6fffe9' : '#ffd085';
+    ctx.shadowColor = levelId === 1 ? '#6fffe9' : levelId === 2 ? '#ffd085' : '#9ef0ff';
     ctx.shadowBlur = 14 * p.glow;
     ctx.beginPath();
     ctx.roundRect(p.x, p.y, p.w, 12, 6);
     ctx.fill();
     ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function drawMovingPlatform(
+  ctx: CanvasRenderingContext2D,
+  mp: MovingPlatform,
+  levelId: LevelId,
+  time: number
+): void {
+  ctx.save();
+  const pulse = 0.72 + 0.28 * Math.sin(time * 2.8 + mp.phase);
+
+  // Soft floating cloud puffs beneath the skywood ledge
+  ctx.fillStyle =
+    levelId === 3
+      ? `rgba(210, 244, 255, ${0.32 * pulse})`
+      : `rgba(255, 224, 185, ${0.28 * pulse})`;
+  ctx.beginPath();
+  ctx.arc(mp.x + mp.w * 0.22, mp.y + 16, 13, 0, Math.PI * 2);
+  ctx.arc(mp.x + mp.w * 0.5, mp.y + 18, 16, 0, Math.PI * 2);
+  ctx.arc(mp.x + mp.w * 0.78, mp.y + 16, 13, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Luminous skywood platform deck
+  ctx.shadowColor = levelId === 3 ? '#94ecff' : '#ffd58c';
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = levelId === 3 ? '#26446b' : '#3d2a42';
+  ctx.beginPath();
+  ctx.roundRect(mp.x, mp.y, mp.w, 15, 7);
+  ctx.fill();
+
+  // Frost-moss / cloud-crest top rim
+  ctx.fillStyle = levelId === 3 ? '#aef4ff' : '#ffdba6';
+  ctx.beginPath();
+  ctx.roundRect(mp.x + 5, mp.y + 1, mp.w - 10, 4.5, 3);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawSkyRing(ctx: CanvasRenderingContext2D, ring: SkyRing, time: number): void {
+  ctx.save();
+  const ready = ring.cooldown <= 0;
+  const pulse = ready ? 1 + Math.sin(time * 3.4 + ring.phase) * 0.08 : 0.85;
+  const alpha = ready ? 0.92 : 0.35;
+
+  ctx.translate(ring.x, ring.y);
+  ctx.scale(pulse, pulse);
+
+  const halo = ctx.createRadialGradient(0, 0, ring.r * 0.3, 0, 0, ring.r * 1.45);
+  halo.addColorStop(0, `rgba(155, 245, 255, ${0.28 * alpha})`);
+  halo.addColorStop(0.6, `rgba(255, 224, 145, ${0.2 * alpha})`);
+  halo.addColorStop(1, 'rgba(155, 245, 255, 0)');
+  ctx.fillStyle = halo;
+  ctx.beginPath();
+  ctx.arc(0, 0, ring.r * 1.45, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = `rgba(160, 248, 255, ${alpha})`;
+  ctx.lineWidth = 3;
+  ctx.shadowColor = '#94f2ff';
+  ctx.shadowBlur = ready ? 16 : 4;
+  ctx.beginPath();
+  ctx.arc(0, 0, ring.r, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Rotating orbital rune nodes around the ring
+  ctx.rotate(time * 1.6 + ring.phase);
+  ctx.strokeStyle = `rgba(255, 224, 148, ${alpha * 0.85})`;
+  ctx.lineWidth = 1.6;
+  ctx.setLineDash([7, 7]);
+  ctx.beginPath();
+  ctx.arc(0, 0, ring.r - 6, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.fillStyle = `rgba(255, 244, 198, ${alpha})`;
+  for (let i = 0; i < 4; i++) {
+    const a = (i * Math.PI) / 2;
+    ctx.beginPath();
+    ctx.arc(Math.cos(a) * ring.r, Math.sin(a) * ring.r, 3, 0, Math.PI * 2);
+    ctx.fill();
   }
   ctx.restore();
 }
@@ -805,7 +1007,9 @@ function drawSanctuaryTree(
       ? 'rgba(255, 240, 165, 0.58)'
       : levelId === 1
         ? 'rgba(115, 255, 235, 0.28)'
-        : 'rgba(255, 195, 140, 0.3)'
+        : levelId === 2
+          ? 'rgba(255, 195, 140, 0.3)'
+          : 'rgba(160, 238, 255, 0.34)'
   );
   aura.addColorStop(1, 'rgba(115, 255, 235, 0)');
   ctx.fillStyle = aura;
@@ -813,7 +1017,7 @@ function drawSanctuaryTree(
   ctx.arc(tx, ty - 130, auraR, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.fillStyle = levelId === 1 ? '#d7f3f0' : '#f7dfd4';
+  ctx.fillStyle = levelId === 1 ? '#d7f3f0' : levelId === 2 ? '#f7dfd4' : '#e6f6ff';
   ctx.beginPath();
   ctx.moveTo(tx - 38, ty + 8);
   ctx.quadraticCurveTo(tx - 16, ty - 90, tx - 18, ty - 190);
@@ -836,12 +1040,18 @@ function drawSanctuaryTree(
           ? 'rgba(135, 255, 232, 0.85)'
           : 'rgba(255, 224, 145, 0.85)'
         : 'rgba(110, 225, 215, 0.55)';
-    } else {
+    } else if (levelId === 2) {
       ctx.fillStyle = sanctuaryAwakened
         ? idx % 2 === 0
           ? 'rgba(255, 215, 130, 0.88)'
           : 'rgba(255, 155, 195, 0.88)'
         : 'rgba(245, 175, 140, 0.58)';
+    } else {
+      ctx.fillStyle = sanctuaryAwakened
+        ? idx % 2 === 0
+          ? 'rgba(155, 246, 255, 0.9)'
+          : 'rgba(210, 175, 255, 0.9)'
+        : 'rgba(155, 218, 255, 0.6)';
     }
     ctx.beginPath();
     ctx.arc(tx + dx, ty + dy, r, 0, Math.PI * 2);
@@ -898,7 +1108,8 @@ function drawGrassAndFlowers(
   cameraX: number,
   viewW: number
 ): void {
-  const bladeColor = levelId === 1 ? '#3dc79f' : '#c9794b';
+  const bladeColor =
+    levelId === 1 ? '#3dc79f' : levelId === 2 ? '#c9794b' : '#6cc8e8';
   for (const g of world.grassTufts) {
     if (g.x < cameraX - 20 || g.x > cameraX + viewW + 20) continue;
     const tipX = g.x + g.bend * g.h;
@@ -973,7 +1184,7 @@ function drawCollectible(
     ctx.beginPath();
     ctx.arc(0, 0, 3.2, 0, Math.PI * 2);
     ctx.fill();
-  } else {
+  } else if (item.kind === 'crystal') {
     // Rotating Faceted Prism Crystal (grants temporary Spirit Pulse boost!)
     const halo = ctx.createRadialGradient(item.x, item.y, 2, item.x, item.y, 30);
     halo.addColorStop(0, 'rgba(205, 175, 255, 0.85)');
@@ -1005,6 +1216,37 @@ function drawCollectible(
     ctx.lineTo(8, 0);
     ctx.lineTo(0, 12);
     ctx.closePath();
+    ctx.fill();
+  } else {
+    // Rotating 4-Pointed Astral Star Seed (grants temporary Triple Jump!)
+    const halo = ctx.createRadialGradient(item.x, item.y, 2, item.x, item.y, 32);
+    halo.addColorStop(0, 'rgba(215, 245, 255, 0.92)');
+    halo.addColorStop(0.45, 'rgba(175, 145, 255, 0.44)');
+    halo.addColorStop(1, 'rgba(175, 145, 255, 0)');
+    ctx.fillStyle = halo;
+    ctx.beginPath();
+    ctx.arc(item.x, item.y, 32, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.translate(item.x, item.y);
+    ctx.rotate(time * 1.4 + item.phase);
+    ctx.fillStyle = '#d9f4ff';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    for (let i = 0; i < 8; i++) {
+      const r = i % 2 === 0 ? 12.5 : 4.2;
+      const a = (i * Math.PI) / 4;
+      if (i === 0) ctx.moveTo(Math.cos(a) * r, Math.sin(a) * r);
+      else ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.fillStyle = '#fff5b8';
+    ctx.beginPath();
+    ctx.arc(0, 0, 2.8, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -1077,9 +1319,10 @@ function drawPlayer(ctx: CanvasRenderingContext2D, player: PlayerState, time: nu
   ctx.save();
 
   const boosted = player.crystalBoostTimer > 0;
-  ctx.strokeStyle = boosted ? '#ffe08c' : '#7bfce6';
+  const astralJump = player.extraAirJumpTimer > 0;
+  ctx.strokeStyle = boosted ? '#ffe08c' : astralJump ? '#c7b8ff' : '#7bfce6';
   ctx.lineCap = 'round';
-  ctx.shadowColor = boosted ? '#ffd266' : '#6fffe9';
+  ctx.shadowColor = boosted ? '#ffd266' : astralJump ? '#c7b8ff' : '#6fffe9';
   ctx.shadowBlur = 12;
   for (let i = 0; i < player.scarf.length - 1; i++) {
     ctx.lineWidth = Math.max(1.5, 6.5 - i * 0.55);
@@ -1092,16 +1335,39 @@ function drawPlayer(ctx: CanvasRenderingContext2D, player: PlayerState, time: nu
   ctx.globalAlpha = 1;
 
   const bodyY = player.y - 18 * player.squash;
-  const aura = ctx.createRadialGradient(player.x, bodyY, 4, player.x, bodyY, boosted ? 56 : 44);
-  aura.addColorStop(0, boosted ? 'rgba(255, 224, 140, 0.42)' : 'rgba(140, 255, 238, 0.36)');
+  const auraR = boosted || astralJump ? 56 : 44;
+  const aura = ctx.createRadialGradient(player.x, bodyY, 4, player.x, bodyY, auraR);
+  aura.addColorStop(
+    0,
+    boosted
+      ? 'rgba(255, 224, 140, 0.42)'
+      : astralJump
+        ? 'rgba(186, 165, 255, 0.42)'
+        : 'rgba(140, 255, 238, 0.36)'
+  );
   aura.addColorStop(1, 'rgba(140, 255, 238, 0)');
   ctx.fillStyle = aura;
   ctx.beginPath();
-  ctx.arc(player.x, bodyY, boosted ? 56 : 44, 0, Math.PI * 2);
+  ctx.arc(player.x, bodyY, auraR, 0, Math.PI * 2);
   ctx.fill();
 
+  if (astralJump) {
+    ctx.save();
+    ctx.strokeStyle = 'rgba(205, 190, 255, 0.55)';
+    ctx.lineWidth = 1.4;
+    ctx.setLineDash([4, 6]);
+    ctx.beginPath();
+    ctx.arc(player.x, bodyY, 27 + Math.sin(time * 5) * 2, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
   if (player.gliding) {
-    ctx.fillStyle = boosted ? 'rgba(255, 226, 155, 0.78)' : 'rgba(145, 255, 235, 0.72)';
+    ctx.fillStyle = boosted
+      ? 'rgba(255, 226, 155, 0.78)'
+      : astralJump
+        ? 'rgba(205, 190, 255, 0.78)'
+        : 'rgba(145, 255, 235, 0.72)';
     ctx.beginPath();
     ctx.ellipse(player.x, bodyY - 20, 22, 7, 0, Math.PI, 0);
     ctx.fill();

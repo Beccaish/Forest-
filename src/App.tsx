@@ -17,6 +17,8 @@ const INITIAL_HUD: HudSnapshot = {
   blossomsTotal: 6,
   crystalsCollected: 0,
   crystalsTotal: 5,
+  starseedsCollected: 0,
+  starseedsTotal: 3,
   lanternsLit: 0,
   lanternsTotal: 8,
   petals: 3,
@@ -26,6 +28,7 @@ const INITIAL_HUD: HudSnapshot = {
   elapsedSeconds: 0,
   progressPct: 0,
   crystalBoostActive: false,
+  tripleJumpActive: false,
 };
 
 function detectCoarsePointer(): boolean {

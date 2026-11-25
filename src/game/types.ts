@@ -1,10 +1,10 @@
 export type GamePhase = 'TITLE_MENU' | 'PLAYING' | 'PAUSED' | 'VICTORY' | 'GAME_OVER';
 
-export type LevelId = 1 | 2;
+export type LevelId = 1 | 2 | 3;
 
 export type WeatherKind = 'DRIFTING_LEAVES' | 'SOFT_RAIN' | 'STARLIGHT_FLURRY';
 
-export type CollectibleKind = 'orb' | 'blossom' | 'crystal';
+export type CollectibleKind = 'orb' | 'blossom' | 'crystal' | 'starseed';
 
 export interface HudSnapshot {
   phase: GamePhase;
@@ -16,6 +16,8 @@ export interface HudSnapshot {
   blossomsTotal: number;
   crystalsCollected: number;
   crystalsTotal: number;
+  starseedsCollected: number;
+  starseedsTotal: number;
   lanternsLit: number;
   lanternsTotal: number;
   petals: number;
@@ -25,6 +27,7 @@ export interface HudSnapshot {
   elapsedSeconds: number;
   progressPct: number;
   crystalBoostActive: boolean;
+  tripleJumpActive: boolean;
 }
 
 export interface BiomeConfig {
@@ -120,6 +123,28 @@ export interface Platform {
   w: number;
   type: 'branch' | 'stone' | 'spirit';
   glow: number;
+}
+
+export interface MovingPlatform {
+  baseX: number;
+  baseY: number;
+  x: number;
+  y: number;
+  prevX: number;
+  prevY: number;
+  w: number;
+  dx: number;
+  dy: number;
+  speed: number;
+  phase: number;
+}
+
+export interface SkyRing {
+  x: number;
+  y: number;
+  r: number;
+  cooldown: number;
+  phase: number;
 }
 
 export interface GlowMushroom {
@@ -235,6 +260,7 @@ export interface PlayerState {
   gliding: boolean;
   pulseCooldown: number;
   crystalBoostTimer: number;
+  extraAirJumpTimer: number;
   invulnTimer: number;
   petals: number;
   maxPetals: number;
