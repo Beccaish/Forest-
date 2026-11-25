@@ -34,9 +34,12 @@ const CLOAK_PALETTES: Record<
   default: { fill: '#226d68', highlight: '#7cfce7', scarf: '#7cfce7' },
   sunset_ember: { fill: '#a14328', highlight: '#ffb86c', scarf: '#ff9654' },
   sakura_petal: { fill: '#b24b88', highlight: '#ff9ee4', scarf: '#ffd68a' },
+  ranger_cape: { fill: '#2c6b45', highlight: '#65d68a', scarf: '#d9b26f' },
   starweave_mantle: { fill: '#3b4291', highlight: '#b8beff', scarf: '#98a2ff' },
   ocean_tide: { fill: '#14698a', highlight: '#48e5ff', scarf: '#7cfce7' },
+  fairy_gossamer: { fill: '#9f4e9e', highlight: '#ffb8f2', scarf: '#ffe28a' },
   prism_aurora: { fill: '#197b84', highlight: '#94ffe6', scarf: '#e4b3ff' },
+  dragonscale_cloak: { fill: '#781f24', highlight: '#ff7a52', scarf: '#ffc857' },
   shadow_velvet: { fill: '#45286e', highlight: '#c28cff', scarf: '#ffe18c' },
 };
 
@@ -91,6 +94,32 @@ const ItemIcon: React.FC<{ id: ShopItemId }> = ({ id }) => {
             strokeWidth="1.4"
           />
           <circle cx="16" cy="18" r="2.6" fill="#fff0c2" />
+        </svg>
+      );
+    case 'super_dragon_wings':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path
+            d="M15 20L4 10L7 19L12 22Z"
+            fill="#248f74"
+            stroke="#ff9966"
+            strokeWidth="1.4"
+          />
+          <path
+            d="M17 20L28 10L25 19L20 22Z"
+            fill="#248f74"
+            stroke="#ff9966"
+            strokeWidth="1.4"
+          />
+          <circle cx="16" cy="20" r="2.2" fill="#ffc857" />
+        </svg>
+      );
+    case 'super_fairy_sparkle':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M16 5L18 12L25 14L18 16L16 23L14 16L7 14L14 12Z" fill="#ff9ef0" />
+          <circle cx="9" cy="8" r="1.8" fill="#ffe494" />
+          <circle cx="24" cy="23" r="2" fill="#7cfce7" />
         </svg>
       );
     case 'moss_crown':
@@ -270,6 +299,66 @@ const ItemIcon: React.FC<{ id: ShopItemId }> = ({ id }) => {
           <path d="M14.6 17L17.4 17L16 19.2Z" fill="#ffd27a" />
         </svg>
       );
+    case 'ranger_hood':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M7 22C7 12 13 8 21 8C23 13 24 18 25 22L16 19Z" fill="#2d6e46" stroke="#6ee79c" strokeWidth="1.5" />
+          <circle cx="19" cy="18" r="2" fill="#ffd67a" />
+        </svg>
+      );
+    case 'knight_helm':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M9 24V16C9 11 12 8 16 8C20 8 23 11 23 16V24Z" fill="#b4c9de" stroke="#e6f4ff" strokeWidth="1.4" />
+          <rect x="13" y="15" width="7" height="2.4" fill="#182b3d" />
+          <path d="M16 8C13 5 9 6 7 9C11 9 13 9 16 8Z" fill="#56e3cc" />
+        </svg>
+      );
+    case 'fairy_sparkle_tiara':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M6 21C9 14 23 14 26 21" stroke="#ff9ee8" strokeWidth="2" strokeLinecap="round" />
+          <circle cx="16" cy="12" r="2.6" fill="#ffe68c" />
+          <circle cx="10" cy="15" r="1.6" fill="#ffb8f2" />
+          <circle cx="22" cy="15" r="1.6" fill="#ffb8f2" />
+        </svg>
+      );
+    case 'ranger_cape':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M10 8L22 8L25 24L16 21L7 24Z" fill="#2c6b45" stroke="#65d68a" strokeWidth="1.6" />
+          <circle cx="16" cy="11" r="2" fill="#d9b26f" />
+        </svg>
+      );
+    case 'dragonscale_cloak':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M10 8L22 8L25 24C20 26 12 26 7 24Z" fill="#781f24" stroke="#ff7a52" strokeWidth="1.6" />
+          <path d="M11 15L16 18L21 15" stroke="#ffc857" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      );
+    case 'fairy_gossamer':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M10 8L22 8L25 24C20 26 12 26 7 24Z" fill="#9f4e9e" stroke="#ffb8f2" strokeWidth="1.6" />
+          <circle cx="14" cy="15" r="1.4" fill="#ffe28a" />
+          <circle cx="19" cy="19" r="1.4" fill="#ffe28a" />
+        </svg>
+      );
+    case 'fairy_sparkle_wand':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <line x1="9" y1="24" x2="20" y2="12" stroke="#ffe194" strokeWidth="2.2" strokeLinecap="round" />
+          <path d="M21 6L22.5 10L26.5 11.5L22.5 13L21 17L19.5 13L15.5 11.5L19.5 10Z" fill="#ffb6f6" />
+        </svg>
+      );
+    case 'knight_crest':
+      return (
+        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M9 8H23V17C23 22 16 26 16 26C16 26 9 22 9 17Z" fill="#3e6e94" stroke="#b8e0ff" strokeWidth="1.6" />
+          <path d="M16 11V22M12 16H20" stroke="#7cfce7" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      );
     case 'sanctuary_heart':
       return (
         <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
@@ -347,6 +436,21 @@ const AvatarPreviewSvg: React.FC<{ loadout: PlayerLoadout }> = ({ loadout }) => 
           <ellipse cx="124" cy="98" rx="22" ry="11" transform="rotate(24 124 98)" fill="#ff8648" fillOpacity="0.85" stroke="#ffe082" strokeWidth="1.6" />
         </g>
       )}
+      {power === 'super_dragon_wings' && (
+        <g>
+          <path d="M84 96L34 58L46 92L68 106Z" fill="#248f74" stroke="#ff9966" strokeWidth="1.8" />
+          <path d="M96 96L146 58L134 92L112 106Z" fill="#248f74" stroke="#ff9966" strokeWidth="1.8" />
+        </g>
+      )}
+      {power === 'super_fairy_sparkle' && (
+        <g>
+          <circle cx="42" cy="76" r="3" fill="#ff9ef0" />
+          <circle cx="138" cy="78" r="2.8" fill="#ffe494" />
+          <circle cx="54" cy="124" r="2.4" fill="#ffe494" />
+          <circle cx="132" cy="122" r="2.6" fill="#ff9ef0" />
+          <circle cx="90" cy="38" r="2.5" fill="#7cfce7" />
+        </g>
+      )}
       {power === 'super_nova_pulse' && (
         <circle cx="90" cy="96" r="54" stroke="#ffd86b" strokeOpacity="0.65" strokeWidth="2.4" fill="none" />
       )}
@@ -394,6 +498,27 @@ const AvatarPreviewSvg: React.FC<{ loadout: PlayerLoadout }> = ({ loadout }) => 
           <ellipse cx="40" cy="60" rx="4" ry="2.2" transform="rotate(-24 40 60)" fill="#dffff8" />
           <ellipse cx="48" cy="60" rx="4" ry="2.2" transform="rotate(24 48 60)" fill="#dffff8" />
           <circle cx="44" cy="64" r="3.8" fill="#ffe18c" />
+        </g>
+      )}
+
+      {charm === 'fairy_sparkle_wand' && (
+        <g>
+          <circle cx="44" cy="66" r="13" fill="#ffb6f6" fillOpacity="0.32" />
+          <circle cx="44" cy="66" r="4.5" fill="#ffd1fa" />
+          <circle cx="37" cy="59" r="1.8" fill="#ffe194" />
+          <circle cx="51" cy="72" r="1.6" fill="#ffe194" />
+        </g>
+      )}
+
+      {charm === 'knight_crest' && (
+        <g>
+          <path
+            d="M132 82H148V93C148 100 140 105 140 105C140 105 132 100 132 93Z"
+            fill="#3e6e94"
+            stroke="#b8e0ff"
+            strokeWidth="1.8"
+          />
+          <path d="M140 86V100M135 93H145" stroke="#7cfce7" strokeWidth="1.6" strokeLinecap="round" />
         </g>
       )}
 
@@ -515,6 +640,27 @@ const AvatarPreviewSvg: React.FC<{ loadout: PlayerLoadout }> = ({ loadout }) => 
         <g stroke="#c7b8ff" strokeWidth="2.6" strokeLinecap="round" fill="none">
           <path d="M81 59C77 50 73 43 68 35M76 49L69 47M78 44L83 40" />
           <path d="M99 59C103 50 107 43 112 35M104 49L111 47M102 44L97 40" />
+        </g>
+      )}
+      {hat === 'ranger_hood' && (
+        <g>
+          <path d="M70 72C68 50 82 44 96 47C106 49 111 60 110 72C100 63 80 63 70 72Z" fill="#2d6e46" stroke="#6ee79c" strokeWidth="1.6" />
+          <circle cx="101" cy="62" r="2.4" fill="#ffd67a" />
+        </g>
+      )}
+      {hat === 'fairy_sparkle_tiara' && (
+        <g>
+          <path d="M74 62C78 55 102 55 106 62" stroke="#ff9ee8" strokeWidth="2.6" strokeLinecap="round" fill="none" />
+          <circle cx="90" cy="52" r="3.4" fill="#ffe68c" />
+          <circle cx="80" cy="56" r="2.1" fill="#ffb8f2" />
+          <circle cx="100" cy="56" r="2.1" fill="#ffb8f2" />
+        </g>
+      )}
+      {hat === 'knight_helm' && (
+        <g>
+          <path d="M72 78V66C72 55 80 49 90 49C100 49 108 55 108 66V78Z" fill="#b4c9de" stroke="#e6f4ff" strokeWidth="1.6" />
+          <rect x="83" y="66" width="16" height="4" rx="1" fill="#182b3d" />
+          <path d="M90 49C84 40 74 41 69 47C77 48 82 50 90 49Z" fill="#56e3cc" />
         </g>
       )}
       {hat === 'astral_wizard' && (

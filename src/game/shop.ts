@@ -7,20 +7,30 @@ export type ShopItemId =
   | 'sunflower_crown'
   | 'coral_tiara'
   | 'astral_wizard'
+  | 'knight_helm'
+  | 'ranger_hood'
+  | 'fairy_sparkle_tiara'
   | 'sunset_ember'
   | 'starweave_mantle'
   | 'prism_aurora'
   | 'sakura_petal'
   | 'ocean_tide'
   | 'shadow_velvet'
+  | 'ranger_cape'
+  | 'dragonscale_cloak'
+  | 'fairy_gossamer'
   | 'firefly_sprite'
   | 'wind_boots'
   | 'sanctuary_heart'
   | 'mini_owl'
+  | 'fairy_sparkle_wand'
+  | 'knight_crest'
   | 'super_sky_leap'
   | 'super_nova_pulse'
   | 'super_star_magnet'
-  | 'super_phoenix_wings';
+  | 'super_phoenix_wings'
+  | 'super_dragon_wings'
+  | 'super_fairy_sparkle';
 
 export interface ShopItem {
   id: ShopItemId;
@@ -51,7 +61,7 @@ export const SHOP_ITEMS: ShopItem[] = [
     name: 'Skybound Triple Leap',
     category: 'power',
     price: 130,
-    description: 'Super Power: Permanent triple jump and +15% jump height with glowing wind rings.',
+    description: 'Super Power: Permanent triple jump and +12% jump height with glowing wind rings.',
     accentColor: '#7cfce7',
   },
   {
@@ -71,12 +81,28 @@ export const SHOP_ITEMS: ShopItem[] = [
     accentColor: '#ff9ee8',
   },
   {
+    id: 'super_fairy_sparkle',
+    name: 'Archfey Sparkle Aura',
+    category: 'power',
+    price: 245,
+    description: 'Super Power: Swirling fairy dust boosts jump height and grants +50% bonus Dewdrops.',
+    accentColor: '#ff9ef0',
+  },
+  {
     id: 'super_phoenix_wings',
     name: 'Phoenix Wing Glide',
     category: 'power',
     price: 280,
     description: 'Super Power: Fiery wings for soaring low-sink glides and slow Spirit Petal healing.',
     accentColor: '#ff935c',
+  },
+  {
+    id: 'super_dragon_wings',
+    name: 'Emerald Dragon Wings',
+    category: 'power',
+    price: 295,
+    description: 'Super Power: Mighty drake wings for +20% speed, soaring glide, and dash-knockback.',
+    accentColor: '#ff7a52',
   },
 
   // Headwear
@@ -105,12 +131,36 @@ export const SHOP_ITEMS: ShopItem[] = [
     accentColor: '#9ef4ff',
   },
   {
+    id: 'ranger_hood',
+    name: 'Woodland Ranger Hood',
+    category: 'hat',
+    price: 120,
+    description: 'Pointed forest-scout hood fastened with a golden oak-leaf pin.',
+    accentColor: '#6ee79c',
+  },
+  {
     id: 'coral_tiara',
     name: 'Coral Mermaid Crest',
     category: 'hat',
     price: 145,
     description: 'Shimmering lagoon-pearl crest gifted by deep-water mermaids.',
     accentColor: '#5ef2ff',
+  },
+  {
+    id: 'fairy_sparkle_tiara',
+    name: 'Pixie Prism Circlet',
+    category: 'hat',
+    price: 155,
+    description: 'Gossamer fairy circlet crowned with floating pink-gold stardust.',
+    accentColor: '#ff9ee8',
+  },
+  {
+    id: 'knight_helm',
+    name: 'Silverwood Knight Helm',
+    category: 'hat',
+    price: 165,
+    description: 'Gleaming forest knight visor topped with a windswept emerald plume.',
+    accentColor: '#b8dcff',
   },
   {
     id: 'frost_antlers',
@@ -147,6 +197,14 @@ export const SHOP_ITEMS: ShopItem[] = [
     accentColor: '#ff9ee4',
   },
   {
+    id: 'ranger_cape',
+    name: 'Forest Ranger Mantle',
+    category: 'cloak',
+    price: 130,
+    description: 'Moss-green trailblazer cloak pinned with a weathered bronze clasp.',
+    accentColor: '#65d68a',
+  },
+  {
     id: 'starweave_mantle',
     name: 'Starweave Mantle',
     category: 'cloak',
@@ -163,12 +221,28 @@ export const SHOP_ITEMS: ShopItem[] = [
     accentColor: '#48e5ff',
   },
   {
+    id: 'fairy_gossamer',
+    name: 'Starlight Fairy Shroud',
+    category: 'cloak',
+    price: 190,
+    description: 'Iridescent gossamer cape dusted with sparkling pixie stardust.',
+    accentColor: '#ffb8f2',
+  },
+  {
     id: 'prism_aurora',
     name: 'Prism Aurora Cape',
     category: 'cloak',
     price: 220,
     description: 'Iridescent spirit cloak that trails northern aurora light.',
     accentColor: '#7cfce7',
+  },
+  {
+    id: 'dragonscale_cloak',
+    name: 'Ember Dragonscale Cape',
+    category: 'cloak',
+    price: 235,
+    description: 'Crimson scaled drake cape rimmed with molten golden armor trim.',
+    accentColor: '#ff6e54',
   },
   {
     id: 'shadow_velvet',
@@ -197,12 +271,28 @@ export const SHOP_ITEMS: ShopItem[] = [
     accentColor: '#8cf8e8',
   },
   {
+    id: 'fairy_sparkle_wand',
+    name: 'Pixie Dust Lantern',
+    category: 'charm',
+    price: 175,
+    description: 'Trails fairy sparkles and extends Crystal Boost & Flying Flower duration +2.5s.',
+    accentColor: '#ffb6f6',
+  },
+  {
     id: 'mini_owl',
     name: 'Starlight Owlet',
     category: 'charm',
     price: 195,
     description: 'A loyal glowing owlet companion that grants +40% bonus Dewdrops.',
     accentColor: '#a8ebff',
+  },
+  {
+    id: 'knight_crest',
+    name: 'Verdant Knight Shield',
+    category: 'charm',
+    price: 205,
+    description: 'Orbiting enchanted shield that blocks 1 enemy hit every 22 seconds.',
+    accentColor: '#9ed4ff',
   },
   {
     id: 'sanctuary_heart',

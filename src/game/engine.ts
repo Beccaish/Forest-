@@ -1,6 +1,7 @@
 import { audioEngine } from './audio';
 import { backdropCache } from './backgrounds';
 import { renderForestScene } from './renderer';
+import { getSavedGameSummary, loadGameState, saveGameState } from './save';
 import {
   SHOP_ITEMS,
   cloneProgress,
@@ -75,6 +76,7 @@ export class ForestGameEngine {
   private lastFrameMs = 0;
   private hudSyncTimer = 0;
   private phoenixRegenTimer = 0;
+  private shieldCooldown = 0;
 
   public input: InputState = {
     left: false,
@@ -186,11 +188,11 @@ export class ForestGameEngine {
   }
 
   private earnDewdrops(amount: number): void {
-    const bonus =
-      this.shopProgress.equipped.charm === 'mini_owl'
-        ? Math.max(2, Math.round(amount * 0.4))
-        : 0;
-    this.shopProgress.dewdrops += amount + bonus;
+    let mult = 1;
+    if (this.shopProgress.equipped.charm === 'mini_owl') mult += 0.4;
+    if (this.shopProgress.equipped.power === 'super_fairy_sparkle') mult += 0.5;
+    const total = Math.round(amount * mult);
+    this.shopProgress.dewdrops += total;
     saveShopProgress(this.shopProgress);
   }
 
@@ -274,6 +276,119 @@ export class ForestGameEngine {
     else if (this.phase === 'PAUSED') this.resumeGame();
   }
 
+  goHome(): void {
+    this.clearHeldInputs();
+    this.phase = 'TITLE_MENU';
+    this.emitHudSnapshot();
+  }
+
+  saveGame(): boolean {
+    if (this.phase !== 'PLAYING' && this.phase !== 'PAUSED') return false;
+    audioEngine.init();
+    const collectedIndices: number[] = [];
+    this.world.collectibles.forEach((c, idx) => {
+      if (c.collected) collectedIndices.push(idx);
+    });
+    const litLanternIndices: number[] = [];
+    this.world.lanterns.forEach((l, idx) => {
+      if (l.lit) litLanternIndices.push(idx);
+    });
+    const blessedCreatureIds = this.world.creatures.filter((c) => c.blessed).map((c) => c.id);
+    const pacifiedBaddieIds = this.world.baddies.filter((b) => b.pacifiedOnce).map((b) => b.id);
+
+    const ok = saveGameState({
+      version: 1,
+      savedAt: Date.now(),
+      levelId: this.levelId,
+      playerX: this.player.x,
+      playerY: this.player.y,
+      checkpointX: this.player.checkpointX,
+      checkpointY: this.player.checkpointY,
+      petals: this.player.petals,
+      highJumpCharges: this.player.highJumpCharges,
+      flyingFlowers: this.player.flyingFlowers,
+      elapsedSeconds: this.elapsedSeconds,
+      orbsCollected: this.orbsCollected,
+      blossomsCollected: this.blossomsCollected,
+      crystalsCollected: this.crystalsCollected,
+      starseedsCollected: this.starseedsCollected,
+      collectedIndices,
+      litLanternIndices,
+      blessedCreatureIds,
+      pacifiedBaddieIds,
+    });
+    saveShopProgress(this.shopProgress);
+    if (ok) {
+      audioEngine.playChime(2);
+      this.spawnDust(this.player.x, this.player.y - 24, '#8cf8e8', 16);
+    }
+    this.emitHudSnapshot();
+    return ok;
+  }
+
+  loadSavedGame(): boolean {
+    const saved = loadGameState();
+    if (!saved) return false;
+    audioEngine.init();
+    this.levelId = saved.levelId;
+    this.resetWorldState(saved.levelId);
+
+    const collectedSet = new Set(saved.collectedIndices);
+    this.world.collectibles.forEach((item, idx) => {
+      if (collectedSet.has(idx)) item.collected = true;
+    });
+
+    const litSet = new Set(saved.litLanternIndices);
+    this.world.lanterns.forEach((l, idx) => {
+      if (litSet.has(idx)) {
+        l.lit = true;
+        l.glow = 1;
+      }
+    });
+
+    const blessedSet = new Set(saved.blessedCreatureIds);
+    for (const c of this.world.creatures) {
+      if (blessedSet.has(c.id)) {
+        c.blessed = true;
+      }
+    }
+
+    const pacifiedSet = new Set(saved.pacifiedBaddieIds);
+    for (const b of this.world.baddies) {
+      if (pacifiedSet.has(b.id)) {
+        b.pacifiedOnce = true;
+      }
+    }
+
+    this.player.x = saved.playerX;
+    this.player.y = saved.playerY;
+    this.player.checkpointX = saved.checkpointX;
+    this.player.checkpointY = saved.checkpointY;
+    this.player.petals = clamp(saved.petals, 1, this.player.maxPetals);
+    this.player.highJumpCharges = saved.highJumpCharges;
+    this.player.flyingFlowers = saved.flyingFlowers;
+    this.player.scarf.forEach((n) => {
+      n.x = this.player.x;
+      n.y = this.player.y - 24;
+    });
+
+    this.elapsedSeconds = saved.elapsedSeconds;
+    this.orbsCollected = saved.orbsCollected;
+    this.blossomsCollected = saved.blossomsCollected;
+    this.crystalsCollected = saved.crystalsCollected;
+    this.starseedsCollected = saved.starseedsCollected;
+
+    const virtualW = this.viewW / this.worldScale;
+    const virtualH = this.viewH / this.worldScale;
+    this.cameraX = clamp(this.player.x - virtualW * 0.38, 0, Math.max(0, 11400 - virtualW));
+    this.cameraY = this.player.y - virtualH * 0.68;
+
+    this.phase = 'PLAYING';
+    audioEngine.playChime(3);
+    this.emitHudSnapshot();
+    return true;
+  }
+
   respawnAtLantern(): void {
     audioEngine.init();
     this.player.x = this.player.checkpointX;
@@ -325,7 +440,9 @@ export class ForestGameEngine {
     if (p.flyingFlowers <= 0 || p.flyingTimer > 0.25) return;
     audioEngine.init();
     p.flyingFlowers--;
-    p.flyingTimer = this.shopProgress.equipped.power === 'super_star_magnet' ? 7.5 : 5.0;
+    const baseFly = this.shopProgress.equipped.power === 'super_star_magnet' ? 7.5 : 5.0;
+    const wandBonus = this.shopProgress.equipped.charm === 'fairy_sparkle_wand' ? 2.5 : 0;
+    p.flyingTimer = baseFly + wandBonus;
     p.onGround = false;
     p.vy = -260;
     p.squash = 1.24;
@@ -563,9 +680,17 @@ export class ForestGameEngine {
 
     const moveDir = (this.input.right ? 1 : 0) - (this.input.left ? 1 : 0);
     const hasBoots = this.shopProgress.equipped.charm === 'wind_boots';
+    const hasPixieLantern = this.shopProgress.equipped.charm === 'fairy_sparkle_wand';
+    const hasShield = this.shopProgress.equipped.charm === 'knight_crest';
     const equippedPower = this.shopProgress.equipped.power;
     const hasSkyLeap = equippedPower === 'super_sky_leap';
     const hasPhoenix = equippedPower === 'super_phoenix_wings';
+    const hasDragonWings = equippedPower === 'super_dragon_wings';
+    const hasFairyAura = equippedPower === 'super_fairy_sparkle';
+
+    if (this.shieldCooldown > 0) {
+      this.shieldCooldown = Math.max(0, this.shieldCooldown - dt);
+    }
 
     if (hasPhoenix && p.petals < p.maxPetals) {
       this.phoenixRegenTimer += dt;
@@ -585,7 +710,8 @@ export class ForestGameEngine {
       baseSpeed +
       (p.crystalBoostTimer > 0 ? 45 : 0) +
       (isFlying ? 85 : 0) +
-      (hasPhoenix && !p.onGround ? 55 : 0);
+      (hasPhoenix && !p.onGround ? 55 : 0) +
+      (hasDragonWings ? 60 : 0);
     const accel = p.onGround ? (hasBoots ? 2150 : 1950) : hasBoots ? 1420 : 1280;
     const decel = p.onGround ? 1800 : 540;
 
@@ -601,7 +727,7 @@ export class ForestGameEngine {
     }
 
     const hasTripleJump = p.extraAirJumpTimer > 0 || hasSkyLeap;
-    const jumpMult = hasSkyLeap ? 1.12 : 1;
+    const jumpMult = hasSkyLeap ? 1.12 : hasFairyAura ? 1.1 : 1;
 
     if (p.jumpBuffer > 0 && !isFlying) {
       if (p.coyoteTime > 0) {
@@ -685,9 +811,9 @@ export class ForestGameEngine {
       }
     } else {
       const gravityBase = isUnderwater ? 820 : 1220;
-      const glideGrav = isUnderwater ? 140 : hasPhoenix ? 95 : hasBoots ? 210 : 260;
+      const glideGrav = isUnderwater ? 140 : hasPhoenix ? 95 : hasDragonWings ? 105 : hasBoots ? 210 : 260;
       const gravity = p.gliding ? glideGrav : gravityBase;
-      const glideCap = isUnderwater ? 60 : hasPhoenix ? 38 : hasBoots ? 78 : 105;
+      const glideCap = isUnderwater ? 60 : hasPhoenix ? 38 : hasDragonWings ? 44 : hasBoots ? 78 : 105;
       p.vy += gravity * dt;
       if (p.gliding && p.vy > glideCap) p.vy = glideCap;
       else if (p.vy > (isUnderwater ? 460 : 780)) p.vy = isUnderwater ? 460 : 780;
@@ -809,16 +935,16 @@ export class ForestGameEngine {
       }
     }
 
-    if ((Math.abs(p.vx) > 90 || p.crystalBoostTimer > 0) && Math.random() < 0.3) {
+    if ((Math.abs(p.vx) > 90 || p.crystalBoostTimer > 0 || hasFairyAura || hasPixieLantern) && Math.random() < (hasFairyAura ? 0.55 : 0.3)) {
       this.particles.push({
-        x: p.x + (Math.random() - 0.5) * 10,
-        y: p.y - 6 - Math.random() * 14,
+        x: p.x + (Math.random() - 0.5) * 16,
+        y: p.y - 6 - Math.random() * 20,
         vx: -p.vx * 0.15,
-        vy: -15 - Math.random() * 20,
-        r: 1.3 + Math.random() * 1.4,
-        life: 0.45,
-        maxLife: 0.45,
-        color: p.crystalBoostTimer > 0 ? '#ffe18c' : '#7cfce7',
+        vy: -15 - Math.random() * 22,
+        r: 1.4 + Math.random() * 1.6,
+        life: 0.5,
+        maxLife: 0.5,
+        color: hasFairyAura || hasPixieLantern ? (Math.random() > 0.5 ? '#ff9ef0' : '#ffe399') : p.crystalBoostTimer > 0 ? '#ffe18c' : '#7cfce7',
       });
     }
 
@@ -905,6 +1031,15 @@ export class ForestGameEngine {
       }
 
       if (distToPlayer < 26 && p.invulnTimer <= 0) {
+        if (hasShield && this.shieldCooldown <= 0) {
+          this.shieldCooldown = 22;
+          p.invulnTimer = 1.25;
+          w.stunnedTimer = 5;
+          this.triggerShake(4.5, 0.16);
+          audioEngine.playPulse();
+          this.spawnDust(p.x, p.y - 20, '#9ed4ff', 22);
+          continue;
+        }
         p.petals = Math.max(0, p.petals - 1);
         p.invulnTimer = 1.4;
         p.vx = Math.sign(p.x - w.x || -1) * 260;
@@ -951,6 +1086,23 @@ export class ForestGameEngine {
 
       if (b.emerge < 0.55) continue;
 
+      // Dragon Wings aerial dash knockback
+      if (
+        hasDragonWings &&
+        (!p.onGround || Math.abs(p.vx) > 250) &&
+        Math.hypot(b.x - p.x, b.y - 18 - (p.y - 20)) < 46
+      ) {
+        b.stunnedTimer = 6.5;
+        if (!b.pacifiedOnce) {
+          b.pacifiedOnce = true;
+          this.earnDewdrops(15);
+          this.emitHudSnapshot();
+        }
+        audioEngine.playStomp();
+        this.spawnDust(b.x, b.y - 20, '#ff8654', 16);
+        continue;
+      }
+
       // Jump / Stomp defeat check
       if (
         p.vy > 0 &&
@@ -977,6 +1129,15 @@ export class ForestGameEngine {
 
       // Side collision check
       if (Math.hypot(b.x - p.x, b.y - 16 - (p.y - 20)) < 25 && p.invulnTimer <= 0) {
+        if (hasShield && this.shieldCooldown <= 0) {
+          this.shieldCooldown = 22;
+          p.invulnTimer = 1.25;
+          b.stunnedTimer = 5;
+          this.triggerShake(4.5, 0.16);
+          audioEngine.playPulse();
+          this.spawnDust(p.x, p.y - 20, '#9ed4ff', 22);
+          continue;
+        }
         p.petals = Math.max(0, p.petals - 1);
         p.invulnTimer = 1.4;
         p.vx = Math.sign(p.x - b.x || -1) * 260;
@@ -1031,7 +1192,7 @@ export class ForestGameEngine {
         } else if (item.kind === 'crystal') {
           this.crystalsCollected++;
           this.earnDewdrops(20);
-          p.crystalBoostTimer = 6.5;
+          p.crystalBoostTimer = 6.5 + (hasPixieLantern ? 2.5 : 0);
           audioEngine.playCrystal();
           this.spawnDust(item.x, item.y, '#cfa6ff', 24);
         } else if (item.kind === 'starseed') {
@@ -1186,6 +1347,7 @@ export class ForestGameEngine {
       underwaterActive: blend.weights.underwater > 0.45,
       dewdrops: this.shopProgress.dewdrops,
       equipped: { ...this.shopProgress.equipped },
+      savedGame: getSavedGameSummary(),
     });
   }
 }

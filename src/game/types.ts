@@ -1,4 +1,5 @@
 import type { PlayerLoadout } from './shop';
+import type { SavedGameSummary } from './save';
 
 export type GamePhase = 'TITLE_MENU' | 'PLAYING' | 'PAUSED' | 'VICTORY' | 'GAME_OVER';
 
@@ -47,6 +48,7 @@ export interface HudSnapshot {
   underwaterActive: boolean;
   dewdrops: number;
   equipped: PlayerLoadout;
+  savedGame: SavedGameSummary | null;
 }
 
 export interface BiomeConfig {

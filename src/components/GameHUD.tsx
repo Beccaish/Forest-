@@ -5,18 +5,26 @@ interface GameHUDProps {
   hud: HudSnapshot;
   muted: boolean;
   isTouchDevice: boolean;
+  justSaved: boolean;
   onToggleMute: () => void;
   onPause: () => void;
   onFly: () => void;
+  onSaveGame: () => void;
+  onOpenShop: () => void;
+  onGoHome: () => void;
 }
 
 export const GameHUD: React.FC<GameHUDProps> = ({
   hud,
   muted,
   isTouchDevice,
+  justSaved,
   onToggleMute,
   onPause,
   onFly,
+  onSaveGame,
+  onOpenShop,
+  onGoHome,
 }) => {
   if (hud.phase !== 'PLAYING') return null;
 
@@ -223,7 +231,11 @@ export const GameHUD: React.FC<GameHUDProps> = ({
                       ? 'Solar Nova'
                       : hud.equipped.power === 'super_star_magnet'
                         ? 'Cosmic Magnet'
-                        : 'Phoenix Wings'}
+                        : hud.equipped.power === 'super_fairy_sparkle'
+                          ? 'Archfey Aura'
+                          : hud.equipped.power === 'super_dragon_wings'
+                            ? 'Dragon Wings'
+                            : 'Phoenix Wings'}
                 </span>
               </>
             )}
@@ -231,27 +243,52 @@ export const GameHUD: React.FC<GameHUDProps> = ({
         </div>
 
         {/* Top-Right Interactive Actions */}
-        <div className="pointer-events-auto flex shrink-0 items-center gap-2">
+        <div className="pointer-events-auto flex flex-wrap justify-end shrink-0 items-center gap-1.5 sm:gap-2">
           {hud.flyingFlowers > 0 && (
             <button
               type="button"
               onClick={onFly}
-              className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#ff9ce3]/55 bg-[#2e0c2b]/80 px-3 py-2 text-xs font-semibold text-[#ffd6f4] transition-colors hover:border-[#ff9ce3] hover:bg-[#461341]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff9ce3] tabular-nums"
+              className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#ff9ce3]/55 bg-[#2e0c2b]/80 px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-semibold text-[#ffd6f4] transition-colors hover:border-[#ff9ce3] hover:bg-[#461341]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff9ce3] tabular-nums"
             >
               Fly · {hud.flyingFlowers}
             </button>
           )}
           <button
             type="button"
+            onClick={onOpenShop}
+            className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#ffe194]/45 bg-[#081b24]/80 px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-semibold text-[#ffe194] transition-colors hover:border-[#ffe194]/80 hover:bg-[#102d3b]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe194]"
+          >
+            Shop
+          </button>
+          <button
+            type="button"
+            onClick={onSaveGame}
+            className={`min-h-[40px] whitespace-nowrap shrink-0 rounded-md border px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7] ${
+              justSaved
+                ? 'border-[#56e3cc] bg-[#56e3cc]/25 text-[#9effef] font-semibold'
+                : 'border-[#8cf8e8]/25 bg-[#06131a]/75 text-[#dcf7f3] hover:border-[#8cf8e8]/55 hover:bg-[#0c2330]/90'
+            }`}
+          >
+            {justSaved ? 'Saved!' : 'Save'}
+          </button>
+          <button
+            type="button"
+            onClick={onGoHome}
+            className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#8cf8e8]/25 bg-[#06131a]/75 px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-medium text-[#dcf7f3] transition-colors hover:border-[#8cf8e8]/55 hover:bg-[#0c2330]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
+          >
+            Home
+          </button>
+          <button
+            type="button"
             onClick={onToggleMute}
-            className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#8cf8e8]/25 bg-[#06131a]/75 px-3 py-2 text-xs font-medium text-[#dcf7f3] transition-colors hover:border-[#8cf8e8]/55 hover:bg-[#0c2330]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
+            className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#8cf8e8]/25 bg-[#06131a]/75 px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-medium text-[#dcf7f3] transition-colors hover:border-[#8cf8e8]/55 hover:bg-[#0c2330]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
           >
             {muted ? 'Unmute' : 'Mute'}
           </button>
           <button
             type="button"
             onClick={onPause}
-            className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#8cf8e8]/25 bg-[#06131a]/75 px-3 py-2 text-xs font-medium text-[#dcf7f3] transition-colors hover:border-[#8cf8e8]/55 hover:bg-[#0c2330]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
+            className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#8cf8e8]/25 bg-[#06131a]/75 px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-medium text-[#dcf7f3] transition-colors hover:border-[#8cf8e8]/55 hover:bg-[#0c2330]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
           >
             Pause
           </button>

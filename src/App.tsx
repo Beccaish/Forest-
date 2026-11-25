@@ -6,6 +6,7 @@ import { ShopModal } from './components/ShopModal';
 import { TouchControls } from './components/TouchControls';
 import { audioEngine } from './game/audio';
 import { ForestGameEngine } from './game/engine';
+import { getSavedGameSummary } from './game/save';
 import { loadShopProgress, type SavedShopProgress, type ShopItemId } from './game/shop';
 import type { HudSnapshot } from './game/types';
 
@@ -71,6 +72,7 @@ const INITIAL_HUD: HudSnapshot = {
   underwaterActive: false,
   dewdrops: 60,
   equipped: { hat: null, cloak: null, charm: null, power: null },
+  savedGame: getSavedGameSummary(),
 };
 
 function detectCoarsePointer(): boolean {
@@ -91,6 +93,9 @@ function ForestGameView() {
   const [hud, setHud] = useState<HudSnapshot>(INITIAL_HUD);
   const [muted, setMuted] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
+  const saveFeedbackTimerRef = useRef<number | null>(null);
+  const pausedByShopRef = useRef(false);
   const [shopProgress, setShopProgress] = useState<SavedShopProgress>(loadShopProgress);
   const shopOpenRef = useRef(false);
   const [isTouchDevice, setIsTouchDevice] = useState<boolean>(detectCoarsePointer);
@@ -103,15 +108,51 @@ function ForestGameView() {
     shopOpenRef.current = shopOpen;
   }, [shopOpen]);
 
+  useEffect(() => {
+    return () => {
+      if (saveFeedbackTimerRef.current !== null) {
+        window.clearTimeout(saveFeedbackTimerRef.current);
+      }
+    };
+  }, []);
+
   const handleOpenShop = useCallback(() => {
     if (engineRef.current) {
+      if (hud.phase === 'PLAYING') {
+        pausedByShopRef.current = true;
+        engineRef.current.pauseGame();
+      } else {
+        pausedByShopRef.current = false;
+      }
       setShopProgress(engineRef.current.getShopProgress());
     }
     setShopOpen(true);
-  }, []);
+  }, [hud.phase]);
 
   const handleCloseShop = useCallback(() => {
     setShopOpen(false);
+    if (pausedByShopRef.current) {
+      pausedByShopRef.current = false;
+      engineRef.current?.resumeGame();
+    }
+  }, []);
+
+  const handleSaveGame = useCallback(() => {
+    const ok = engineRef.current?.saveGame();
+    if (!ok) return;
+    setJustSaved(true);
+    if (saveFeedbackTimerRef.current !== null) {
+      window.clearTimeout(saveFeedbackTimerRef.current);
+    }
+    saveFeedbackTimerRef.current = window.setTimeout(() => {
+      setJustSaved(false);
+    }, 2000);
+  }, []);
+
+  const handleGoHome = useCallback(() => {
+    pausedByShopRef.current = false;
+    setShopOpen(false);
+    engineRef.current?.goHome();
   }, []);
 
   const handleBuyItem = useCallback((itemId: ShopItemId) => {
@@ -332,19 +373,27 @@ function ForestGameView() {
         hud={hud}
         muted={muted}
         isTouchDevice={isTouchDevice}
+        justSaved={justSaved}
         onToggleMute={handleToggleMute}
         onPause={() => engineRef.current?.pauseGame()}
         onFly={() => engineRef.current?.activateFlyingFlower()}
+        onSaveGame={handleSaveGame}
+        onOpenShop={handleOpenShop}
+        onGoHome={handleGoHome}
       />
 
       <GameModals
         hud={hud}
         muted={muted}
         isTouchDevice={isTouchDevice}
+        justSaved={justSaved}
         onSelectLevel={(lvl) => engineRef.current?.selectLevel(lvl)}
         onStart={() => engineRef.current?.startNewGame()}
+        onContinueSaved={() => engineRef.current?.loadSavedGame()}
         onNextLevel={() => engineRef.current?.startNextLevel()}
         onResume={() => engineRef.current?.resumeGame()}
+        onSaveGame={handleSaveGame}
+        onGoHome={handleGoHome}
         onRestart={() => engineRef.current?.startNewGame()}
         onRespawn={() => engineRef.current?.respawnAtLantern()}
         onToggleMute={handleToggleMute}

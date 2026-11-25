@@ -1934,6 +1934,18 @@ function drawPlayer(
     scarfColor = hueShift > 0.5 ? '#7cfce7' : '#e0b3ff';
     cloakFill = '#ecfeff';
     cloakTrim = hueShift > 0.5 ? '#7cfce7' : '#c79eff';
+  } else if (equipped.cloak === 'ranger_cape') {
+    scarfColor = '#65d68a';
+    cloakFill = '#2c6b45';
+    cloakTrim = '#d9b26f';
+  } else if (equipped.cloak === 'dragonscale_cloak') {
+    scarfColor = '#ff7a52';
+    cloakFill = '#781f24';
+    cloakTrim = '#ffc857';
+  } else if (equipped.cloak === 'fairy_gossamer') {
+    scarfColor = '#ffb8f2';
+    cloakFill = '#fce4ff';
+    cloakTrim = '#ffd87a';
   } else if (equipped.cloak === 'shadow_velvet') {
     scarfColor = '#c28cff';
     cloakFill = '#48346e';
@@ -2030,6 +2042,39 @@ function drawPlayer(
     ctx.restore();
   }
 
+  // Pixie Dust Lantern & Verdant Knight Shield charms
+  if (equipped.charm === 'fairy_sparkle_wand') {
+    const lx = player.x - player.facing * 23;
+    const ly = bodyY - 12 + Math.sin(time * 4.2) * 5;
+    ctx.save();
+    ctx.fillStyle = 'rgba(255, 182, 246, 0.35)';
+    ctx.beginPath();
+    ctx.arc(lx, ly, 13, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffd1fa';
+    ctx.beginPath();
+    ctx.arc(lx, ly, 3.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else if (equipped.charm === 'knight_crest') {
+    const sx = player.x + Math.cos(time * 2.5) * 26;
+    const sy = bodyY - 4 + Math.sin(time * 2.5) * 6;
+    ctx.save();
+    ctx.fillStyle = '#3e6e94';
+    ctx.strokeStyle = '#b8e0ff';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(sx - 5, sy - 6);
+    ctx.lineTo(sx + 5, sy - 6);
+    ctx.lineTo(sx + 5, sy + 1);
+    ctx.lineTo(sx, sy + 7);
+    ctx.lineTo(sx - 5, sy + 1);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  }
+
   // Super Power Auras & Wings
   if (equipped.power === 'super_star_magnet') {
     ctx.save();
@@ -2039,6 +2084,18 @@ function drawPlayer(
     ctx.beginPath();
     ctx.arc(player.x, bodyY, 34 + Math.sin(time * 4) * 3, time * 1.4, time * 1.4 + Math.PI * 2);
     ctx.stroke();
+    ctx.restore();
+  } else if (equipped.power === 'super_fairy_sparkle') {
+    ctx.save();
+    for (let s = 0; s < 5; s++) {
+      const ang = time * 2.8 + (s * Math.PI * 2) / 5;
+      const sx = player.x + Math.cos(ang) * 29;
+      const sy = bodyY + Math.sin(ang * 1.3) * 16;
+      ctx.fillStyle = s % 2 === 0 ? '#ff9ef0' : '#ffe494';
+      ctx.beginPath();
+      ctx.arc(sx, sy, 2.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
     ctx.restore();
   } else if (equipped.power === 'super_nova_pulse') {
     ctx.save();
@@ -2067,6 +2124,32 @@ function drawPlayer(
     ctx.beginPath();
     ctx.ellipse(player.x - span * 0.72, bodyY - 8 + flap * 0.4, span * 0.75, 6.5, -0.4, 0, Math.PI * 2);
     ctx.ellipse(player.x + span * 0.72, bodyY - 8 + flap * 0.4, span * 0.75, 6.5, 0.4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.restore();
+  } else if (equipped.power === 'super_dragon_wings') {
+    const flap = Math.sin(time * (player.gliding || player.flyingTimer > 0 ? 11 : 4.5)) * 6;
+    const wSpan = player.gliding || player.flyingTimer > 0 ? 28 : 20;
+    ctx.save();
+    ctx.fillStyle = '#248f74';
+    ctx.strokeStyle = '#ff9966';
+    ctx.lineWidth = 1.6;
+    // Left bat-like dragon wing
+    ctx.beginPath();
+    ctx.moveTo(player.x - 4, bodyY - 4);
+    ctx.lineTo(player.x - wSpan, bodyY - 22 + flap);
+    ctx.lineTo(player.x - wSpan * 0.78, bodyY - 6 + flap * 0.5);
+    ctx.lineTo(player.x - wSpan * 0.4, bodyY - 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Right dragon wing
+    ctx.beginPath();
+    ctx.moveTo(player.x + 4, bodyY - 4);
+    ctx.lineTo(player.x + wSpan, bodyY - 22 + flap);
+    ctx.lineTo(player.x + wSpan * 0.78, bodyY - 6 + flap * 0.5);
+    ctx.lineTo(player.x + wSpan * 0.4, bodyY - 2);
+    ctx.closePath();
     ctx.fill();
     ctx.stroke();
     ctx.restore();
@@ -2246,6 +2329,61 @@ function drawPlayer(
     ctx.moveTo(9, -45);
     ctx.lineTo(6, -51);
     ctx.stroke();
+    ctx.restore();
+  } else if (equipped.hat === 'ranger_hood') {
+    ctx.save();
+    ctx.fillStyle = '#2d6e46';
+    ctx.strokeStyle = '#6ee79c';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(-10, -29);
+    ctx.quadraticCurveTo(-13, -44, -2, -46);
+    ctx.quadraticCurveTo(9, -43, 10, -31);
+    ctx.quadraticCurveTo(0, -35, -10, -29);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#ffd67a';
+    ctx.beginPath();
+    ctx.arc(6, -34, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else if (equipped.hat === 'fairy_sparkle_tiara') {
+    ctx.save();
+    ctx.strokeStyle = '#ff9ee8';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(1, -33, 8.6, Math.PI * 1.12, Math.PI * 1.88);
+    ctx.stroke();
+    ctx.fillStyle = '#ffe68c';
+    ctx.beginPath();
+    ctx.arc(1, -43, 2.5, 0, Math.PI * 2);
+    ctx.arc(-5, -40, 1.6, 0, Math.PI * 2);
+    ctx.arc(7, -40, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  } else if (equipped.hat === 'knight_helm') {
+    ctx.save();
+    ctx.fillStyle = '#b4c9de';
+    ctx.strokeStyle = '#e6f4ff';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(1, -30, 10.2, Math.PI * 0.9, Math.PI * 2.1);
+    ctx.lineTo(11, -24);
+    ctx.lineTo(-9, -24);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // Visor slit
+    ctx.fillStyle = '#182b3d';
+    ctx.fillRect(2, -30, 8, 2.5);
+    // Emerald plume
+    ctx.fillStyle = '#56e3cc';
+    ctx.beginPath();
+    ctx.quadraticCurveTo(-3, -46, -11, -40);
+    ctx.quadraticCurveTo(-2, -37, 2, -40);
+    ctx.closePath();
+    ctx.fill();
     ctx.restore();
   } else if (equipped.hat === 'astral_wizard') {
     ctx.save();

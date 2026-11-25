@@ -5,10 +5,14 @@ interface GameModalsProps {
   hud: HudSnapshot;
   muted: boolean;
   isTouchDevice: boolean;
+  justSaved: boolean;
   onSelectLevel: (levelId: LevelId) => void;
   onStart: () => void;
+  onContinueSaved: () => void;
   onNextLevel: () => void;
   onResume: () => void;
+  onSaveGame: () => void;
+  onGoHome: () => void;
   onRestart: () => void;
   onRespawn: () => void;
   onToggleMute: () => void;
@@ -25,10 +29,14 @@ export const GameModals: React.FC<GameModalsProps> = ({
   hud,
   muted,
   isTouchDevice,
+  justSaved,
   onSelectLevel,
   onStart,
+  onContinueSaved,
   onNextLevel,
   onResume,
+  onSaveGame,
+  onGoHome,
   onRestart,
   onRespawn,
   onToggleMute,
@@ -149,6 +157,15 @@ export const GameModals: React.FC<GameModalsProps> = ({
             >
               Start Game
             </button>
+            {hud.savedGame && (
+              <button
+                type="button"
+                onClick={onContinueSaved}
+                className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#8cf8e8]/45 bg-[#0b2733]/90 px-5 py-2.5 sm:py-3 text-sm font-semibold text-[#b8fff2] transition-colors hover:border-[#8cf8e8] hover:bg-[#113746] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#8cf8e8] tabular-nums"
+              >
+                Continue L{hud.savedGame.levelId} · {hud.savedGame.progressPct}%
+              </button>
+            )}
             <button
               type="button"
               onClick={onOpenShop}
@@ -182,13 +199,38 @@ export const GameModals: React.FC<GameModalsProps> = ({
             {hud.biomeName} · {hud.weatherLabel}
           </p>
 
-          <div className="grid grid-cols-2 sm:grid-cols-1 gap-2.5 sm:gap-3">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
             <button
               type="button"
               onClick={onResume}
-              className="col-span-2 sm:col-span-1 min-h-[44px] whitespace-nowrap shrink-0 rounded-md bg-[#56e3cc] px-5 py-2.5 text-sm font-semibold text-[#041b1f] transition-colors hover:bg-[#73f5df] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e6fffb]"
+              className="col-span-2 min-h-[44px] whitespace-nowrap shrink-0 rounded-md bg-[#56e3cc] px-5 py-2.5 text-sm font-semibold text-[#041b1f] transition-colors hover:bg-[#73f5df] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e6fffb]"
             >
               Resume
+            </button>
+            <button
+              type="button"
+              onClick={onSaveGame}
+              className={`min-h-[44px] whitespace-nowrap shrink-0 rounded-md border px-4 py-2.5 text-xs sm:text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7] ${
+                justSaved
+                  ? 'border-[#56e3cc] bg-[#56e3cc]/25 text-[#9effef]'
+                  : 'border-[#7cfce7]/35 bg-transparent text-[#9effef] hover:bg-[#0e2430]'
+              }`}
+            >
+              {justSaved ? 'Saved!' : 'Save Game'}
+            </button>
+            <button
+              type="button"
+              onClick={onOpenShop}
+              className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#ffe194]/40 bg-transparent px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#ffe194] transition-colors hover:bg-[#0e2430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe194] tabular-nums"
+            >
+              Shop · {hud.dewdrops}
+            </button>
+            <button
+              type="button"
+              onClick={onGoHome}
+              className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#7cfce7]/25 bg-transparent px-4 py-2.5 text-xs sm:text-sm font-medium text-[#dcf7f3] transition-colors hover:bg-[#0e2430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
+            >
+              Home
             </button>
             <button
               type="button"
@@ -203,13 +245,6 @@ export const GameModals: React.FC<GameModalsProps> = ({
               className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#7cfce7]/25 bg-transparent px-4 py-2.5 text-xs sm:text-sm font-medium text-[#dcf7f3] transition-colors hover:bg-[#0e2430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
             >
               {muted ? 'Unmute' : 'Mute'}
-            </button>
-            <button
-              type="button"
-              onClick={onOpenShop}
-              className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#ffe194]/40 bg-transparent px-4 py-2.5 text-xs sm:text-sm font-semibold text-[#ffe194] transition-colors hover:bg-[#0e2430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe194] tabular-nums"
-            >
-              Shop · {hud.dewdrops}
             </button>
             <button
               type="button"
@@ -244,10 +279,24 @@ export const GameModals: React.FC<GameModalsProps> = ({
             </button>
             <button
               type="button"
+              onClick={onOpenShop}
+              className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#ffe194]/45 px-5 py-2.5 text-sm font-semibold text-[#ffe194] transition-colors hover:bg-[#0e2430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe194] tabular-nums"
+            >
+              Shop · {hud.dewdrops}
+            </button>
+            <button
+              type="button"
               onClick={onRestart}
               className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#7cfce7]/25 px-5 py-2.5 text-sm font-medium text-[#dcf7f3] transition-colors hover:bg-[#0e2430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
             >
               Restart
+            </button>
+            <button
+              type="button"
+              onClick={onGoHome}
+              className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#7cfce7]/25 px-5 py-2.5 text-sm font-medium text-[#dcf7f3] transition-colors hover:bg-[#0e2430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
+            >
+              Home
             </button>
           </div>
         </div>
@@ -340,6 +389,13 @@ export const GameModals: React.FC<GameModalsProps> = ({
             className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#ffe194]/45 px-5 py-2.5 sm:py-3 text-sm font-semibold text-[#ffe194] transition-colors hover:bg-[#0e2430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe194] tabular-nums"
           >
             Shop · {hud.dewdrops}
+          </button>
+          <button
+            type="button"
+            onClick={onGoHome}
+            className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#7cfce7]/30 px-5 py-2.5 sm:py-3 text-sm font-medium text-[#dcf7f3] transition-colors hover:bg-[#0e2430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
+          >
+            Home
           </button>
         </div>
       </div>
