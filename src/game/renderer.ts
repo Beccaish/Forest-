@@ -59,6 +59,7 @@ export interface RenderContextState {
   shakeY: number;
   viewW: number;
   viewH: number;
+  worldScale: number;
   time: number;
   sanctuaryAwakened: boolean;
 }
@@ -79,12 +80,15 @@ export function renderForestScene(
     shakeY,
     viewW,
     viewH,
+    worldScale,
     time,
     sanctuaryAwakened,
   } = state;
 
+  const virtualW = viewW / worldScale;
+  const virtualH = viewH / worldScale;
   const levelId = world.levelId;
-  const centerWorldX = cameraX + viewW * 0.5;
+  const centerWorldX = cameraX + virtualW * 0.5;
   const b = getBiomeBlend(centerWorldX, levelId);
 
   const skyTop = lerpColor(b.a.skyTop, b.b.skyTop, b.mix);
@@ -208,55 +212,56 @@ export function renderForestScene(
   ctx.restore();
 
   // ============================================================
-  // WORLD-SPACE PLAYABLE LAYER (1.0x + camera shake)
+  // WORLD-SPACE PLAYABLE LAYER (1.0x * worldScale + camera shake)
   // ============================================================
   ctx.save();
+  ctx.scale(worldScale, worldScale);
   ctx.translate(-cameraX + shakeX, -cameraY + shakeY);
 
   for (const a of world.stoneArches) {
-    if (a.x + 180 < cameraX || a.x - 180 > cameraX + viewW) continue;
+    if (a.x + 180 < cameraX || a.x - 180 > cameraX + virtualW) continue;
     drawStoneArch(ctx, a, levelId);
   }
 
-  if (SANCTUARY_X + 360 > cameraX && SANCTUARY_X - 360 < cameraX + viewW) {
+  if (SANCTUARY_X + 360 > cameraX && SANCTUARY_X - 360 < cameraX + virtualW) {
     drawSanctuaryTree(ctx, levelId, sanctuaryAwakened, time);
   }
 
   for (const w of world.windStreams) {
-    if (w.x + 120 < cameraX || w.x - 120 > cameraX + viewW) continue;
+    if (w.x + 120 < cameraX || w.x - 120 > cameraX + virtualW) continue;
     drawWindStream(ctx, w, levelId, time);
   }
 
   for (const p of world.platforms) {
-    if (p.x + p.w + 40 < cameraX || p.x - 40 > cameraX + viewW) continue;
+    if (p.x + p.w + 40 < cameraX || p.x - 40 > cameraX + virtualW) continue;
     drawPlatform(ctx, p, levelId);
   }
 
   for (const l of world.lanterns) {
-    if (l.x + 120 < cameraX || l.x - 120 > cameraX + viewW) continue;
+    if (l.x + 120 < cameraX || l.x - 120 > cameraX + virtualW) continue;
     drawLantern(ctx, l);
   }
 
   for (const m of world.mushrooms) {
-    if (m.x + 80 < cameraX || m.x - 80 > cameraX + viewW) continue;
+    if (m.x + 80 < cameraX || m.x - 80 > cameraX + virtualW) continue;
     drawMushroom(ctx, m);
   }
 
-  drawTerrain(ctx, levelId, groundTop, groundBot, rimCol, cameraX, cameraY, viewW, viewH);
-  drawGrassAndFlowers(ctx, world, levelId, cameraX, viewW);
+  drawTerrain(ctx, levelId, groundTop, groundBot, rimCol, cameraX, cameraY, virtualW, virtualH);
+  drawGrassAndFlowers(ctx, world, levelId, cameraX, virtualW);
 
   for (const item of world.collectibles) {
-    if (item.collected || item.x + 50 < cameraX || item.x - 50 > cameraX + viewW) continue;
+    if (item.collected || item.x + 50 < cameraX || item.x - 50 > cameraX + virtualW) continue;
     drawCollectible(ctx, item, time);
   }
 
   for (const bf of world.butterflies) {
-    if (bf.x + 40 < cameraX || bf.x - 40 > cameraX + viewW) continue;
+    if (bf.x + 40 < cameraX || bf.x - 40 > cameraX + virtualW) continue;
     drawButterfly(ctx, bf, time);
   }
 
   for (const wisp of world.thornWisps) {
-    if (wisp.x + 80 < cameraX || wisp.x - 80 > cameraX + viewW) continue;
+    if (wisp.x + 80 < cameraX || wisp.x - 80 > cameraX + virtualW) continue;
     drawThornWisp(ctx, wisp, time);
   }
 

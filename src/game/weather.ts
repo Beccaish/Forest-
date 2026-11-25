@@ -115,7 +115,8 @@ export class DynamicWeatherSystem {
     cameraX: number,
     cameraY: number,
     blend: BiomeBlend,
-    levelId: LevelId = 1
+    levelId: LevelId = 1,
+    worldScale = 1
   ): void {
     const breeze = Math.sin(time * 0.35) * 22 + 12;
     const { leaves: leafW, rain: rainW, flurry: flurryW } = blend.weights;
@@ -142,8 +143,8 @@ export class DynamicWeatherSystem {
         d.x += windX * dt;
         d.y += d.speed * dt;
 
-        const worldX = cameraX + d.x;
-        const groundScreenY = getTerrainY(worldX, levelId) - cameraY;
+        const worldX = cameraX + d.x / worldScale;
+        const groundScreenY = (getTerrainY(worldX, levelId) - cameraY) * worldScale;
 
         if (d.y >= groundScreenY && d.y <= groundScreenY + 28) {
           this.spawnSplash(d.x, groundScreenY);

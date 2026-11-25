@@ -27,12 +27,18 @@ const INITIAL_HUD: HudSnapshot = {
   crystalBoostActive: false,
 };
 
+function detectCoarsePointer(): boolean {
+  if (typeof window === 'undefined') return false;
+  return window.matchMedia('(pointer: coarse)').matches;
+}
+
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<ForestGameEngine | null>(null);
 
   const [hud, setHud] = useState<HudSnapshot>(INITIAL_HUD);
   const [muted, setMuted] = useState(false);
+  const [isTouchDevice, setIsTouchDevice] = useState<boolean>(detectCoarsePointer);
 
   const handleToggleMute = useCallback(() => {
     audioEngine.init();
@@ -50,6 +56,14 @@ export default function App() {
     });
     engineRef.current = engine;
     engine.start();
+
+    const pointerQuery = window.matchMedia('(pointer: coarse)');
+    const handlePointerMediaChange = (ev: MediaQueryListEvent) => {
+      setIsTouchDevice(ev.matches);
+    };
+    const handleFirstTouch = () => {
+      setIsTouchDevice(true);
+    };
 
     const handleResize = () => engine.resize();
     const handleBlur = () => engine.clearHeldInputs();
@@ -116,6 +130,8 @@ export default function App() {
       }
     };
 
+    pointerQuery.addEventListener('change', handlePointerMediaChange);
+    window.addEventListener('touchstart', handleFirstTouch, { passive: true });
     window.addEventListener('resize', handleResize);
     window.addEventListener('blur', handleBlur);
     document.addEventListener('visibilitychange', handleVisibility);
@@ -123,6 +139,8 @@ export default function App() {
     window.addEventListener('keyup', handleKeyUp);
 
     return () => {
+      pointerQuery.removeEventListener('change', handlePointerMediaChange);
+      window.removeEventListener('touchstart', handleFirstTouch);
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('blur', handleBlur);
       document.removeEventListener('visibilitychange', handleVisibility);
@@ -140,6 +158,7 @@ export default function App() {
       <GameHUD
         hud={hud}
         muted={muted}
+        isTouchDevice={isTouchDevice}
         onToggleMute={handleToggleMute}
         onPause={() => engineRef.current?.pauseGame()}
       />
@@ -147,6 +166,7 @@ export default function App() {
       <GameModals
         hud={hud}
         muted={muted}
+        isTouchDevice={isTouchDevice}
         onSelectLevel={(lvl) => engineRef.current?.selectLevel(lvl)}
         onStart={() => engineRef.current?.startNewGame()}
         onNextLevel={() => engineRef.current?.startNextLevel()}
@@ -157,7 +177,7 @@ export default function App() {
       />
 
       <TouchControls
-        visible={hud.phase === 'PLAYING'}
+        visible={hud.phase === 'PLAYING' && isTouchDevice}
         onLeftChange={(held) => {
           if (engineRef.current) engineRef.current.input.left = held;
         }}

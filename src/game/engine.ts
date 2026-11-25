@@ -58,6 +58,7 @@ export class ForestGameEngine {
 
   private viewW = 1280;
   private viewH = 720;
+  private worldScale = 1;
   private dpr = 1;
   private rafId: number | null = null;
   private lastFrameMs = 0;
@@ -83,7 +84,7 @@ export class ForestGameEngine {
 
     this.resize();
     this.cameraX = 0;
-    this.cameraY = this.player.y - this.viewH * 0.65;
+    this.cameraY = this.player.y - (this.viewH / this.worldScale) * 0.65;
     this.emitHudSnapshot();
   }
 
@@ -139,6 +140,7 @@ export class ForestGameEngine {
   resize(): void {
     this.viewW = window.innerWidth;
     this.viewH = window.innerHeight;
+    this.worldScale = this.viewH < 640 ? clamp(this.viewH / 640, 0.54, 1) : 1;
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = Math.floor(this.viewW * this.dpr);
     this.canvas.height = Math.floor(this.viewH * this.dpr);
@@ -222,7 +224,7 @@ export class ForestGameEngine {
     this.hitstopTimer = 0;
     this.shakeTimer = 0;
     this.cameraX = 0;
-    this.cameraY = this.player.y - this.viewH * 0.65;
+    this.cameraY = this.player.y - (this.viewH / this.worldScale) * 0.65;
   }
 
   triggerJump(): void {
@@ -334,7 +336,9 @@ export class ForestGameEngine {
       this.shakeTimer = Math.max(0, this.shakeTimer - dt);
     }
 
-    const blend = getBiomeBlend(this.cameraX + this.viewW * 0.5, this.levelId);
+    const virtualW = this.viewW / this.worldScale;
+    const virtualH = this.viewH / this.worldScale;
+    const blend = getBiomeBlend(this.cameraX + virtualW * 0.5, this.levelId);
     audioEngine.updateRainIntensity(blend.weights.rain);
 
     for (const s of this.world.floatingSpores) {
@@ -348,7 +352,15 @@ export class ForestGameEngine {
       if (s.x > this.viewW + 20) s.x = -20;
     }
 
-    this.weather.update(dt, this.time, this.cameraX, this.cameraY, blend, this.levelId);
+    this.weather.update(
+      dt,
+      this.time,
+      this.cameraX,
+      this.cameraY,
+      blend,
+      this.levelId,
+      this.worldScale
+    );
 
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
@@ -370,7 +382,7 @@ export class ForestGameEngine {
     if (this.phase === 'TITLE_MENU') {
       this.cameraX = 320 + Math.sin(this.time * 0.11) * 280;
       this.cameraY =
-        getTerrainY(this.cameraX + this.viewW * 0.4, this.levelId) - this.viewH * 0.67;
+        getTerrainY(this.cameraX + virtualW * 0.4, this.levelId) - virtualH * 0.67;
       return;
     }
 
@@ -666,11 +678,11 @@ export class ForestGameEngine {
     }
 
     const targetCamX = clamp(
-      p.x - this.viewW * 0.38 + p.vx * 0.25,
+      p.x - virtualW * 0.38 + p.vx * 0.25,
       0,
-      Math.max(0, WORLD_WIDTH - this.viewW)
+      Math.max(0, WORLD_WIDTH - virtualW)
     );
-    const targetCamY = p.y - this.viewH * 0.68;
+    const targetCamY = p.y - virtualH * 0.68;
     this.cameraX = lerp(this.cameraX, targetCamX, Math.min(1, dt * 5.2));
     this.cameraY = lerp(this.cameraY, targetCamY, Math.min(1, dt * 4.5));
 
@@ -698,6 +710,7 @@ export class ForestGameEngine {
       shakeY,
       viewW: this.viewW,
       viewH: this.viewH,
+      worldScale: this.worldScale,
       time: this.time,
       sanctuaryAwakened: this.sanctuaryAwakened,
     });
