@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Component, type ErrorInfo, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { GameHUD } from './components/GameHUD';
 import { GameModals } from './components/GameModals';
 import { PortraitPrompt } from './components/PortraitPrompt';
@@ -6,6 +6,40 @@ import { TouchControls } from './components/TouchControls';
 import { audioEngine } from './game/audio';
 import { ForestGameEngine } from './game/engine';
 import type { HudSnapshot } from './game/types';
+
+class GameErrorBoundary extends Component<
+  { children: ReactNode },
+  { errorMessage: string | null }
+> {
+  state = { errorMessage: null as string | null };
+
+  static getDerivedStateFromError(err: Error) {
+    return { errorMessage: err?.message || 'Unexpected rendering error' };
+  }
+
+  componentDidCatch(err: Error, info: ErrorInfo) {
+    console.error('Whispering Grove runtime error:', err, info);
+  }
+
+  render() {
+    if (this.state.errorMessage) {
+      return (
+        <main className="flex h-dvh w-screen flex-col items-center justify-center bg-[#050d14] px-6 text-center text-[#eafbf8]">
+          <h1 className="font-display text-2xl font-semibold mb-2">Whispering Grove</h1>
+          <p className="max-w-md text-sm text-[#b6ddd7] mb-5">{this.state.errorMessage}</p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="min-h-[44px] rounded-md bg-[#56e3cc] px-6 py-2.5 text-sm font-semibold text-[#041b1f]"
+          >
+            Reload Game
+          </button>
+        </main>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 const INITIAL_HUD: HudSnapshot = {
   phase: 'TITLE_MENU',
@@ -32,7 +66,7 @@ const INITIAL_HUD: HudSnapshot = {
 };
 
 function detectCoarsePointer(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
   return window.matchMedia('(pointer: coarse)').matches;
 }
 
@@ -41,7 +75,7 @@ function detectPortraitViewport(): boolean {
   return window.innerHeight > window.innerWidth;
 }
 
-export default function App() {
+function ForestGameView() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<ForestGameEngine | null>(null);
   const autoPausedByPortraitRef = useRef(false);
@@ -92,7 +126,8 @@ export default function App() {
     engineRef.current = engine;
     engine.start();
 
-    const pointerQuery = window.matchMedia('(pointer: coarse)');
+    const pointerQuery =
+      typeof window.matchMedia === 'function' ? window.matchMedia('(pointer: coarse)') : null;
     const handlePointerMediaChange = (ev: MediaQueryListEvent) => {
       setIsTouchDevice(ev.matches);
     };
@@ -173,7 +208,13 @@ export default function App() {
       }
     };
 
-    pointerQuery.addEventListener('change', handlePointerMediaChange);
+    if (pointerQuery) {
+      if (typeof pointerQuery.addEventListener === 'function') {
+        pointerQuery.addEventListener('change', handlePointerMediaChange);
+      } else if (typeof pointerQuery.addListener === 'function') {
+        pointerQuery.addListener(handlePointerMediaChange);
+      }
+    }
     window.addEventListener('touchstart', handleFirstTouch, { passive: true });
     window.addEventListener('resize', syncOrientation);
     window.addEventListener('orientationchange', syncOrientation);
@@ -183,7 +224,13 @@ export default function App() {
     window.addEventListener('keyup', handleKeyUp);
 
     return () => {
-      pointerQuery.removeEventListener('change', handlePointerMediaChange);
+      if (pointerQuery) {
+        if (typeof pointerQuery.removeEventListener === 'function') {
+          pointerQuery.removeEventListener('change', handlePointerMediaChange);
+        } else if (typeof pointerQuery.removeListener === 'function') {
+          pointerQuery.removeListener(handlePointerMediaChange);
+        }
+      }
       window.removeEventListener('touchstart', handleFirstTouch);
       window.removeEventListener('resize', syncOrientation);
       window.removeEventListener('orientationchange', syncOrientation);
@@ -197,7 +244,7 @@ export default function App() {
   }, []);
 
   return (
-    <main className="relative h-screen w-screen overflow-hidden bg-[#050d14]">
+    <main className="relative h-dvh w-screen overflow-hidden bg-[#050d14]">
       <canvas ref={canvasRef} className="block h-full w-full" />
 
       <GameHUD
@@ -239,5 +286,13 @@ export default function App() {
         onContinueAnyway={handleDismissPortrait}
       />
     </main>
+  );
+}
+
+export default function App() {
+  return (
+    <GameErrorBoundary>
+      <ForestGameView />
+    </GameErrorBoundary>
   );
 }

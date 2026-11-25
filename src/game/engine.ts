@@ -140,8 +140,8 @@ export class ForestGameEngine {
   }
 
   resize(): void {
-    this.viewW = window.innerWidth;
-    this.viewH = window.innerHeight;
+    this.viewW = Math.max(1, window.innerWidth || 1280);
+    this.viewH = Math.max(1, window.innerHeight || 720);
     this.worldScale = this.viewH < 640 ? clamp(this.viewH / 640, 0.54, 1) : 1;
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = Math.floor(this.viewW * this.dpr);
