@@ -2722,7 +2722,8 @@ function drawTrashItem(ctx: CanvasRenderingContext2D, t: TrashItem, time: number
   ctx.ellipse(t.x, t.y - 2, 15, 5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.translate(t.x, t.y - 7);
+  ctx.translate(t.x, t.y - 8);
+  ctx.scale(1.16, 1.16);
   ctx.rotate(t.rot);
 
   if (t.kind === 'bottle') {
@@ -3103,33 +3104,33 @@ function drawSickAnimal(
     const tagY = a.y - 44 + bob;
     if (isTouchDevice) {
       const label = `Help ${a.name}`;
-      ctx.font = '600 11px "Plus Jakarta Sans", sans-serif';
+      ctx.font = '700 12px "Plus Jakarta Sans", sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       const textW = ctx.measureText(label).width;
-      const boxW = textW + 24;
+      const boxW = textW + 26;
 
-      ctx.fillStyle = 'rgba(7, 25, 36, 0.88)';
+      ctx.fillStyle = 'rgba(7, 25, 36, 0.9)';
       ctx.strokeStyle = '#ff9ec7';
-      ctx.lineWidth = 1.4;
+      ctx.lineWidth = 1.6;
       ctx.beginPath();
-      ctx.roundRect(a.x - boxW * 0.5, tagY - 11, boxW, 22, 11);
+      ctx.roundRect(a.x - boxW * 0.5, tagY - 12, boxW, 24, 12);
       ctx.fill();
       ctx.stroke();
 
       // Small coral heart/plus medical mark inside pill
-      const iconX = a.x - boxW * 0.5 + 11;
+      const iconX = a.x - boxW * 0.5 + 12;
       ctx.fillStyle = '#ff85b3';
       ctx.beginPath();
-      ctx.arc(iconX, tagY, 4.5, 0, Math.PI * 2);
+      ctx.arc(iconX, tagY, 4.8, 0, Math.PI * 2);
       ctx.fill();
       ctx.strokeStyle = '#ffffff';
-      ctx.lineWidth = 1.4;
+      ctx.lineWidth = 1.5;
       ctx.beginPath();
-      ctx.moveTo(iconX - 2.3, tagY);
-      ctx.lineTo(iconX + 2.3, tagY);
-      ctx.moveTo(iconX, tagY - 2.3);
-      ctx.lineTo(iconX, tagY + 2.3);
+      ctx.moveTo(iconX - 2.4, tagY);
+      ctx.lineTo(iconX + 2.4, tagY);
+      ctx.moveTo(iconX, tagY - 2.4);
+      ctx.lineTo(iconX, tagY + 2.4);
       ctx.stroke();
 
       ctx.fillStyle = '#fff2f8';

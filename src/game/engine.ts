@@ -233,7 +233,17 @@ export class ForestGameEngine {
   resize(): void {
     this.viewW = Math.max(1, window.innerWidth || 1280);
     this.viewH = Math.max(1, window.innerHeight || 720);
-    this.worldScale = this.viewH < 640 ? clamp(this.viewH / 640, 0.54, 1) : 1;
+    if (this.isTouchDevice) {
+      if (this.viewW >= this.viewH) {
+        // Mobile landscape: keep world elements full, crisp, and easy to see (~0.98x - 1.25x)
+        this.worldScale = clamp(this.viewH / 380, 0.96, 1.25);
+      } else {
+        // Mobile portrait: keep elements large without cramping horizontal sightline
+        this.worldScale = clamp(this.viewW / 400, 0.92, 1.15);
+      }
+    } else {
+      this.worldScale = this.viewH < 640 ? clamp(this.viewH / 640, 0.72, 1) : 1;
+    }
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = Math.floor(this.viewW * this.dpr);
     this.canvas.height = Math.floor(this.viewH * this.dpr);
@@ -510,7 +520,10 @@ export class ForestGameEngine {
   }
 
   setIsTouchDevice(isTouch: boolean): void {
-    this.isTouchDevice = isTouch;
+    if (this.isTouchDevice !== isTouch) {
+      this.isTouchDevice = isTouch;
+      this.resize();
+    }
   }
 
   helpNearbyAnimal(): boolean {

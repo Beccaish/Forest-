@@ -115,13 +115,13 @@ export const GameHUD: React.FC<GameHUDProps> = ({
               aria-label={pointsExpanded ? 'Collapse score details' : 'Expand score details'}
               className="w-full text-left rounded-xl border border-[#8cf8e8]/25 bg-[#061822]/48 px-2.5 py-1.5 text-[#eefcf9] shadow-md backdrop-blur-md transition-colors hover:border-[#8cf8e8]/45 focus-visible:outline-2 focus-visible:outline-[#7cfce7]"
             >
-              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px]">
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs">
                 {/* Petals */}
                 <div className="flex items-center gap-0.5 shrink-0" aria-label={`Vitality ${hud.petals} of ${hud.maxPetals}`}>
                   {Array.from({ length: hud.maxPetals }).map((_, idx) => {
                     const active = idx < hud.petals;
                     return (
-                      <svg key={idx} width="12" height="12" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                      <svg key={idx} width="14" height="14" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                         <path
                           d="M10 2C13.5 5.5 16 9.2 16 12.5C16 15.8 13.3 18 10 18C6.7 18 4 15.8 4 12.5C4 9.2 6.5 5.5 10 2Z"
                           fill={active ? '#7cfce7' : 'rgba(124,252,231,0.16)'}
@@ -138,7 +138,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
                 </span>
 
                 <span className="flex items-center gap-1 tabular-nums shrink-0">
-                  <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <svg width="13" height="13" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                     <circle cx="10" cy="10" r="6" fill="#82ffeb" fillOpacity="0.4" />
                     <circle cx="10" cy="10" r="3.6" fill="#ffffff" />
                   </svg>
@@ -146,7 +146,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
                 </span>
 
                 <span className="flex items-center gap-1 tabular-nums shrink-0">
-                  <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <svg width="13" height="13" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                     <circle cx="10" cy="5.5" r="2.8" fill="#ffd67a" />
                     <circle cx="14.2" cy="9" r="2.8" fill="#ffae94" />
                     <circle cx="12.5" cy="14" r="2.8" fill="#ffd67a" />
@@ -157,28 +157,28 @@ export const GameHUD: React.FC<GameHUDProps> = ({
                 </span>
 
                 <span className="flex items-center gap-1 tabular-nums shrink-0">
-                  <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <svg width="13" height="13" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                     <path d="M10 2L15.5 10L10 18L4.5 10L10 2Z" fill="#b4f5ff" stroke="#ffffff" strokeWidth="1.2" />
                   </svg>
                   <span className="font-semibold">{hud.crystalsCollected}/{hud.crystalsTotal}</span>
                 </span>
 
                 <span className="flex items-center gap-1 tabular-nums shrink-0">
-                  <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <svg width="13" height="13" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                     <path d="M10 1.8L12.1 7.9L18.2 10L12.1 12.1L10 18.2L7.9 12.1L1.8 10L7.9 7.9L10 1.8Z" fill="#d9f4ff" stroke="#ffffff" strokeWidth="1" />
                   </svg>
                   <span className="font-semibold">{hud.starseedsCollected}/{hud.starseedsTotal}</span>
                 </span>
 
                 <span className="flex items-center gap-1 tabular-nums shrink-0">
-                  <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <svg width="13" height="13" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                     <rect x="6" y="4" width="8" height="11" rx="2" fill="#ffe399" stroke="#ffd166" strokeWidth="1.4" />
                   </svg>
                   <span className="font-semibold">{hud.lanternsLit}/{hud.lanternsTotal}</span>
                 </span>
 
                 <span className="flex items-center gap-1 font-bold text-[#ffe194] tabular-nums shrink-0">
-                  <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <svg width="13" height="13" viewBox="0 0 20 20" fill="none" aria-hidden="true">
                     <path d="M10 2.2C13.4 6.3 15.8 9.6 15.8 12.6C15.8 15.8 13.2 18 10 18C6.8 18 4.2 15.8 4.2 12.6C4.2 9.6 6.6 6.3 10 2.2Z" fill="#7cfce7" fillOpacity="0.45" stroke="#ffe194" strokeWidth="1.5" />
                   </svg>
                   <span>{hud.dewdrops}</span>
@@ -197,7 +197,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
                 )}
 
                 <span className="ml-auto flex items-center text-[#9fece0] shrink-0" aria-hidden="true">
-                  {pointsExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                  {pointsExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                 </span>
               </div>
             </button>
