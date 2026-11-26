@@ -2,8 +2,9 @@ import { Component, type ErrorInfo, type ReactNode, useCallback, useEffect, useR
 import { GameHUD } from './components/GameHUD';
 import { GameModals } from './components/GameModals';
 import { PortraitPrompt } from './components/PortraitPrompt';
+import { SettingsModal } from './components/SettingsModal';
 import { ShopModal } from './components/ShopModal';
-import { TouchControls } from './components/TouchControls';
+import { type MobileControlStyle, TouchControls } from './components/TouchControls';
 import { audioEngine } from './game/audio';
 import { ForestGameEngine } from './game/engine';
 import { getSavedGameSummary } from './game/save';
@@ -85,19 +86,41 @@ function detectPortraitViewport(): boolean {
   return window.innerHeight > window.innerWidth;
 }
 
+const MOBILE_CONTROLS_KEY = 'whispering_grove_mobile_controls_v1';
+
+function loadMobileControlStyle(): MobileControlStyle {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const saved = window.localStorage.getItem(MOBILE_CONTROLS_KEY);
+      if (saved === 'joystick' || saved === 'arrows') {
+        return saved;
+      }
+    }
+  } catch {
+    // Ignore storage errors
+  }
+  return 'arrows';
+}
+
 function ForestGameView() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<ForestGameEngine | null>(null);
   const autoPausedByPortraitRef = useRef(false);
 
   const [hud, setHud] = useState<HudSnapshot>(INITIAL_HUD);
-  const [muted, setMuted] = useState(false);
+  const [muted, setMuted] = useState(() => !audioEngine.isEnabled());
+  const [musicVolume, setMusicVolume] = useState(() => audioEngine.getMusicVolume());
+  const [sfxVolume, setSfxVolume] = useState(() => audioEngine.getSfxVolume());
   const [shopOpen, setShopOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [mobileControlStyle, setMobileControlStyle] = useState<MobileControlStyle>(loadMobileControlStyle);
   const [justSaved, setJustSaved] = useState(false);
   const saveFeedbackTimerRef = useRef<number | null>(null);
   const pausedByShopRef = useRef(false);
+  const pausedBySettingsRef = useRef(false);
   const [shopProgress, setShopProgress] = useState<SavedShopProgress>(loadShopProgress);
   const shopOpenRef = useRef(false);
+  const settingsOpenRef = useRef(false);
   const [isTouchDevice, setIsTouchDevice] = useState<boolean>(detectCoarsePointer);
   const [isPortrait, setIsPortrait] = useState<boolean>(detectPortraitViewport);
   const [portraitDismissed, setPortraitDismissed] = useState(false);
@@ -107,6 +130,10 @@ function ForestGameView() {
   useEffect(() => {
     shopOpenRef.current = shopOpen;
   }, [shopOpen]);
+
+  useEffect(() => {
+    settingsOpenRef.current = settingsOpen;
+  }, [settingsOpen]);
 
   useEffect(() => {
     return () => {
@@ -137,6 +164,37 @@ function ForestGameView() {
     }
   }, []);
 
+  const handleOpenSettings = useCallback(() => {
+    if (engineRef.current) {
+      if (hud.phase === 'PLAYING') {
+        pausedBySettingsRef.current = true;
+        engineRef.current.pauseGame();
+      } else {
+        pausedBySettingsRef.current = false;
+      }
+    }
+    setSettingsOpen(true);
+  }, [hud.phase]);
+
+  const handleCloseSettings = useCallback(() => {
+    setSettingsOpen(false);
+    if (pausedBySettingsRef.current) {
+      pausedBySettingsRef.current = false;
+      engineRef.current?.resumeGame();
+    }
+  }, []);
+
+  const handleChangeMobileControlStyle = useCallback((style: MobileControlStyle) => {
+    setMobileControlStyle(style);
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(MOBILE_CONTROLS_KEY, style);
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }, []);
+
   const handleSaveGame = useCallback(() => {
     const ok = engineRef.current?.saveGame();
     if (!ok) return;
@@ -151,8 +209,34 @@ function ForestGameView() {
 
   const handleGoHome = useCallback(() => {
     pausedByShopRef.current = false;
+    pausedBySettingsRef.current = false;
     setShopOpen(false);
+    setSettingsOpen(false);
     engineRef.current?.goHome();
+  }, []);
+
+  const handleTouchLeft = useCallback((held: boolean) => {
+    if (engineRef.current) engineRef.current.input.left = held;
+  }, []);
+
+  const handleTouchRight = useCallback((held: boolean) => {
+    if (engineRef.current) engineRef.current.input.right = held;
+  }, []);
+
+  const handleTouchJumpDown = useCallback(() => {
+    engineRef.current?.triggerJump();
+  }, []);
+
+  const handleTouchJumpUp = useCallback(() => {
+    engineRef.current?.releaseJump();
+  }, []);
+
+  const handleTouchPulse = useCallback(() => {
+    engineRef.current?.triggerPulse();
+  }, []);
+
+  const handleTouchFly = useCallback(() => {
+    engineRef.current?.activateFlyingFlower();
   }, []);
 
   const handleBuyItem = useCallback((itemId: ShopItemId) => {
@@ -170,6 +254,23 @@ function ForestGameView() {
     const nextEnabled = !audioEngine.isEnabled();
     audioEngine.setEnabled(nextEnabled);
     setMuted(!nextEnabled);
+  }, []);
+
+  const handleMusicVolumeChange = useCallback((val: number) => {
+    audioEngine.init();
+    audioEngine.setMusicVolume(val);
+    setMusicVolume(val);
+  }, []);
+
+  const handleSfxVolumeChange = useCallback((val: number) => {
+    audioEngine.init();
+    audioEngine.setSfxVolume(val);
+    setSfxVolume(val);
+  }, []);
+
+  const handlePreviewSfx = useCallback(() => {
+    audioEngine.init();
+    audioEngine.playChime(2);
   }, []);
 
   const handleDismissPortrait = useCallback(() => {
@@ -234,15 +335,27 @@ function ForestGameView() {
       }
 
       if (e.code === 'Escape' && !e.repeat) {
+        if (settingsOpenRef.current) {
+          setSettingsOpen(false);
+          if (pausedBySettingsRef.current) {
+            pausedBySettingsRef.current = false;
+            engine.resumeGame();
+          }
+          return;
+        }
         if (shopOpenRef.current) {
           setShopOpen(false);
+          if (pausedByShopRef.current) {
+            pausedByShopRef.current = false;
+            engine.resumeGame();
+          }
           return;
         }
         engine.togglePause();
         return;
       }
 
-      if (shopOpenRef.current) {
+      if (shopOpenRef.current || settingsOpenRef.current) {
         return;
       }
 
@@ -372,19 +485,27 @@ function ForestGameView() {
       <GameHUD
         hud={hud}
         muted={muted}
+        musicVolume={musicVolume}
+        sfxVolume={sfxVolume}
         isTouchDevice={isTouchDevice}
         justSaved={justSaved}
         onToggleMute={handleToggleMute}
+        onMusicVolumeChange={handleMusicVolumeChange}
+        onSfxVolumeChange={handleSfxVolumeChange}
+        onPreviewSfx={handlePreviewSfx}
         onPause={() => engineRef.current?.pauseGame()}
         onFly={() => engineRef.current?.activateFlyingFlower()}
         onSaveGame={handleSaveGame}
         onOpenShop={handleOpenShop}
+        onOpenSettings={handleOpenSettings}
         onGoHome={handleGoHome}
       />
 
       <GameModals
         hud={hud}
         muted={muted}
+        musicVolume={musicVolume}
+        sfxVolume={sfxVolume}
         isTouchDevice={isTouchDevice}
         justSaved={justSaved}
         onSelectLevel={(lvl) => engineRef.current?.selectLevel(lvl)}
@@ -397,7 +518,11 @@ function ForestGameView() {
         onRestart={() => engineRef.current?.startNewGame()}
         onRespawn={() => engineRef.current?.respawnAtLantern()}
         onToggleMute={handleToggleMute}
+        onMusicVolumeChange={handleMusicVolumeChange}
+        onSfxVolumeChange={handleSfxVolumeChange}
+        onPreviewSfx={handlePreviewSfx}
         onOpenShop={handleOpenShop}
+        onOpenSettings={handleOpenSettings}
       />
 
       <ShopModal
@@ -408,19 +533,36 @@ function ForestGameView() {
         onClose={handleCloseShop}
       />
 
+      <SettingsModal
+        visible={settingsOpen}
+        mobileControlStyle={mobileControlStyle}
+        muted={muted}
+        musicVolume={musicVolume}
+        sfxVolume={sfxVolume}
+        onChangeMobileControlStyle={handleChangeMobileControlStyle}
+        onToggleMute={handleToggleMute}
+        onMusicVolumeChange={handleMusicVolumeChange}
+        onSfxVolumeChange={handleSfxVolumeChange}
+        onPreviewSfx={handlePreviewSfx}
+        onClose={handleCloseSettings}
+      />
+
       <TouchControls
-        visible={hud.phase === 'PLAYING' && isTouchDevice && !showPortraitPrompt && !shopOpen}
+        visible={
+          hud.phase === 'PLAYING' &&
+          isTouchDevice &&
+          !showPortraitPrompt &&
+          !shopOpen &&
+          !settingsOpen
+        }
+        controlStyle={mobileControlStyle}
         flyingFlowers={hud.flyingFlowers}
-        onLeftChange={(held) => {
-          if (engineRef.current) engineRef.current.input.left = held;
-        }}
-        onRightChange={(held) => {
-          if (engineRef.current) engineRef.current.input.right = held;
-        }}
-        onJumpDown={() => engineRef.current?.triggerJump()}
-        onJumpUp={() => engineRef.current?.releaseJump()}
-        onPulse={() => engineRef.current?.triggerPulse()}
-        onFly={() => engineRef.current?.activateFlyingFlower()}
+        onLeftChange={handleTouchLeft}
+        onRightChange={handleTouchRight}
+        onJumpDown={handleTouchJumpDown}
+        onJumpUp={handleTouchJumpUp}
+        onPulse={handleTouchPulse}
+        onFly={handleTouchFly}
       />
 
       <PortraitPrompt

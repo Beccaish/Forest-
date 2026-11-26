@@ -1,9 +1,12 @@
 import React from 'react';
 import type { HudSnapshot, LevelId } from '../game/types';
+import { SoundControl } from './SoundControl';
 
 interface GameModalsProps {
   hud: HudSnapshot;
   muted: boolean;
+  musicVolume: number;
+  sfxVolume: number;
   isTouchDevice: boolean;
   justSaved: boolean;
   onSelectLevel: (levelId: LevelId) => void;
@@ -16,7 +19,11 @@ interface GameModalsProps {
   onRestart: () => void;
   onRespawn: () => void;
   onToggleMute: () => void;
+  onMusicVolumeChange: (val: number) => void;
+  onSfxVolumeChange: (val: number) => void;
+  onPreviewSfx: () => void;
   onOpenShop: () => void;
+  onOpenSettings: () => void;
 }
 
 function formatTime(totalSeconds: number): string {
@@ -28,6 +35,8 @@ function formatTime(totalSeconds: number): string {
 export const GameModals: React.FC<GameModalsProps> = ({
   hud,
   muted,
+  musicVolume,
+  sfxVolume,
   isTouchDevice,
   justSaved,
   onSelectLevel,
@@ -40,20 +49,34 @@ export const GameModals: React.FC<GameModalsProps> = ({
   onRestart,
   onRespawn,
   onToggleMute,
+  onMusicVolumeChange,
+  onSfxVolumeChange,
+  onPreviewSfx,
   onOpenShop,
+  onOpenSettings,
 }) => {
   if (hud.phase === 'PLAYING') return null;
 
   if (hud.phase === 'TITLE_MENU') {
     return (
       <div className="fixed inset-0 z-20 flex flex-col justify-between overflow-y-auto pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))] pl-[max(1.25rem,env(safe-area-inset-left))] pr-[max(1.25rem,env(safe-area-inset-right))] sm:p-10 bg-gradient-to-r from-[#040c13]/84 via-[#040c13]/45 to-transparent">
-        <div className="flex justify-end">
+        <div className="flex justify-end items-center gap-2">
+          <SoundControl
+            muted={muted}
+            musicVolume={musicVolume}
+            sfxVolume={sfxVolume}
+            onToggleMute={onToggleMute}
+            onMusicVolumeChange={onMusicVolumeChange}
+            onSfxVolumeChange={onSfxVolumeChange}
+            onPreviewSfx={onPreviewSfx}
+            align="right"
+          />
           <button
             type="button"
-            onClick={onToggleMute}
-            className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#8cf8e8]/25 bg-[#06131a]/80 px-4 py-2 text-xs font-medium text-[#dcf7f3] transition-colors hover:border-[#8cf8e8]/55 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
+            onClick={onOpenSettings}
+            className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#8cf8e8]/25 bg-[#06131a]/80 px-3.5 py-2 text-xs font-medium text-[#dcf7f3] transition-colors hover:border-[#8cf8e8]/55 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
           >
-            {muted ? 'Unmute' : 'Mute'}
+            Settings
           </button>
         </div>
 
@@ -262,6 +285,13 @@ export const GameModals: React.FC<GameModalsProps> = ({
               className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#7cfce7]/25 bg-transparent px-4 py-2.5 text-xs sm:text-sm font-medium text-[#dcf7f3] transition-colors hover:bg-[#0e2430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
             >
               {muted ? 'Unmute' : 'Mute'}
+            </button>
+            <button
+              type="button"
+              onClick={onOpenSettings}
+              className="min-h-[44px] whitespace-nowrap shrink-0 rounded-md border border-[#7cfce7]/25 bg-transparent px-4 py-2.5 text-xs sm:text-sm font-medium text-[#dcf7f3] transition-colors hover:bg-[#0e2430] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
+            >
+              Settings
             </button>
             <button
               type="button"

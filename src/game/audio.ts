@@ -31,18 +31,63 @@ const DEFAULT_WEIGHTS: WeatherWeights = {
 class ForestAudioEngine {
   private ctx: AudioContext | null = null;
   private enabled = true;
+  private musicVolume = 1.0;
+  private sfxVolume = 0.72;
   private ambientStarted = false;
   private windGain: GainNode | null = null;
   private windFilter: BiquadFilterNode | null = null;
   private rainGain: GainNode | null = null;
   private rainWarmGain: GainNode | null = null;
   private musicMasterGain: GainNode | null = null;
+  private sfxMasterGain: GainNode | null = null;
   private musicLowpass: BiquadFilterNode | null = null;
   private noiseBuffer: AudioBuffer | null = null;
   private weatherWeights: WeatherWeights = { ...DEFAULT_WEIGHTS };
   private lofiStep = 0;
   private nextStepTime = 0;
   private schedulerId: number | null = null;
+
+  constructor() {
+    this.loadSettings();
+  }
+
+  private loadSettings(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = window.localStorage.getItem('whispering_grove_audio_v1');
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as {
+        enabled?: boolean;
+        musicVolume?: number;
+        sfxVolume?: number;
+      };
+      if (typeof parsed.enabled === 'boolean') this.enabled = parsed.enabled;
+      if (typeof parsed.musicVolume === 'number' && Number.isFinite(parsed.musicVolume)) {
+        this.musicVolume = Math.max(0, Math.min(1, parsed.musicVolume));
+      }
+      if (typeof parsed.sfxVolume === 'number' && Number.isFinite(parsed.sfxVolume)) {
+        this.sfxVolume = Math.max(0, Math.min(1, parsed.sfxVolume));
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }
+
+  private saveSettings(): void {
+    if (typeof window === 'undefined') return;
+    try {
+      window.localStorage.setItem(
+        'whispering_grove_audio_v1',
+        JSON.stringify({
+          enabled: this.enabled,
+          musicVolume: this.musicVolume,
+          sfxVolume: this.sfxVolume,
+        })
+      );
+    } catch {
+      // Ignore storage errors
+    }
+  }
 
   init(): void {
     if (this.ctx) {
@@ -136,13 +181,20 @@ class ForestAudioEngine {
     this.musicLowpass.Q.value = 0.65;
 
     this.musicMasterGain = this.ctx.createGain();
-    this.musicMasterGain.gain.value = this.enabled ? 0.14 : 0;
+    this.musicMasterGain.gain.value = this.enabled ? 0.14 * this.musicVolume : 0;
 
     this.musicLowpass.connect(this.musicMasterGain);
     this.musicMasterGain.connect(this.ctx.destination);
 
+    // Master Sound Effects Bus (slightly softer by default: 0.72)
+    this.sfxMasterGain = this.ctx.createGain();
+    this.sfxMasterGain.gain.value = this.enabled ? this.sfxVolume : 0;
+    this.sfxMasterGain.connect(this.ctx.destination);
+
     this.nextStepTime = this.ctx.currentTime + 0.08;
-    this.schedulerId = window.setInterval(() => this.scheduleLofiLookahead(), 110);
+    if (this.schedulerId === null) {
+      this.schedulerId = window.setInterval(() => this.scheduleLofiLookahead(), 110);
+    }
     this.applyWeatherAudioTargets();
   }
 
@@ -294,14 +346,20 @@ class ForestAudioEngine {
 
   setEnabled(on: boolean): void {
     this.enabled = on;
+    this.saveSettings();
     if (!this.ctx) return;
-    if (this.windGain) {
-      this.windGain.gain.setTargetAtTime(on ? 0.024 : 0, this.ctx.currentTime, 0.15);
+    if (this.sfxMasterGain) {
+      this.sfxMasterGain.gain.setTargetAtTime(on ? this.sfxVolume : 0, this.ctx.currentTime, 0.06);
     }
     if (this.musicMasterGain) {
-      this.musicMasterGain.gain.setTargetAtTime(on ? 0.14 : 0, this.ctx.currentTime, 0.18);
+      this.musicMasterGain.gain.setTargetAtTime(
+        on ? 0.14 * this.musicVolume : 0,
+        this.ctx.currentTime,
+        0.18
+      );
     }
     if (!on) {
+      if (this.windGain) this.windGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.15);
       if (this.rainGain) this.rainGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.12);
       if (this.rainWarmGain) this.rainWarmGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.12);
     } else {
@@ -311,6 +369,39 @@ class ForestAudioEngine {
 
   isEnabled(): boolean {
     return this.enabled;
+  }
+
+  getMusicVolume(): number {
+    return this.musicVolume;
+  }
+
+  getSfxVolume(): number {
+    return this.sfxVolume;
+  }
+
+  setMusicVolume(vol: number): void {
+    this.musicVolume = Math.max(0, Math.min(1, vol));
+    this.saveSettings();
+    if (!this.ctx) return;
+    if (this.musicMasterGain) {
+      this.musicMasterGain.gain.setTargetAtTime(
+        this.enabled ? 0.14 * this.musicVolume : 0,
+        this.ctx.currentTime,
+        0.08
+      );
+    }
+    this.applyWeatherAudioTargets();
+  }
+
+  setSfxVolume(vol: number): void {
+    this.sfxVolume = Math.max(0, Math.min(1, vol));
+    this.saveSettings();
+    if (!this.ctx || !this.sfxMasterGain) return;
+    this.sfxMasterGain.gain.setTargetAtTime(
+      this.enabled ? this.sfxVolume : 0,
+      this.ctx.currentTime,
+      0.06
+    );
   }
 
   updateRainIntensity(rainWeight: number): void {
@@ -326,21 +417,22 @@ class ForestAudioEngine {
     if (!this.ctx) return;
     const w = this.weatherWeights;
     const now = this.ctx.currentTime;
+    const mVol = this.enabled ? this.musicVolume : 0;
 
     if (this.rainGain) {
-      const targetRain = this.enabled ? Math.max(0, Math.min(1, w.rain)) * 0.042 : 0;
+      const targetRain = mVol * Math.max(0, Math.min(1, w.rain)) * 0.042;
       this.rainGain.gain.setTargetAtTime(targetRain, now, 0.35);
     }
     if (this.rainWarmGain) {
-      const targetWarm = this.enabled ? Math.max(0, Math.min(1, w.rain)) * 0.036 : 0;
+      const targetWarm = mVol * Math.max(0, Math.min(1, w.rain)) * 0.036;
       this.rainWarmGain.gain.setTargetAtTime(targetWarm, now, 0.35);
     }
     if (this.windFilter && this.windGain) {
       // Crisp alpine hush in snow, deep muffled rumble underwater, gentle breeze in forest
       const windFreq = 340 + w.snow * 170 - w.underwater * 180;
       this.windFilter.frequency.setTargetAtTime(windFreq, now, 0.45);
-      const windLevel = this.enabled ? 0.022 + w.snow * 0.012 - w.underwater * 0.008 : 0;
-      this.windGain.gain.setTargetAtTime(Math.max(0, windLevel), now, 0.4);
+      const windLevel = mVol * Math.max(0, 0.022 + w.snow * 0.012 - w.underwater * 0.008);
+      this.windGain.gain.setTargetAtTime(windLevel, now, 0.4);
     }
     if (this.musicLowpass) {
       // Underwater gets cozy submerged lofi cutoff (~540Hz); rain gets warm cozy ~1220Hz; open woods ~1650Hz
@@ -361,7 +453,7 @@ class ForestAudioEngine {
     gain.gain.linearRampToValueAtTime(volume, now + 0.02);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(this.sfxMasterGain ?? this.ctx.destination);
     osc.start(now);
     osc.stop(now + duration + 0.05);
   }
@@ -388,7 +480,7 @@ class ForestAudioEngine {
     gain.gain.setValueAtTime(0.048, now);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(this.sfxMasterGain ?? this.ctx.destination);
     osc.start(now);
     osc.stop(now + 0.22);
   }
@@ -404,7 +496,7 @@ class ForestAudioEngine {
     gain.gain.setValueAtTime(0.085, now);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.34);
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(this.sfxMasterGain ?? this.ctx.destination);
     osc.start(now);
     osc.stop(now + 0.36);
     this.playTone(523.25, 0.55, 0.038, 'sine');
@@ -433,7 +525,7 @@ class ForestAudioEngine {
     gain.gain.setValueAtTime(0.07, now);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.25);
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(this.sfxMasterGain ?? this.ctx.destination);
     osc.start(now);
     osc.stop(now + 0.27);
   }
@@ -467,7 +559,7 @@ class ForestAudioEngine {
     gain.gain.setValueAtTime(0.06, now);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.36);
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(this.sfxMasterGain ?? this.ctx.destination);
     osc.start(now);
     osc.stop(now + 0.38);
     this.playTone(783.99, 0.7, 0.04, 'triangle');
@@ -516,7 +608,7 @@ class ForestAudioEngine {
     gain.gain.setValueAtTime(0.065, now);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
     osc.connect(gain);
-    gain.connect(this.ctx.destination);
+    gain.connect(this.sfxMasterGain ?? this.ctx.destination);
     osc.start(now);
     osc.stop(now + 0.32);
     this.playTone(987.77, 0.35, 0.032, 'triangle');
