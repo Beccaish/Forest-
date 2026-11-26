@@ -288,26 +288,26 @@ function ForestGameView() {
   }, []);
 
   const handleToggleMute = useCallback(() => {
-    audioEngine.init();
+    audioEngine.unlock();
     const nextEnabled = !audioEngine.isEnabled();
     audioEngine.setEnabled(nextEnabled);
     setMuted(!nextEnabled);
   }, []);
 
   const handleMusicVolumeChange = useCallback((val: number) => {
-    audioEngine.init();
+    audioEngine.unlock();
     audioEngine.setMusicVolume(val);
     setMusicVolume(val);
   }, []);
 
   const handleSfxVolumeChange = useCallback((val: number) => {
-    audioEngine.init();
+    audioEngine.unlock();
     audioEngine.setSfxVolume(val);
     setSfxVolume(val);
   }, []);
 
   const handlePreviewSfx = useCallback(() => {
-    audioEngine.init();
+    audioEngine.unlock();
     audioEngine.playChime(2);
   }, []);
 
@@ -355,6 +355,7 @@ function ForestGameView() {
     };
     const handleFirstTouch = () => {
       setIsTouchDevice(true);
+      audioEngine.unlock();
     };
 
     const syncOrientation = () => {
@@ -540,6 +541,7 @@ function ForestGameView() {
         className={`block h-full w-full ${canvasCursorPointer ? 'cursor-pointer' : ''}`}
         style={{ touchAction: 'none' }}
         onPointerDown={(e) => {
+          audioEngine.unlock();
           engineRef.current?.handleCanvasPointerDown(e.clientX, e.clientY);
         }}
         onPointerMove={(e) => {
@@ -548,7 +550,7 @@ function ForestGameView() {
             setCanvasCursorPointer((prev) => (prev === hovering ? prev : hovering));
           }
         }}
-        onTouchStart={(e) => e.preventDefault()}
+        onContextMenu={(e) => e.preventDefault()}
       />
 
       <GameHUD

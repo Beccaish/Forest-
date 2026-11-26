@@ -40,15 +40,116 @@ class ForestAudioEngine {
   private rainWarmGain: GainNode | null = null;
   private musicMasterGain: GainNode | null = null;
   private sfxMasterGain: GainNode | null = null;
+  private masterGain: GainNode | null = null;
+  private masterCompressor: DynamicsCompressorNode | null = null;
   private musicLowpass: BiquadFilterNode | null = null;
   private noiseBuffer: AudioBuffer | null = null;
   private weatherWeights: WeatherWeights = { ...DEFAULT_WEIGHTS };
   private lofiStep = 0;
   private nextStepTime = 0;
   private schedulerId: number | null = null;
+  private gestureListenersAttached = false;
+  private iosSessionUnlocked = false;
+  private silentWavEl: HTMLAudioElement | null = null;
+  private silentWavUrl: string | null = null;
 
   constructor() {
     this.loadSettings();
+    this.attachUnlockListeners();
+  }
+
+  private isTouchViewport(): boolean {
+    if (typeof window === 'undefined') return false;
+    const coarse =
+      typeof window.matchMedia === 'function' && Boolean(window.matchMedia('(pointer: coarse)')?.matches);
+    const hasTouch = 'ontouchstart' in window || (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0);
+    return coarse || hasTouch;
+  }
+
+  private getMasterOutputLevel(): number {
+    // Mobile phone speakers need extra gain headroom while keeping desktop soft and relaxing
+    return this.isTouchViewport() ? 2.1 : 1.15;
+  }
+
+  private ensureSilentWavElement(): HTMLAudioElement | null {
+    if (typeof document === 'undefined' || typeof Audio === 'undefined') return null;
+    if (this.silentWavEl) return this.silentWavEl;
+    try {
+      // Build a 50ms silent 16-bit mono PCM WAV in memory so iOS Safari switches out of the mute-obedient 'ambient' session
+      const numSamples = 2205;
+      const dataSize = numSamples * 2;
+      const buffer = new ArrayBuffer(44 + dataSize);
+      const view = new DataView(buffer);
+      const writeAscii = (offset: number, str: string) => {
+        for (let i = 0; i < str.length; i++) {
+          view.setUint8(offset + i, str.charCodeAt(i));
+        }
+      };
+      writeAscii(0, 'RIFF');
+      view.setUint32(4, 36 + dataSize, true);
+      writeAscii(8, 'WAVE');
+      writeAscii(12, 'fmt ');
+      view.setUint32(16, 16, true); // PCM chunk size
+      view.setUint16(20, 1, true); // PCM format
+      view.setUint16(22, 1, true); // Mono
+      view.setUint32(24, 44100, true); // Sample rate
+      view.setUint32(28, 88200, true); // Byte rate
+      view.setUint16(32, 2, true); // Block align
+      view.setUint16(34, 16, true); // Bits per sample
+      writeAscii(36, 'data');
+      view.setUint32(40, dataSize, true);
+
+      const blob = new Blob([buffer], { type: 'audio/wav' });
+      this.silentWavUrl = URL.createObjectURL(blob);
+      const audio = new Audio(this.silentWavUrl);
+      audio.setAttribute('playsinline', '');
+      audio.preload = 'auto';
+      audio.volume = 1;
+      // On older iOS without navigator.audioSession, keeping the silent track looping prevents reverting to 'ambient' (muted by ringer switch)
+      if (typeof navigator !== 'undefined' && !('audioSession' in navigator)) {
+        audio.loop = true;
+      }
+      this.silentWavEl = audio;
+      return audio;
+    } catch {
+      return null;
+    }
+  }
+
+  private configureMobileAudioSession(): void {
+    if (typeof navigator === 'undefined') return;
+    try {
+      const nav = navigator as Navigator & { audioSession?: { type: string } };
+      if (nav.audioSession && nav.audioSession.type !== 'playback') {
+        nav.audioSession.type = 'playback';
+      }
+    } catch {
+      // Ignore if audioSession API is unavailable or restricted
+    }
+  }
+
+  private attachUnlockListeners(): void {
+    if (typeof window === 'undefined' || this.gestureListenersAttached) return;
+    this.gestureListenersAttached = true;
+
+    const handleUserGesture = () => {
+      this.unlock();
+    };
+    const handleVisibilityResume = () => {
+      if (typeof document !== 'undefined' && !document.hidden) {
+        this.resumeIfNeeded();
+      }
+    };
+
+    // Capture phase ensures unlocking runs even if an inner control calls stopPropagation/preventDefault
+    window.addEventListener('touchend', handleUserGesture, { capture: true, passive: true });
+    window.addEventListener('pointerup', handleUserGesture, { capture: true, passive: true });
+    window.addEventListener('click', handleUserGesture, { capture: true, passive: true });
+    window.addEventListener('keydown', handleUserGesture, { capture: true, passive: true });
+    window.addEventListener('touchstart', handleUserGesture, { capture: true, passive: true });
+    document.addEventListener('visibilitychange', handleVisibilityResume);
+    window.addEventListener('pageshow', handleVisibilityResume);
+    window.addEventListener('focus', handleVisibilityResume);
   }
 
   private loadSettings(): void {
@@ -89,11 +190,86 @@ class ForestAudioEngine {
     }
   }
 
-  init(): void {
-    if (this.ctx) {
-      if (this.ctx.state === 'suspended') {
-        void this.ctx.resume();
+  unlock(): void {
+    this.configureMobileAudioSession();
+    this.init();
+    if (!this.ctx) return;
+
+    if (!this.iosSessionUnlocked) {
+      const wav = this.ensureSilentWavElement();
+      if (wav) {
+        try {
+          wav.currentTime = 0;
+          const p = wav.play();
+          if (p && typeof p.then === 'function') {
+            p.then(() => {
+              this.iosSessionUnlocked = true;
+            }).catch(() => {
+              // Will retry on next user activation (e.g., touchend/click)
+            });
+          } else {
+            this.iosSessionUnlocked = true;
+          }
+        } catch {
+          // Retry on next gesture
+        }
       }
+    }
+
+    // Play a 1-sample silent Web Audio buffer inside the gesture to wake iOS/Android audio hardware
+    try {
+      const unlockBuffer = this.ctx.createBuffer(1, 1, 22050);
+      const src = this.ctx.createBufferSource();
+      src.buffer = unlockBuffer;
+      src.connect(this.ctx.destination);
+      src.start(0);
+    } catch {
+      // Ignore if context cannot start yet
+    }
+
+    this.resumeIfNeeded();
+  }
+
+  private resumeIfNeeded(): void {
+    if (!this.ctx) return;
+    if (this.masterGain) {
+      this.masterGain.gain.setTargetAtTime(this.getMasterOutputLevel(), this.ctx.currentTime, 0.05);
+    }
+    if (this.ctx.state !== 'running') {
+      void this.ctx
+        .resume()
+        .then(() => {
+          if (!this.ctx) return;
+          this.nextStepTime = Math.max(this.nextStepTime, this.ctx.currentTime + 0.04);
+          this.applyWeatherAudioTargets();
+          this.syncBusVolumes();
+          this.scheduleLofiLookahead();
+        })
+        .catch(() => {
+          // Ignore resume rejection until next user gesture
+        });
+    }
+  }
+
+  private syncBusVolumes(): void {
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    if (this.sfxMasterGain) {
+      this.sfxMasterGain.gain.setTargetAtTime(this.enabled ? this.sfxVolume : 0, now, 0.04);
+    }
+    if (this.musicMasterGain) {
+      this.musicMasterGain.gain.setTargetAtTime(
+        this.enabled ? 0.16 * this.musicVolume : 0,
+        now,
+        0.12
+      );
+    }
+  }
+
+  init(): void {
+    this.configureMobileAudioSession();
+    if (this.ctx) {
+      this.resumeIfNeeded();
       return;
     }
     const AC =
@@ -101,12 +277,35 @@ class ForestAudioEngine {
       (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AC) return;
     this.ctx = new AC();
+    this.ctx.onstatechange = () => {
+      if (this.ctx && this.ctx.state === 'running') {
+        this.nextStepTime = Math.max(this.nextStepTime, this.ctx.currentTime + 0.04);
+        this.applyWeatherAudioTargets();
+        this.syncBusVolumes();
+        this.scheduleLofiLookahead();
+      }
+    };
     this.startAmbientLayers();
+    this.resumeIfNeeded();
   }
 
   private startAmbientLayers(): void {
     if (!this.ctx || this.ambientStarted) return;
     this.ambientStarted = true;
+
+    // Protective soft compressor + master gain so mobile phone speakers stay clear without clipping
+    this.masterCompressor = this.ctx.createDynamicsCompressor();
+    this.masterCompressor.threshold.value = -16;
+    this.masterCompressor.knee.value = 18;
+    this.masterCompressor.ratio.value = 3.5;
+    this.masterCompressor.attack.value = 0.008;
+    this.masterCompressor.release.value = 0.22;
+
+    this.masterGain = this.ctx.createGain();
+    this.masterGain.gain.value = this.getMasterOutputLevel();
+
+    this.masterCompressor.connect(this.masterGain);
+    this.masterGain.connect(this.ctx.destination);
 
     const sampleRate = this.ctx.sampleRate;
     const bufferSize = sampleRate * 3;
@@ -136,7 +335,7 @@ class ForestAudioEngine {
 
     windSrc.connect(this.windFilter);
     this.windFilter.connect(this.windGain);
-    this.windGain.connect(this.ctx.destination);
+    this.windGain.connect(this.masterCompressor);
     windSrc.start();
 
     // Soft lofi rain layers (crisp patter + cozy warm mid-patter)
@@ -159,7 +358,7 @@ class ForestAudioEngine {
 
     rainSrc.connect(rainFilter);
     rainFilter.connect(this.rainGain);
-    this.rainGain.connect(this.ctx.destination);
+    this.rainGain.connect(this.masterCompressor);
 
     const rainWarmFilter = this.ctx.createBiquadFilter();
     rainWarmFilter.type = 'bandpass';
@@ -171,7 +370,7 @@ class ForestAudioEngine {
 
     rainSrc.connect(rainWarmFilter);
     rainWarmFilter.connect(this.rainWarmGain);
-    this.rainWarmGain.connect(this.ctx.destination);
+    this.rainWarmGain.connect(this.masterCompressor);
     rainSrc.start();
 
     // Soft Lofi Chill Music Master Bus (warm low-pass filtered Rhodes & brush texture)
@@ -181,15 +380,15 @@ class ForestAudioEngine {
     this.musicLowpass.Q.value = 0.65;
 
     this.musicMasterGain = this.ctx.createGain();
-    this.musicMasterGain.gain.value = this.enabled ? 0.14 * this.musicVolume : 0;
+    this.musicMasterGain.gain.value = this.enabled ? 0.16 * this.musicVolume : 0;
 
     this.musicLowpass.connect(this.musicMasterGain);
-    this.musicMasterGain.connect(this.ctx.destination);
+    this.musicMasterGain.connect(this.masterCompressor);
 
     // Master Sound Effects Bus (slightly softer by default: 0.72)
     this.sfxMasterGain = this.ctx.createGain();
     this.sfxMasterGain.gain.value = this.enabled ? this.sfxVolume : 0;
-    this.sfxMasterGain.connect(this.ctx.destination);
+    this.sfxMasterGain.connect(this.masterCompressor);
 
     this.nextStepTime = this.ctx.currentTime + 0.08;
     if (this.schedulerId === null) {
@@ -347,13 +546,25 @@ class ForestAudioEngine {
   setEnabled(on: boolean): void {
     this.enabled = on;
     this.saveSettings();
+    if (on) {
+      this.unlock();
+    } else {
+      this.iosSessionUnlocked = false;
+      if (this.silentWavEl) {
+        try {
+          this.silentWavEl.pause();
+        } catch {
+          // Ignore pause errors
+        }
+      }
+    }
     if (!this.ctx) return;
     if (this.sfxMasterGain) {
       this.sfxMasterGain.gain.setTargetAtTime(on ? this.sfxVolume : 0, this.ctx.currentTime, 0.06);
     }
     if (this.musicMasterGain) {
       this.musicMasterGain.gain.setTargetAtTime(
-        on ? 0.14 * this.musicVolume : 0,
+        on ? 0.16 * this.musicVolume : 0,
         this.ctx.currentTime,
         0.18
       );
@@ -385,7 +596,7 @@ class ForestAudioEngine {
     if (!this.ctx) return;
     if (this.musicMasterGain) {
       this.musicMasterGain.gain.setTargetAtTime(
-        this.enabled ? 0.14 * this.musicVolume : 0,
+        this.enabled ? 0.16 * this.musicVolume : 0,
         this.ctx.currentTime,
         0.08
       );
@@ -444,6 +655,7 @@ class ForestAudioEngine {
 
   playTone(freq: number, duration = 0.7, volume = 0.08, type: OscillatorType = 'sine'): void {
     if (!this.enabled || !this.ctx) return;
+    if (this.ctx.state !== 'running') this.resumeIfNeeded();
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -470,6 +682,7 @@ class ForestAudioEngine {
 
   playJump(isDouble = false): void {
     if (!this.enabled || !this.ctx) return;
+    if (this.ctx.state !== 'running') this.resumeIfNeeded();
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
@@ -487,6 +700,7 @@ class ForestAudioEngine {
 
   playBounce(): void {
     if (!this.enabled || !this.ctx) return;
+    if (this.ctx.state !== 'running') this.resumeIfNeeded();
     const now = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
