@@ -233,24 +233,30 @@ class ForestAudioEngine {
     if (typeof window === 'undefined' || this.gestureListenersAttached) return;
     this.gestureListenersAttached = true;
 
-    const handleUserGesture = () => {
-      this.unlock();
-    };
-    const handleVisibilityResume = () => {
-      if (typeof document !== 'undefined' && !document.hidden) {
-        this.resumeIfNeeded();
-      }
-    };
+    try {
+      const handleUserGesture = () => {
+        this.unlock();
+      };
+      const handleVisibilityResume = () => {
+        if (typeof document !== 'undefined' && !document.hidden) {
+          this.resumeIfNeeded();
+        }
+      };
 
-    // Capture phase ensures unlocking runs even if an inner control calls stopPropagation/preventDefault
-    window.addEventListener('touchend', handleUserGesture, { capture: true, passive: true });
-    window.addEventListener('pointerup', handleUserGesture, { capture: true, passive: true });
-    window.addEventListener('click', handleUserGesture, { capture: true, passive: true });
-    window.addEventListener('keydown', handleUserGesture, { capture: true, passive: true });
-    window.addEventListener('touchstart', handleUserGesture, { capture: true, passive: true });
-    document.addEventListener('visibilitychange', handleVisibilityResume);
-    window.addEventListener('pageshow', handleVisibilityResume);
-    window.addEventListener('focus', handleVisibilityResume);
+      // Capture phase ensures unlocking runs even if an inner control calls stopPropagation/preventDefault
+      window.addEventListener('touchend', handleUserGesture, { capture: true, passive: true });
+      window.addEventListener('pointerup', handleUserGesture, { capture: true, passive: true });
+      window.addEventListener('click', handleUserGesture, { capture: true, passive: true });
+      window.addEventListener('keydown', handleUserGesture, { capture: true, passive: true });
+      window.addEventListener('touchstart', handleUserGesture, { capture: true, passive: true });
+      if (typeof document !== 'undefined') {
+        document.addEventListener('visibilitychange', handleVisibilityResume);
+      }
+      window.addEventListener('pageshow', handleVisibilityResume);
+      window.addEventListener('focus', handleVisibilityResume);
+    } catch {
+      // Ignore listener attachment errors in restricted environments
+    }
   }
 
   private loadSettings(): void {
@@ -373,21 +379,25 @@ class ForestAudioEngine {
       this.resumeIfNeeded();
       return;
     }
-    const AC =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-    if (!AC) return;
-    this.ctx = new AC();
-    this.ctx.onstatechange = () => {
-      if (this.ctx && this.ctx.state === 'running') {
-        this.nextStepTime = Math.max(this.nextStepTime, this.ctx.currentTime + 0.04);
-        this.applyWeatherAudioTargets();
-        this.syncBusVolumes();
-        this.scheduleLofiLookahead();
-      }
-    };
-    this.startAmbientLayers();
-    this.resumeIfNeeded();
+    try {
+      const AC =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AC) return;
+      this.ctx = new AC();
+      this.ctx.onstatechange = () => {
+        if (this.ctx && this.ctx.state === 'running') {
+          this.nextStepTime = Math.max(this.nextStepTime, this.ctx.currentTime + 0.04);
+          this.applyWeatherAudioTargets();
+          this.syncBusVolumes();
+          this.scheduleLofiLookahead();
+        }
+      };
+      this.startAmbientLayers();
+      this.resumeIfNeeded();
+    } catch {
+      this.ctx = null;
+    }
   }
 
   private startAmbientLayers(): void {

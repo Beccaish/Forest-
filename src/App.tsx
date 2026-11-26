@@ -542,7 +542,7 @@ function ForestGameView() {
   }
 
   return (
-    <main className="relative h-full w-full overflow-hidden bg-[#050d14]" style={{ touchAction: 'none' }}>
+    <main className="fixed inset-0 h-full w-full overflow-hidden bg-[#050d14]" style={{ touchAction: 'none' }}>
       <canvas
         ref={canvasRef}
         className={`block h-full w-full ${canvasCursorPointer ? 'cursor-pointer' : ''}`}

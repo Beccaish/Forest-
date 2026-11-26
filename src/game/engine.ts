@@ -217,8 +217,12 @@ export class ForestGameEngine {
       this.lastFrameMs = now;
       const dt = Math.min(Math.max(rawDt, 0), 0.05);
 
-      this.update(dt);
-      this.render();
+      try {
+        this.update(dt);
+        this.render();
+      } catch (err) {
+        console.error('Whispering Forest frame error:', err);
+      }
       this.rafId = window.requestAnimationFrame(tick);
     };
     this.rafId = window.requestAnimationFrame(tick);
