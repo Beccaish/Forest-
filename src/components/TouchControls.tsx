@@ -14,8 +14,8 @@ interface TouchControlsProps {
   onFly: () => void;
 }
 
-const JOYSTICK_MAX_RADIUS = 36;
-const JOYSTICK_DEADZONE = 9;
+const JOYSTICK_MAX_RADIUS = 22;
+const JOYSTICK_DEADZONE = 3;
 
 export const TouchControls: React.FC<TouchControlsProps> = ({
   visible,
@@ -30,6 +30,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
 }) => {
   const padRef = useRef<HTMLDivElement | null>(null);
   const stickRef = useRef<HTMLDivElement | null>(null);
+  const stickOriginRef = useRef<{ x: number; y: number } | null>(null);
   const movePointerId = useRef<number | null>(null);
   const jumpPointerId = useRef<number | null>(null);
 
@@ -43,6 +44,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
     if (!visible) {
       movePointerId.current = null;
       jumpPointerId.current = null;
+      stickOriginRef.current = null;
       setActiveDir(null);
       setStickOffset({ x: 0, y: 0 });
       setJumpActive(false);
@@ -69,20 +71,39 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
     }
   };
 
+  const beginStickAtPointer = (clientX: number, clientY: number) => {
+    stickOriginRef.current = { x: clientX, y: clientY };
+    setStickOffset({ x: 0, y: 0 });
+    setActiveDir(null);
+    onLeftChange(false);
+    onRightChange(false);
+  };
+
   const updateStickFromPointer = (clientX: number, clientY: number) => {
     const el = stickRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const cx = rect.left + rect.width * 0.5;
-    const cy = rect.top + rect.height * 0.5;
-    let dx = clientX - cx;
-    let dy = clientY - cy;
+    const padCx = rect.left + rect.width * 0.5;
+    const padCy = rect.top + rect.height * 0.5;
+    if (!stickOriginRef.current) {
+      stickOriginRef.current = { x: padCx, y: padCy };
+    }
+
+    const origin = stickOriginRef.current;
+    let dx = clientX - origin.x;
+    let dy = clientY - origin.y;
     const dist = Math.hypot(dx, dy);
+
     if (dist > JOYSTICK_MAX_RADIUS) {
       const scale = JOYSTICK_MAX_RADIUS / dist;
       dx *= scale;
       dy *= scale;
+      // Follow thumb gently within the pad center zone so reversing direction stays instant
+      const maxDrift = 14;
+      origin.x = Math.max(padCx - maxDrift, Math.min(padCx + maxDrift, clientX - dx));
+      origin.y = Math.max(padCy - maxDrift, Math.min(padCy + maxDrift, clientY - dy));
     }
+
     setStickOffset({ x: dx, y: dy });
 
     if (dx < -JOYSTICK_DEADZONE) {
@@ -102,6 +123,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
 
   const clearMove = () => {
     movePointerId.current = null;
+    stickOriginRef.current = null;
     setActiveDir(null);
     setStickOffset({ x: 0, y: 0 });
     onLeftChange(false);
@@ -116,7 +138,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
       onTouchEnd={(e) => e.preventDefault()}
       onDoubleClick={(e) => e.preventDefault()}
     >
-      {/* Left Thumb: Either Classic Arrows Rocker (Default) OR Minecraft-style Round Thumbstick */}
+      {/* Left Thumb: Either Classic Arrows Rocker (Default) OR Compact Responsive Round Thumbstick */}
       {controlStyle === 'joystick' ? (
         <div
           ref={stickRef}
@@ -127,7 +149,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
             e.preventDefault();
             movePointerId.current = e.pointerId;
             e.currentTarget.setPointerCapture(e.pointerId);
-            updateStickFromPointer(e.clientX, e.clientY);
+            beginStickAtPointer(e.clientX, e.clientY);
           }}
           onPointerMove={(e) => {
             if (movePointerId.current !== e.pointerId) return;
@@ -143,13 +165,12 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
             if (movePointerId.current !== e.pointerId) return;
             clearMove();
           }}
-          className="pointer-events-auto relative flex h-28 w-28 items-center justify-center rounded-full border-2 border-[#8cf8e8]/38 bg-[#061620]/58 shadow-lg backdrop-blur-sm"
+          className="pointer-events-auto relative flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#8cf8e8]/42 bg-[#061620]/56 shadow-lg backdrop-blur-sm"
           style={{ touchAction: 'none' }}
         >
-          {/* Subtle directional guide ticks */}
           <span
             aria-hidden="true"
-            className={`absolute left-2.5 text-[11px] font-bold transition-colors ${
+            className={`absolute left-2 text-[11px] font-bold transition-colors ${
               activeDir === 'left' ? 'text-[#7cfce7]' : 'text-[#8cf8e8]/45'
             }`}
           >
@@ -157,23 +178,11 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
           </span>
           <span
             aria-hidden="true"
-            className={`absolute right-2.5 text-[11px] font-bold transition-colors ${
+            className={`absolute right-2 text-[11px] font-bold transition-colors ${
               activeDir === 'right' ? 'text-[#7cfce7]' : 'text-[#8cf8e8]/45'
             }`}
           >
             ▶
-          </span>
-          <span
-            aria-hidden="true"
-            className="absolute top-2 text-[10px] text-[#8cf8e8]/30"
-          >
-            ▲
-          </span>
-          <span
-            aria-hidden="true"
-            className="absolute bottom-2 text-[10px] text-[#8cf8e8]/30"
-          >
-            ▼
           </span>
 
           {/* Inner Draggable Round Thumb Knob */}
@@ -181,10 +190,10 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
             style={{
               transform: `translate3d(${stickOffset.x}px, ${stickOffset.y}px, 0)`,
             }}
-            className={`h-12 w-12 rounded-full border-2 shadow-md transition-colors ${
+            className={`h-10 w-10 rounded-full border-2 shadow-md transition-colors ${
               activeDir
-                ? 'border-[#e6fffb] bg-[#56e3cc]/75'
-                : 'border-[#8cf8e8]/65 bg-[#123747]/85'
+                ? 'border-[#e6fffb] bg-[#56e3cc]/80'
+                : 'border-[#8cf8e8]/70 bg-[#123747]/88'
             }`}
           />
         </div>
