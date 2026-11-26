@@ -505,12 +505,12 @@ export const ShopModal: React.FC<ShopModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-30 flex items-center justify-center bg-[#0f2b21]/58 p-2.5 sm:p-5 overflow-y-auto"
+      className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center bg-[#0f2b21]/65 p-1.5 pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))] pl-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))] sm:p-5 overflow-hidden"
       role="dialog"
       aria-modal="true"
       aria-labelledby="grove-shop-title"
     >
-      <div className="relative w-full max-w-6xl max-h-[93vh] max-h-[93dvh] flex flex-col rounded-2xl border-2 border-[#8ec8a7] bg-[#f4fbf5] shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-6xl h-full sm:h-auto sm:max-h-[92vh] sm:max-h-[92dvh] flex flex-col rounded-xl sm:rounded-2xl border-2 border-[#8ec8a7] bg-[#f4fbf5] shadow-2xl overflow-hidden">
         {/* Bright sunlit enchanted meadow wash */}
         <img
           src={meadowBackdropImg}
@@ -525,15 +525,15 @@ export const ShopModal: React.FC<ShopModalProps> = ({
         />
 
         {/* Header Bar */}
-        <div className="relative z-10 flex items-center justify-between gap-4 border-b border-[#b9dfc7] bg-white/88 px-4 py-3 sm:px-6 sm:py-3.5 shrink-0">
-          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
+        <div className="relative z-10 flex items-center justify-between gap-3 border-b border-[#b9dfc7] bg-white/92 px-3.5 py-2.5 sm:px-6 sm:py-3.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-3 sm:gap-6">
             <h2
               id="grove-shop-title"
-              className="font-display text-xl sm:text-2xl font-bold text-[#0f2f25]"
+              className="font-display text-lg sm:text-2xl font-bold text-[#0f2f25]"
             >
               Grove Shop
             </h2>
-            <div className="flex items-center gap-2 rounded-lg border border-[#e7c572] bg-[#fff7dc] px-3 py-1.5 text-sm sm:text-base font-bold text-[#7c4a03]">
+            <div className="flex items-center gap-1.5 rounded-lg border border-[#e7c572] bg-[#fff7dc] px-2.5 py-1 sm:px-3 sm:py-1.5 text-sm sm:text-base font-bold text-[#7c4a03]">
               <DewdropIcon size={18} />
               <span className="tabular-nums">{progress.dewdrops}</span>
               <span className="text-xs sm:text-sm font-semibold text-[#945c0c]">Dewdrops</span>
@@ -543,14 +543,14 @@ export const ShopModal: React.FC<ShopModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[42px] whitespace-nowrap shrink-0 rounded-lg border border-[#8ec8a7] bg-white px-5 py-2 text-sm font-semibold text-[#103429] transition-colors hover:bg-[#e5f5eb] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f766e]"
+            className="min-h-[40px] sm:min-h-[42px] whitespace-nowrap shrink-0 rounded-lg border border-[#8ec8a7] bg-white px-4 sm:px-5 py-1.5 sm:py-2 text-sm font-semibold text-[#103429] transition-colors hover:bg-[#e5f5eb] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f766e]"
           >
             Close
           </button>
         </div>
 
         {/* Scrollable Two-Column Workspace */}
-        <div className="relative z-10 overflow-y-auto p-4 sm:p-6" style={{ touchAction: 'pan-y' }}>
+        <div className="relative z-10 flex-1 min-h-0 overflow-y-auto p-3 sm:p-6" style={{ touchAction: 'pan-y' }}>
           <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-5 sm:gap-6 items-start">
             {/* Left Column: 3D Forest Turntable & Try-On Status */}
             <div className="rounded-xl border border-[#b6dec4] bg-white/90 p-4 shadow-sm flex flex-col gap-4">

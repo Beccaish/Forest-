@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Menu, Volume2, VolumeX, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Menu, Volume2, VolumeX, X } from 'lucide-react';
 import type { HudSnapshot } from '../game/types';
 import { SoundControl } from './SoundControl';
 
@@ -20,6 +20,7 @@ interface GameHUDProps {
   onOpenShop: () => void;
   onOpenSettings: () => void;
   onGoHome: () => void;
+  onMobileNavOpenChange?: (open: boolean) => void;
 }
 
 export const GameHUD: React.FC<GameHUDProps> = ({
@@ -39,26 +40,38 @@ export const GameHUD: React.FC<GameHUDProps> = ({
   onOpenShop,
   onOpenSettings,
   onGoHome,
+  onMobileNavOpenChange,
 }) => {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [pointsExpanded, setPointsExpanded] = useState(false);
   const mobileNavRef = useRef<HTMLDivElement | null>(null);
+  const mobilePointsRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    onMobileNavOpenChange?.(mobileNavOpen);
+  }, [mobileNavOpen, onMobileNavOpenChange]);
 
   useEffect(() => {
     if (hud.phase !== 'PLAYING') {
       setMobileNavOpen(false);
+      setPointsExpanded(false);
     }
   }, [hud.phase]);
 
   useEffect(() => {
-    if (!mobileNavOpen) return;
+    if (!mobileNavOpen && !pointsExpanded) return;
     const handleOutside = (e: PointerEvent) => {
-      if (mobileNavRef.current && !mobileNavRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      if (mobileNavOpen && mobileNavRef.current && !mobileNavRef.current.contains(target)) {
         setMobileNavOpen(false);
+      }
+      if (pointsExpanded && mobilePointsRef.current && !mobilePointsRef.current.contains(target)) {
+        setPointsExpanded(false);
       }
     };
     window.addEventListener('pointerdown', handleOutside);
     return () => window.removeEventListener('pointerdown', handleOutside);
-  }, [mobileNavOpen]);
+  }, [mobileNavOpen, pointsExpanded]);
 
   if (hud.phase !== 'PLAYING') return null;
 
@@ -89,83 +102,159 @@ export const GameHUD: React.FC<GameHUDProps> = ({
     return (
       <div className="pointer-events-none fixed inset-0 z-10 flex flex-col justify-between pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))] pl-[max(0.6rem,env(safe-area-inset-left))] pr-[max(0.6rem,env(safe-area-inset-right))]">
         <div className="flex items-start justify-between gap-2">
-          {/* Mobile Horizontal Top Points Bar (keeps entire gameplay screen & round stick area unobstructed) */}
-          <div className="min-w-0 max-w-[calc(100%-175px)] rounded-xl border border-[#8cf8e8]/22 bg-[#061822]/45 px-2.5 py-1.5 text-[#eefcf9] shadow-md backdrop-blur-md">
-            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px]">
-              {/* Petals */}
-              <div className="flex items-center gap-0.5 shrink-0" aria-label={`Vitality ${hud.petals} of ${hud.maxPetals}`}>
-                {Array.from({ length: hud.maxPetals }).map((_, idx) => {
-                  const active = idx < hud.petals;
-                  return (
-                    <svg key={idx} width="12" height="12" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                      <path
-                        d="M10 2C13.5 5.5 16 9.2 16 12.5C16 15.8 13.3 18 10 18C6.7 18 4 15.8 4 12.5C4 9.2 6.5 5.5 10 2Z"
-                        fill={active ? '#7cfce7' : 'rgba(124,252,231,0.16)'}
-                        stroke={active ? '#e6fffb' : 'rgba(124,252,231,0.35)'}
-                        strokeWidth="1.5"
-                      />
-                    </svg>
-                  );
-                })}
-              </div>
+          {/* Mobile Horizontal Top Points Bar — Tap to Expand with Full Labels */}
+          <div ref={mobilePointsRef} className="pointer-events-auto relative min-w-0 max-w-[calc(100%-175px)]">
+            <button
+              type="button"
+              onClick={() => {
+                setMobileNavOpen(false);
+                setPointsExpanded((v) => !v);
+              }}
+              aria-expanded={pointsExpanded}
+              aria-label={pointsExpanded ? 'Collapse score details' : 'Expand score details'}
+              className="w-full text-left rounded-xl border border-[#8cf8e8]/25 bg-[#061822]/48 px-2.5 py-1.5 text-[#eefcf9] shadow-md backdrop-blur-md transition-colors hover:border-[#8cf8e8]/45 focus-visible:outline-2 focus-visible:outline-[#7cfce7]"
+            >
+              <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[11px]">
+                {/* Petals */}
+                <div className="flex items-center gap-0.5 shrink-0" aria-label={`Vitality ${hud.petals} of ${hud.maxPetals}`}>
+                  {Array.from({ length: hud.maxPetals }).map((_, idx) => {
+                    const active = idx < hud.petals;
+                    return (
+                      <svg key={idx} width="12" height="12" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                        <path
+                          d="M10 2C13.5 5.5 16 9.2 16 12.5C16 15.8 13.3 18 10 18C6.7 18 4 15.8 4 12.5C4 9.2 6.5 5.5 10 2Z"
+                          fill={active ? '#7cfce7' : 'rgba(124,252,231,0.16)'}
+                          stroke={active ? '#e6fffb' : 'rgba(124,252,231,0.35)'}
+                          strokeWidth="1.5"
+                        />
+                      </svg>
+                    );
+                  })}
+                </div>
 
-              <span className="font-semibold text-[#ffe29a] tabular-nums shrink-0">
-                L{hud.levelId} · {hud.progressPct}%
-              </span>
-
-              <span className="flex items-center gap-1 tabular-nums shrink-0" title="Lumina">
-                <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <circle cx="10" cy="10" r="6" fill="#82ffeb" fillOpacity="0.4" />
-                  <circle cx="10" cy="10" r="3.6" fill="#ffffff" />
-                </svg>
-                <span className="font-semibold">{hud.orbsCollected}/{hud.orbsTotal}</span>
-              </span>
-
-              <span className="flex items-center gap-1 tabular-nums shrink-0" title="Blossoms">
-                <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <circle cx="10" cy="5.5" r="2.8" fill="#ffd67a" />
-                  <circle cx="14.2" cy="9" r="2.8" fill="#ffae94" />
-                  <circle cx="12.5" cy="14" r="2.8" fill="#ffd67a" />
-                  <circle cx="7.5" cy="14" r="2.8" fill="#ffae94" />
-                  <circle cx="5.8" cy="9" r="2.8" fill="#ffd67a" />
-                </svg>
-                <span className="font-semibold">{hud.blossomsCollected}/{hud.blossomsTotal}</span>
-              </span>
-
-              <span className="flex items-center gap-1 tabular-nums shrink-0" title="Crystals">
-                <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <path d="M10 2L15.5 10L10 18L4.5 10L10 2Z" fill="#b4f5ff" stroke="#ffffff" strokeWidth="1.2" />
-                </svg>
-                <span className="font-semibold">{hud.crystalsCollected}/{hud.crystalsTotal}</span>
-              </span>
-
-              <span className="flex items-center gap-1 tabular-nums shrink-0" title="Star Seeds">
-                <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <path d="M10 1.8L12.1 7.9L18.2 10L12.1 12.1L10 18.2L7.9 12.1L1.8 10L7.9 7.9L10 1.8Z" fill="#d9f4ff" stroke="#ffffff" strokeWidth="1" />
-                </svg>
-                <span className="font-semibold">{hud.starseedsCollected}/{hud.starseedsTotal}</span>
-              </span>
-
-              <span className="flex items-center gap-1 tabular-nums shrink-0" title="Lanterns">
-                <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <rect x="6" y="4" width="8" height="11" rx="2" fill="#ffe399" stroke="#ffd166" strokeWidth="1.4" />
-                </svg>
-                <span className="font-semibold">{hud.lanternsLit}/{hud.lanternsTotal}</span>
-              </span>
-
-              <span className="flex items-center gap-1 font-bold text-[#ffe194] tabular-nums shrink-0" title="Dewdrops">
-                <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                  <path d="M10 2.2C13.4 6.3 15.8 9.6 15.8 12.6C15.8 15.8 13.2 18 10 18C6.8 18 4.2 15.8 4.2 12.6C4.2 9.6 6.6 6.3 10 2.2Z" fill="#7cfce7" fillOpacity="0.45" stroke="#ffe194" strokeWidth="1.5" />
-                </svg>
-                <span>{hud.dewdrops}</span>
-              </span>
-
-              {hud.flyingTimeLeft > 0 && (
-                <span className="font-semibold text-[#ff9ce3] tabular-nums shrink-0">
-                  Fly {hud.flyingTimeLeft.toFixed(1)}s
+                <span className="font-semibold text-[#ffe29a] tabular-nums shrink-0">
+                  L{hud.levelId} · {hud.progressPct}%
                 </span>
-              )}
-            </div>
+
+                <span className="flex items-center gap-1 tabular-nums shrink-0">
+                  <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <circle cx="10" cy="10" r="6" fill="#82ffeb" fillOpacity="0.4" />
+                    <circle cx="10" cy="10" r="3.6" fill="#ffffff" />
+                  </svg>
+                  <span className="font-semibold">{hud.orbsCollected}/{hud.orbsTotal}</span>
+                </span>
+
+                <span className="flex items-center gap-1 tabular-nums shrink-0">
+                  <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <circle cx="10" cy="5.5" r="2.8" fill="#ffd67a" />
+                    <circle cx="14.2" cy="9" r="2.8" fill="#ffae94" />
+                    <circle cx="12.5" cy="14" r="2.8" fill="#ffd67a" />
+                    <circle cx="7.5" cy="14" r="2.8" fill="#ffae94" />
+                    <circle cx="5.8" cy="9" r="2.8" fill="#ffd67a" />
+                  </svg>
+                  <span className="font-semibold">{hud.blossomsCollected}/{hud.blossomsTotal}</span>
+                </span>
+
+                <span className="flex items-center gap-1 tabular-nums shrink-0">
+                  <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <path d="M10 2L15.5 10L10 18L4.5 10L10 2Z" fill="#b4f5ff" stroke="#ffffff" strokeWidth="1.2" />
+                  </svg>
+                  <span className="font-semibold">{hud.crystalsCollected}/{hud.crystalsTotal}</span>
+                </span>
+
+                <span className="flex items-center gap-1 tabular-nums shrink-0">
+                  <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <path d="M10 1.8L12.1 7.9L18.2 10L12.1 12.1L10 18.2L7.9 12.1L1.8 10L7.9 7.9L10 1.8Z" fill="#d9f4ff" stroke="#ffffff" strokeWidth="1" />
+                  </svg>
+                  <span className="font-semibold">{hud.starseedsCollected}/{hud.starseedsTotal}</span>
+                </span>
+
+                <span className="flex items-center gap-1 tabular-nums shrink-0">
+                  <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <rect x="6" y="4" width="8" height="11" rx="2" fill="#ffe399" stroke="#ffd166" strokeWidth="1.4" />
+                  </svg>
+                  <span className="font-semibold">{hud.lanternsLit}/{hud.lanternsTotal}</span>
+                </span>
+
+                <span className="flex items-center gap-1 font-bold text-[#ffe194] tabular-nums shrink-0">
+                  <svg width="10" height="10" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                    <path d="M10 2.2C13.4 6.3 15.8 9.6 15.8 12.6C15.8 15.8 13.2 18 10 18C6.8 18 4.2 15.8 4.2 12.6C4.2 9.6 6.6 6.3 10 2.2Z" fill="#7cfce7" fillOpacity="0.45" stroke="#ffe194" strokeWidth="1.5" />
+                  </svg>
+                  <span>{hud.dewdrops}</span>
+                </span>
+
+                {hud.flyingTimeLeft > 0 && (
+                  <span className="font-semibold text-[#ff9ce3] tabular-nums shrink-0">
+                    Fly {hud.flyingTimeLeft.toFixed(1)}s
+                  </span>
+                )}
+
+                <span className="ml-auto flex items-center text-[#9fece0] shrink-0" aria-hidden="true">
+                  {pointsExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                </span>
+              </div>
+            </button>
+
+            {/* Expanded Details Card (shows words like desktop when tapped) */}
+            {pointsExpanded && (
+              <div
+                onClick={() => setPointsExpanded(false)}
+                className="absolute left-0 top-full mt-1.5 z-40 w-[235px] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-xl border border-[#8cf8e8]/28 bg-[#071923]/90 p-3 text-[#eefcf9] shadow-2xl backdrop-blur-md"
+              >
+                <div className="flex items-center justify-between gap-2 text-xs">
+                  <span className="font-semibold text-[#c5ede6]">
+                    Vitality {hud.petals}/{hud.maxPetals}
+                  </span>
+                  <span className="font-semibold text-[#ffe29a] tabular-nums">
+                    L{hud.levelId} · {hud.progressPct}%
+                  </span>
+                </div>
+                <p className="mt-0.5 text-[11px] text-[#bfe6df]">
+                  {hud.biomeName} · {hud.weatherLabel}
+                </p>
+
+                <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 border-t border-[#8cf8e8]/15 pt-2 text-xs">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[11px] text-[#bce4dd]">Lumina</span>
+                    <span className="font-semibold tabular-nums">{hud.orbsCollected}/{hud.orbsTotal}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[11px] text-[#bce4dd]">Blossoms</span>
+                    <span className="font-semibold tabular-nums">{hud.blossomsCollected}/{hud.blossomsTotal}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[11px] text-[#bce4dd]">Crystals</span>
+                    <span className="font-semibold tabular-nums">{hud.crystalsCollected}/{hud.crystalsTotal}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[11px] text-[#bce4dd]">Stars</span>
+                    <span className="font-semibold tabular-nums">{hud.starseedsCollected}/{hud.starseedsTotal}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[11px] text-[#bce4dd]">Lanterns</span>
+                    <span className="font-semibold tabular-nums">{hud.lanternsLit}/{hud.lanternsTotal}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[11px] text-[#ffe194]">Dewdrops</span>
+                    <span className="font-bold text-[#ffe194] tabular-nums">{hud.dewdrops}</span>
+                  </div>
+                </div>
+
+                {hasActiveBuffs && (
+                  <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 border-t border-[#8cf8e8]/15 pt-1.5 text-[11px] font-medium">
+                    {powerLabel && <span className="text-[#ffe39a]">{powerLabel}</span>}
+                    {hud.highJumpCharges > 0 && (
+                      <span className="text-[#7cfce7] tabular-nums">Jump ×{hud.highJumpCharges}</span>
+                    )}
+                    {hud.flyingFlowers > 0 && (
+                      <span className="text-[#ffb4ea] tabular-nums">Flower ×{hud.flyingFlowers}</span>
+                    )}
+                    {hud.crystalBoostActive && <span className="text-[#ffe18c]">Prism Surge</span>}
+                    {hud.tripleJumpActive && <span className="text-[#c7b8ff]">Triple Jump</span>}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Mobile Top-Right Prominent Save & Pause + Hidden Nav Bar Toggle */}
@@ -186,6 +275,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
               type="button"
               onClick={() => {
                 setMobileNavOpen(false);
+                setPointsExpanded(false);
                 onPause();
               }}
               className="min-h-[40px] whitespace-nowrap shrink-0 rounded-lg border border-[#8cf8e8]/35 bg-[#061822]/78 px-3 py-2 text-xs font-semibold text-[#eefcf9] shadow-md transition-colors hover:bg-[#0c2635] focus-visible:outline-2 focus-visible:outline-[#7cfce7]"
@@ -195,7 +285,10 @@ export const GameHUD: React.FC<GameHUDProps> = ({
 
             <button
               type="button"
-              onClick={() => setMobileNavOpen((v) => !v)}
+              onClick={() => {
+                setPointsExpanded(false);
+                setMobileNavOpen((v) => !v);
+              }}
               aria-expanded={mobileNavOpen}
               aria-label={mobileNavOpen ? 'Close navigation bar' : 'Open navigation bar'}
               className={`min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg border px-2.5 py-2 text-xs font-semibold shadow-md transition-colors focus-visible:outline-2 focus-visible:outline-[#7cfce7] ${
@@ -211,7 +304,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
             {mobileNavOpen && (
               <div
                 onPointerDown={(e) => e.stopPropagation()}
-                className="absolute right-0 top-full mt-2 z-30 w-64 rounded-xl border border-[#8cf8e8]/28 bg-[#071923]/92 p-3 text-[#eafbf8] shadow-2xl backdrop-blur-md"
+                className="absolute right-0 top-full mt-2 z-40 w-64 max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-xl border border-[#8cf8e8]/28 bg-[#071923]/94 p-3 text-[#eafbf8] shadow-2xl backdrop-blur-md"
                 role="region"
                 aria-label="Mobile menu"
               >

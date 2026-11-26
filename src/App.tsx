@@ -3,7 +3,7 @@ import { GameHUD } from './components/GameHUD';
 import { GameModals } from './components/GameModals';
 import { PortraitPrompt } from './components/PortraitPrompt';
 import { SettingsModal } from './components/SettingsModal';
-import { type MobileControlStyle, TouchControls } from './components/TouchControls';
+import { type MobileControlHandedness, type MobileControlStyle, TouchControls } from './components/TouchControls';
 import { audioEngine } from './game/audio';
 import { ForestGameEngine } from './game/engine';
 import { getSavedGameSummary } from './game/save';
@@ -90,6 +90,7 @@ function detectPortraitViewport(): boolean {
 }
 
 const MOBILE_CONTROLS_KEY = 'whispering_grove_mobile_controls_v1';
+const MOBILE_HANDEDNESS_KEY = 'whispering_grove_mobile_handedness_v1';
 
 function loadMobileControlStyle(): MobileControlStyle {
   try {
@@ -105,6 +106,20 @@ function loadMobileControlStyle(): MobileControlStyle {
   return 'arrows';
 }
 
+function loadMobileHandedness(): MobileControlHandedness {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const saved = window.localStorage.getItem(MOBILE_HANDEDNESS_KEY);
+      if (saved === 'move-right' || saved === 'move-left') {
+        return saved;
+      }
+    }
+  } catch {
+    // Ignore storage errors
+  }
+  return 'move-left';
+}
+
 function ForestGameView() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<ForestGameEngine | null>(null);
@@ -117,6 +132,8 @@ function ForestGameView() {
   const [shopOpen, setShopOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [mobileControlStyle, setMobileControlStyle] = useState<MobileControlStyle>(loadMobileControlStyle);
+  const [mobileHandedness, setMobileHandedness] = useState<MobileControlHandedness>(loadMobileHandedness);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [justSaved, setJustSaved] = useState(false);
   const saveFeedbackTimerRef = useRef<number | null>(null);
   const pausedByShopRef = useRef(false);
@@ -193,6 +210,17 @@ function ForestGameView() {
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
         window.localStorage.setItem(MOBILE_CONTROLS_KEY, style);
+      }
+    } catch {
+      // Ignore storage errors
+    }
+  }, []);
+
+  const handleChangeMobileHandedness = useCallback((side: MobileControlHandedness) => {
+    setMobileHandedness(side);
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        window.localStorage.setItem(MOBILE_HANDEDNESS_KEY, side);
       }
     } catch {
       // Ignore storage errors
@@ -525,6 +553,7 @@ function ForestGameView() {
         onOpenShop={handleOpenShop}
         onOpenSettings={handleOpenSettings}
         onGoHome={handleGoHome}
+        onMobileNavOpenChange={setMobileNavOpen}
       />
 
       <GameModals
@@ -554,7 +583,7 @@ function ForestGameView() {
       {shopOpen && (
         <Suspense
           fallback={
-            <div className="fixed inset-0 z-30 flex items-center justify-center bg-[#0f2b21]/60 text-sm font-semibold text-[#eafbf8]">
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f2b21]/60 text-sm font-semibold text-[#eafbf8]">
               Opening Grove Shop...
             </div>
           }
@@ -572,10 +601,12 @@ function ForestGameView() {
       <SettingsModal
         visible={settingsOpen}
         mobileControlStyle={mobileControlStyle}
+        mobileHandedness={mobileHandedness}
         muted={muted}
         musicVolume={musicVolume}
         sfxVolume={sfxVolume}
         onChangeMobileControlStyle={handleChangeMobileControlStyle}
+        onChangeMobileHandedness={handleChangeMobileHandedness}
         onToggleMute={handleToggleMute}
         onMusicVolumeChange={handleMusicVolumeChange}
         onSfxVolumeChange={handleSfxVolumeChange}
@@ -589,9 +620,11 @@ function ForestGameView() {
           isTouchDevice &&
           !showPortraitPrompt &&
           !shopOpen &&
-          !settingsOpen
+          !settingsOpen &&
+          !mobileNavOpen
         }
         controlStyle={mobileControlStyle}
+        handedness={mobileHandedness}
         flyingFlowers={hud.flyingFlowers}
         onLeftChange={handleTouchLeft}
         onRightChange={handleTouchRight}
