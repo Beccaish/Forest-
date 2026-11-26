@@ -109,7 +109,7 @@ export class ForestGameEngine {
 
     this.resize();
     this.cameraX = 0;
-    this.cameraY = this.player.y - (this.viewH / this.worldScale) * 0.65;
+    this.cameraY = this.player.y - (this.viewH / this.worldScale) * 0.79;
     this.emitHudSnapshot();
   }
 
@@ -240,14 +240,15 @@ export class ForestGameEngine {
     this.viewH = Math.max(1, window.innerHeight || 720);
     if (this.isTouchDevice) {
       if (this.viewW >= this.viewH) {
-        // Mobile landscape: keep world elements full, crisp, and easy to see (~0.98x - 1.25x)
-        this.worldScale = clamp(this.viewH / 380, 0.96, 1.25);
+        // Mobile landscape: keep world elements bigger and easy to see
+        this.worldScale = clamp(this.viewH / 300, 1.20, 1.48);
       } else {
-        // Mobile portrait: keep elements large without cramping horizontal sightline
-        this.worldScale = clamp(this.viewW / 400, 0.92, 1.15);
+        // Mobile portrait: keep elements comfortably large without cramping horizontal sightline
+        this.worldScale = clamp(this.viewW / 330, 1.15, 1.38);
       }
     } else {
-      this.worldScale = this.viewH < 640 ? clamp(this.viewH / 640, 0.72, 1) : 1;
+      // Desktop: scale up elements so they are noticeably bigger and clearer
+      this.worldScale = clamp(this.viewH / 540, 1.18, 1.38);
     }
     this.dpr = Math.min(window.devicePixelRatio || 1, 2);
     this.canvas.width = Math.floor(this.viewW * this.dpr);
@@ -427,7 +428,7 @@ export class ForestGameEngine {
     const virtualW = this.viewW / this.worldScale;
     const virtualH = this.viewH / this.worldScale;
     this.cameraX = clamp(this.player.x - virtualW * 0.38, 0, Math.max(0, 11400 - virtualW));
-    this.cameraY = this.player.y - virtualH * 0.68;
+    this.cameraY = this.player.y - virtualH * 0.79;
 
     this.phase = 'PLAYING';
     audioEngine.playChime(3);
@@ -471,7 +472,7 @@ export class ForestGameEngine {
     this.onIcePlatform = false;
     this.onSnowGround = false;
     this.cameraX = 0;
-    this.cameraY = this.player.y - (this.viewH / this.worldScale) * 0.65;
+    this.cameraY = this.player.y - (this.viewH / this.worldScale) * 0.79;
   }
 
   private screenToWorld(clientX: number, clientY: number): { wx: number; wy: number } {
@@ -888,7 +889,7 @@ export class ForestGameEngine {
     if (this.phase === 'TITLE_MENU') {
       this.cameraX = 320 + Math.sin(this.time * 0.11) * 280;
       this.cameraY =
-        getTerrainY(this.cameraX + virtualW * 0.4, this.levelId) - virtualH * 0.67;
+        getTerrainY(this.cameraX + virtualW * 0.4, this.levelId) - virtualH * 0.78;
       return;
     }
 
@@ -1597,7 +1598,7 @@ export class ForestGameEngine {
       0,
       Math.max(0, WORLD_WIDTH - virtualW)
     );
-    const targetCamY = p.y - virtualH * 0.68;
+    const targetCamY = p.y - virtualH * 0.79;
     this.cameraX = lerp(this.cameraX, targetCamX, Math.min(1, dt * 5.2));
     this.cameraY = lerp(this.cameraY, targetCamY, Math.min(1, dt * 4.5));
 

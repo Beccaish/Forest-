@@ -1,5 +1,5 @@
 import React, { Component, Suspense, lazy, type ReactNode, useEffect, useMemo, useState } from 'react';
-import meadowBackdropImg from '../assets/images/shop_meadow_backdrop_1795684177280.jpg';
+import shopStoneWallImg from '../assets/images/shop_stone_wall_1795702807514.jpg';
 import {
   SHOP_ITEMS,
   type PlayerLoadout,
@@ -26,7 +26,7 @@ class PreviewErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex h-[260px] sm:h-[300px] w-full items-center justify-center rounded-xl border-2 border-[#9cd3b2] bg-[#e8f6ec] p-4 text-center text-sm font-medium text-[#11352a]">
+        <div className="flex h-[250px] sm:h-[285px] w-full items-center justify-center rounded-2xl border-2 border-[#8a552b] bg-[#2a170b] p-4 text-center text-sm font-medium text-[#fff3dc]">
           3D preview unavailable on this device — you can still try on, buy, and equip all items.
         </div>
       );
@@ -60,16 +60,20 @@ const CATEGORY_LABELS: Record<ShopCategory, string> = {
   charm: 'Relic',
 };
 
-const DewdropIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
+const DewdropIcon: React.FC<{ size?: number }> = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
     <path
       d="M10 2.2C13.4 6.3 15.8 9.6 15.8 12.6C15.8 15.8 13.2 18 10 18C6.8 18 4.2 15.8 4.2 12.6C4.2 9.6 6.6 6.3 10 2.2Z"
-      fill="#38d9c0"
-      fillOpacity="0.6"
-      stroke="#b4690e"
-      strokeWidth="1.5"
+      fill="#2dd4bf"
+      stroke="#134e4a"
+      strokeWidth="1.4"
     />
-    <circle cx="8.4" cy="11.8" r="1.6" fill="#ffffff" />
+    <path
+      d="M10 4.2C12.4 7.5 14.2 10.2 14.2 12.6C14.2 15 12.2 16.5 10 16.5C7.8 16.5 5.8 15 5.8 12.6C5.8 10.2 7.6 7.5 10 4.2Z"
+      fill="#5eead4"
+      fillOpacity="0.75"
+    />
+    <circle cx="8" cy="11.2" r="1.5" fill="#ffffff" />
   </svg>
 );
 
@@ -505,60 +509,80 @@ export const ShopModal: React.FC<ShopModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center bg-[#0f2b21]/65 p-1.5 pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))] pl-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))] sm:p-5 overflow-hidden"
+      className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center bg-[#07130d]/80 backdrop-blur-md p-1.5 pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))] pl-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))] sm:p-5 overflow-hidden"
       role="dialog"
       aria-modal="true"
       aria-labelledby="grove-shop-title"
     >
-      <div className="relative w-full max-w-6xl h-full sm:h-auto sm:max-h-[92vh] sm:max-h-[92dvh] flex flex-col rounded-xl sm:rounded-2xl border-2 border-[#8ec8a7] bg-[#f4fbf5] shadow-2xl overflow-hidden">
-        {/* Bright sunlit enchanted meadow wash */}
+      <div className="relative w-full max-w-6xl h-full sm:h-auto sm:max-h-[92vh] sm:max-h-[92dvh] flex flex-col rounded-2xl sm:rounded-3xl border-4 border-[#3b2716] bg-[#1a281e] shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_2px_4px_rgba(255,230,180,0.15)] overflow-hidden">
+        {/* Ancient Temple Mossy Stone Wall Background */}
         <img
-          src={meadowBackdropImg}
+          src={shopStoneWallImg}
           alt=""
           aria-hidden="true"
           referrerPolicy="no-referrer"
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-28"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-65"
         />
+        {/* Ambient magical sunlight & vignette overlay */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#f6fcf6]/92 via-[#edf8ef]/88 to-[#e4f5ea]/90"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#1b2f23]/80 via-[#132219]/75 to-[#0b1710]/90"
         />
 
-        {/* Header Bar */}
-        <div className="relative z-10 flex items-center justify-between gap-3 border-b border-[#b9dfc7] bg-white/92 px-3.5 py-2.5 sm:px-6 sm:py-3.5 shrink-0">
-          <div className="flex flex-wrap items-center gap-3 sm:gap-6">
-            <h2
-              id="grove-shop-title"
-              className="font-display text-lg sm:text-2xl font-bold text-[#0f2f25]"
-            >
-              Grove Shop
-            </h2>
-            <div className="flex items-center gap-1.5 rounded-lg border border-[#e7c572] bg-[#fff7dc] px-2.5 py-1 sm:px-3 sm:py-1.5 text-sm sm:text-base font-bold text-[#7c4a03]">
-              <DewdropIcon size={18} />
-              <span className="tabular-nums">{progress.dewdrops}</span>
-              <span className="text-xs sm:text-sm font-semibold text-[#945c0c]">Dewdrops</span>
+        {/* Floating Golden Fireflies / Spore motes */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-1 overflow-hidden">
+          <div className="absolute top-8 left-12 w-2 h-2 rounded-full bg-[#fde047] opacity-60 shadow-[0_0_8px_#fde047]" />
+          <div className="absolute top-1/4 right-20 w-2.5 h-2.5 rounded-full bg-[#86efac] opacity-50 shadow-[0_0_10px_#86efac]" />
+          <div className="absolute bottom-16 left-1/3 w-2 h-2 rounded-full bg-[#facc15] opacity-55 shadow-[0_0_8px_#facc15]" />
+          <div className="absolute top-2/3 right-1/4 w-3 h-3 rounded-full bg-[#67e8f9] opacity-45 shadow-[0_0_10px_#67e8f9]" />
+        </div>
+
+        {/* Top Parchment Scroll Header Bar */}
+        <div className="relative z-10 flex items-center justify-between gap-3 px-3 py-2 sm:px-6 sm:py-3 shrink-0">
+          {/* Parchment Scroll Plaque */}
+          <div className="relative flex-1 max-w-2xl flex items-center justify-between gap-3 rounded-xl border-y-2 border-[#b88c52] bg-gradient-to-b from-[#fbf4e4] via-[#f5ebcf] to-[#ece0be] px-4 py-2 sm:px-6 sm:py-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.35),inset_0_1px_2px_rgba(255,255,255,0.7)]">
+            {/* Left scroll curl edge */}
+            <div aria-hidden="true" className="absolute -left-2 top-0 bottom-0 w-3 rounded-l-md bg-gradient-to-r from-[#cf9d56] to-[#ebcb8d] border-l-2 border-y-2 border-[#8f5a2b] shadow" />
+            {/* Right scroll curl edge */}
+            <div aria-hidden="true" className="absolute -right-2 top-0 bottom-0 w-3 rounded-r-md bg-gradient-to-l from-[#cf9d56] to-[#ebcb8d] border-r-2 border-y-2 border-[#8f5a2b] shadow" />
+
+            <div className="flex items-center gap-3 sm:gap-6">
+              <h2
+                id="grove-shop-title"
+                className="font-serif text-xl sm:text-2xl md:text-3xl font-black text-[#361e0b] tracking-wide drop-shadow-sm flex items-center gap-2"
+              >
+                <span>Grove Shop</span>
+              </h2>
+
+              {/* Dewdrops Plaque */}
+              <div className="flex items-center gap-1.5 rounded-xl border border-[#d6af74] bg-[#fbf5e5] px-2.5 py-1 sm:px-3 sm:py-1 shadow-[inset_0_1px_3px_rgba(160,110,40,0.15)] text-sm sm:text-base font-bold text-[#3f2711]">
+                <DewdropIcon size={18} />
+                <span className="tabular-nums font-black text-[#2e1909]">{progress.dewdrops}</span>
+                <span className="text-xs sm:text-sm font-semibold text-[#5a3a1d]">Dewdrops</span>
+              </div>
             </div>
           </div>
 
+          {/* Carved Wood Leaf / Pebble Close Button */}
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[40px] sm:min-h-[42px] whitespace-nowrap shrink-0 rounded-lg border border-[#8ec8a7] bg-white px-4 sm:px-5 py-1.5 sm:py-2 text-sm font-semibold text-[#103429] transition-colors hover:bg-[#e5f5eb] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f766e]"
+            className="min-h-[40px] sm:min-h-[44px] whitespace-nowrap shrink-0 rounded-2xl border-2 border-[#9b6339] bg-gradient-to-b from-[#7a441e] via-[#5c3115] to-[#42210d] px-5 sm:px-6 py-1.5 sm:py-2 text-sm sm:text-base font-serif font-bold text-[#fef5e1] shadow-[0_4px_10px_rgba(0,0,0,0.4),0_2px_0_#281206] hover:brightness-110 active:translate-y-0.5 active:shadow-[0_1px_0_#281206] transition-all focus-visible:outline-2 focus-visible:outline-[#86efac]"
           >
             Close
           </button>
         </div>
 
         {/* Scrollable Two-Column Workspace */}
-        <div className="relative z-10 flex-1 min-h-0 overflow-y-auto p-3 sm:p-6" style={{ touchAction: 'pan-y' }}>
-          <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-5 sm:gap-6 items-start">
-            {/* Left Column: 3D Forest Turntable & Try-On Status */}
-            <div className="rounded-xl border border-[#b6dec4] bg-white/90 p-4 shadow-sm flex flex-col gap-4">
+        <div className="relative z-10 flex-1 min-h-0 overflow-y-auto p-3 sm:p-5" style={{ touchAction: 'pan-y' }}>
+          <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] xl:grid-cols-[410px_1fr] gap-4 sm:gap-5 items-start">
+            {/* Left Column: 3D Forest Turntable & Wearing Now Drawer */}
+            <div className="flex flex-col gap-3">
               <PreviewErrorBoundary>
                 <Suspense
                   fallback={
-                    <div className="flex h-[260px] sm:h-[300px] w-full items-center justify-center rounded-xl border-2 border-[#9cd3b2] bg-[#e2f4e8] text-sm font-semibold text-[#11352a]">
-                      Loading 3D forest stage...
+                    <div className="flex h-[250px] sm:h-[285px] w-full items-center justify-center rounded-2xl border-2 border-[#8a552b] bg-[#2a170b] text-sm font-semibold text-[#fff3dc]">
+                      Loading 3D forest glade...
                     </div>
                   }
                 >
@@ -572,10 +596,17 @@ export const ShopModal: React.FC<ShopModalProps> = ({
                 </Suspense>
               </PreviewErrorBoundary>
 
-              {/* Clean Active / Trying Loadout Summary */}
-              <div className="border-t border-[#d6ecde] pt-3 space-y-2.5 text-sm">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="font-bold text-[#0f2f25]">
+              {/* "Wearing Now" Carved Wooden Drawer Panel */}
+              <div className="relative rounded-2xl border-2 border-[#683f1d] bg-gradient-to-b from-[#3a200e] via-[#2d180a] to-[#201007] p-3 sm:p-3.5 shadow-[0_6px_16px_rgba(0,0,0,0.4),inset_0_1px_2px_rgba(255,220,160,0.1)] flex flex-col gap-2.5">
+                {/* Brass Lock Plate Accent Centered */}
+                <div aria-hidden="true" className="absolute -top-2.5 left-1/2 -translate-x-1/2 flex items-center justify-center">
+                  <div className="w-6 h-3 rounded-t-sm bg-gradient-to-b from-[#f59e0b] to-[#b45309] border border-[#78350f] shadow flex items-center justify-center">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#451a03]" />
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-2 pt-0.5">
+                  <span className="font-serif text-sm font-bold tracking-wide text-[#fdecd0]">
                     {isPreviewDirty ? 'Trying On Preview' : 'Wearing Now'}
                   </span>
                   {isPreviewDirty && (
@@ -585,51 +616,39 @@ export const ShopModal: React.FC<ShopModalProps> = ({
                         setPreviewLoadout(null);
                         setFlyingActive(false);
                       }}
-                      className="min-h-[34px] whitespace-nowrap shrink-0 rounded-md border border-[#96cfad] bg-[#eef9f2] px-3 py-1 text-xs font-semibold text-[#0d5442] hover:bg-[#dcf3e6]"
+                      className="min-h-[28px] whitespace-nowrap shrink-0 rounded-lg border border-[#a3e635]/60 bg-[#1e3d16] px-2.5 py-0.5 text-xs font-bold text-[#d9f99d] hover:bg-[#27501c] transition-colors"
                     >
                       Reset Try-On
                     </button>
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-                  <div>
-                    <div className="text-xs font-medium text-[#477365]">Super Power</div>
-                    <div
-                      className={`font-semibold truncate ${
-                        powerInfo.differsFromEquipped ? 'text-[#b45309]' : 'text-[#103429]'
-                      }`}
-                    >
+                {/* Recessed carved wood slot trays */}
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="rounded-xl border border-[#4d2a12] bg-[#160a04]/90 p-2 shadow-inner">
+                    <div className="text-[10px] uppercase font-bold tracking-wider text-[#a8825c]">Super Power</div>
+                    <div className={`font-bold truncate mt-0.5 ${powerInfo.differsFromEquipped ? 'text-[#facc15]' : 'text-[#f5ede2]'}`}>
                       {powerInfo.name}
                     </div>
                   </div>
-                  <div>
-                    <div className="text-xs font-medium text-[#477365]">Headwear</div>
-                    <div
-                      className={`font-semibold truncate ${
-                        hatInfo.differsFromEquipped ? 'text-[#b45309]' : 'text-[#103429]'
-                      }`}
-                    >
+
+                  <div className="rounded-xl border border-[#4d2a12] bg-[#160a04]/90 p-2 shadow-inner">
+                    <div className="text-[10px] uppercase font-bold tracking-wider text-[#a8825c]">Headwear</div>
+                    <div className={`font-bold truncate mt-0.5 ${hatInfo.differsFromEquipped ? 'text-[#facc15]' : 'text-[#f5ede2]'}`}>
                       {hatInfo.name}
                     </div>
                   </div>
-                  <div>
-                    <div className="text-xs font-medium text-[#477365]">Cloak</div>
-                    <div
-                      className={`font-semibold truncate ${
-                        cloakInfo.differsFromEquipped ? 'text-[#b45309]' : 'text-[#103429]'
-                      }`}
-                    >
+
+                  <div className="rounded-xl border border-[#4d2a12] bg-[#160a04]/90 p-2 shadow-inner">
+                    <div className="text-[10px] uppercase font-bold tracking-wider text-[#a8825c]">Cloak</div>
+                    <div className={`font-bold truncate mt-0.5 ${cloakInfo.differsFromEquipped ? 'text-[#facc15]' : 'text-[#f5ede2]'}`}>
                       {cloakInfo.name}
                     </div>
                   </div>
-                  <div>
-                    <div className="text-xs font-medium text-[#477365]">Relic</div>
-                    <div
-                      className={`font-semibold truncate ${
-                        charmInfo.differsFromEquipped ? 'text-[#b45309]' : 'text-[#103429]'
-                      }`}
-                    >
+
+                  <div className="rounded-xl border border-[#4d2a12] bg-[#160a04]/90 p-2 shadow-inner">
+                    <div className="text-[10px] uppercase font-bold tracking-wider text-[#a8825c]">Relic</div>
+                    <div className={`font-bold truncate mt-0.5 ${charmInfo.differsFromEquipped ? 'text-[#facc15]' : 'text-[#f5ede2]'}`}>
                       {charmInfo.name}
                     </div>
                   </div>
@@ -637,9 +656,17 @@ export const ShopModal: React.FC<ShopModalProps> = ({
               </div>
             </div>
 
-            {/* Right Column: Big, Clear Sunlit Forest Item Grid */}
-            <div className="flex flex-col gap-4 min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
+            {/* Right Column: Category Shelf + Parchment Item Cards with Moss */}
+            <div className="flex flex-col gap-3 min-w-0">
+              {/* Category River Stone Tabs on Wooden Mossy Shelf */}
+              <div className="relative rounded-2xl border-2 border-[#683f1d] bg-gradient-to-r from-[#4d2c14] via-[#5c3519] to-[#4d2c14] p-1.5 sm:p-2 shadow-md flex items-center gap-1.5 sm:gap-2 overflow-x-auto">
+                {/* Top moss sprig trim */}
+                <div aria-hidden="true" className="pointer-events-none absolute -top-2 left-4 right-4 flex justify-between">
+                  <div className="w-8 h-2 bg-[#65a30d] rounded-t-full opacity-70" />
+                  <div className="w-12 h-2.5 bg-[#4d7c0f] rounded-t-full opacity-80" />
+                  <div className="w-10 h-2 bg-[#65a30d] rounded-t-full opacity-70" />
+                </div>
+
                 {CATEGORY_TABS.map((tab) => {
                   const active = category === tab.id;
                   return (
@@ -647,10 +674,10 @@ export const ShopModal: React.FC<ShopModalProps> = ({
                       key={tab.id}
                       type="button"
                       onClick={() => setCategory(tab.id)}
-                      className={`min-h-[42px] whitespace-nowrap shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-[#0f766e] ${
+                      className={`min-h-[38px] whitespace-nowrap shrink-0 rounded-xl px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition-all focus-visible:outline-2 focus-visible:outline-[#86efac] ${
                         active
-                          ? 'bg-[#0f8c71] text-white shadow-sm'
-                          : 'border border-[#b2dbc2] bg-white/95 text-[#143d31] hover:bg-[#e7f6ec]'
+                          ? 'bg-gradient-to-b from-[#a3e635] via-[#84cc16] to-[#65a30d] border-2 border-[#d9f99d] text-[#143807] font-black shadow-[0_3px_0_#365314,0_4px_10px_rgba(0,0,0,0.35)] scale-[1.02]'
+                          : 'bg-gradient-to-b from-[#4d6b53] to-[#364e3c] hover:from-[#5b7d62] hover:to-[#425e49] border-2 border-[#688a6f] text-[#f4faf2] shadow-[0_2px_0_#1f3024]'
                       }`}
                     >
                       {tab.label}
@@ -659,7 +686,8 @@ export const ShopModal: React.FC<ShopModalProps> = ({
                 })}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* 2-Column Parchment Item Cards Grid with Moss Borders */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
                 {filteredItems.map((item) => {
                   const owned = ownedSet.has(item.id);
                   const equipped = progress.equipped[item.category] === item.id;
@@ -670,88 +698,93 @@ export const ShopModal: React.FC<ShopModalProps> = ({
                   return (
                     <div
                       key={item.id}
-                      style={{
-                        borderColor: tryingOn
-                          ? item.accentColor
-                          : equipped
-                            ? '#0f9d76'
-                            : '#c5e3cf',
-                      }}
-                      className={`rounded-xl border-2 p-4 sm:p-5 flex flex-col justify-between gap-4 transition-colors shadow-sm ${
-                        tryingOn ? 'bg-[#f8fffb]' : 'bg-white/95'
+                      className={`relative rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between gap-3 shadow-[0_6px_18px_rgba(15,8,3,0.35)] transition-all ${
+                        tryingOn
+                          ? 'border-[3px] border-[#a3e635] ring-2 ring-[#a3e635]/50 bg-gradient-to-b from-[#fefcee] via-[#f7f5dc] to-[#edf0cf]'
+                          : 'border-[3px] border-[#689334] bg-gradient-to-b from-[#fbf5e7] via-[#f6eed9] to-[#efe3c8]'
                       }`}
                     >
-                      <div className="flex items-center gap-4">
+                      {/* Corner Moss Decals */}
+                      <div aria-hidden="true" className="pointer-events-none absolute -top-1 -left-1">
+                        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+                          <path d="M0 0C8 0 16 4 16 14C11 14 7 10 0 8V0Z" fill="#588b2b" />
+                          <circle cx="14" cy="12" r="1.5" fill="#a3e635" />
+                        </svg>
+                      </div>
+                      <div aria-hidden="true" className="pointer-events-none absolute -bottom-1 -right-1">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                          <path d="M20 20C12 20 4 16 4 6C9 6 13 10 20 12V20Z" fill="#588b2b" />
+                          <circle cx="6" cy="8" r="1.5" fill="#a3e635" />
+                        </svg>
+                      </div>
+
+                      {/* Top Section: Icon + Title + Price + Perk */}
+                      <div className="flex items-start gap-3">
+                        {/* Icon frame */}
                         <div
                           style={{
-                            borderColor: `${item.accentColor}55`,
-                            backgroundColor: `${item.accentColor}18`,
+                            borderColor: `${item.accentColor}99`,
                           }}
-                          className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-xl border-2"
+                          className="flex h-[66px] w-[66px] sm:h-[74px] sm:w-[74px] shrink-0 items-center justify-center rounded-2xl border-2 border-[#668b36] bg-[#f0f9ed] p-1.5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]"
                         >
-                          <ItemIcon id={item.id} size={50} />
+                          <ItemIcon id={item.id} size={46} />
                         </div>
 
+                        {/* Title + Price + Description */}
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <h3 className="text-base sm:text-lg font-bold text-[#0e2d23] leading-snug">
+                          <div className="flex items-start justify-between gap-1.5">
+                            <h3 className="font-serif text-base sm:text-lg font-bold text-[#2a1708] leading-tight line-clamp-1">
                               {item.name}
                             </h3>
-                            <span className="flex items-center gap-1 text-base font-bold text-[#8a5100] shrink-0 tabular-nums">
-                              <DewdropIcon size={15} />
+                            <span className="flex items-center gap-1 text-sm sm:text-base font-black text-[#2b5120] shrink-0 tabular-nums">
+                              <DewdropIcon size={16} />
                               {item.price}
                             </span>
                           </div>
-                          <p className="mt-1 text-sm font-medium text-[#2c5749] leading-snug">
+                          <p className="mt-1 text-xs sm:text-sm font-medium text-[#5a422d] leading-snug line-clamp-2">
                             {item.shortPerk}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between gap-3 border-t border-[#e2f1e7] pt-3">
-                        <span className="text-xs font-semibold text-[#527d6f]">
+                      {/* Bottom Bar: Category Tag + Buttons */}
+                      <div className="flex items-center justify-between gap-2 border-t border-[#d8be97] pt-2.5">
+                        <span className="text-xs font-bold text-[#71543b]">
                           {CATEGORY_LABELS[item.category]}
                         </span>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
+                          {/* Try On Button */}
                           <button
                             type="button"
                             onClick={() => handleTryOn(item)}
-                            style={
+                            className={`min-h-[36px] whitespace-nowrap shrink-0 rounded-xl px-3 py-1 text-xs sm:text-sm font-bold shadow-[0_2px_0_#2b1305,0_3px_6px_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-[0_1px_0_#2b1305] transition-all focus-visible:outline-2 focus-visible:outline-[#86efac] ${
                               tryingOn
-                                ? {
-                                    borderColor: item.accentColor,
-                                    color: '#0e2d23',
-                                    backgroundColor: `${item.accentColor}22`,
-                                  }
-                                : undefined
-                            }
-                            className={`min-h-[42px] whitespace-nowrap shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f766e] ${
-                              tryingOn
-                                ? 'border-2'
-                                : 'border border-[#b2dbc2] bg-[#f4fbf6] text-[#12382c] hover:bg-[#e3f4e9]'
+                                ? 'border-2 border-[#a3e635] bg-[#3a200e] text-[#bef264]'
+                                : 'border-2 border-[#7c4820] bg-gradient-to-b from-[#6b3a16] to-[#4e260c] text-[#fdf2d9] hover:brightness-110'
                             }`}
                           >
                             {tryingOn ? 'Trying' : 'Try On'}
                           </button>
 
+                          {/* Buy / Equip / Equipped Button */}
                           {owned ? (
                             <button
                               type="button"
                               onClick={() => handleEquipClick(item)}
-                              className={`min-h-[42px] whitespace-nowrap shrink-0 rounded-lg px-4 py-2 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f766e] ${
+                              className={`min-h-[36px] whitespace-nowrap shrink-0 rounded-xl px-3.5 py-1 text-xs sm:text-sm font-bold shadow-[0_2px_0_#1c380f,0_3px_6px_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-[0_1px_0_#1c380f] transition-all focus-visible:outline-2 focus-visible:outline-[#86efac] ${
                                 equipped
-                                  ? 'border-2 border-[#0f8c71] bg-[#d8f6ea] text-[#084d3d] hover:bg-[#c5f0df]'
-                                  : 'bg-[#144436] text-white hover:bg-[#1a5745]'
+                                  ? 'border-2 border-[#a3e635] bg-[#294c1a] text-[#d9f99d]'
+                                  : 'border-2 border-[#548a33] bg-gradient-to-b from-[#46782a] to-[#32581c] text-[#f5ffec] hover:brightness-110'
                               }`}
                             >
-                              {equipped ? 'Equipped' : 'Equip'}
+                              {equipped ? 'Equipped ✓' : 'Equip'}
                             </button>
                           ) : affordable ? (
                             <button
                               type="button"
                               onClick={() => handleBuyClick(item)}
-                              className="min-h-[42px] whitespace-nowrap shrink-0 rounded-lg bg-[#0f8c71] px-5 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#0c7860] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f766e]"
+                              className="min-h-[36px] whitespace-nowrap shrink-0 rounded-xl border-2 border-[#8c5222] bg-gradient-to-b from-[#7c431a] to-[#592b0c] px-4 py-1 text-xs sm:text-sm font-bold text-[#fff6e0] shadow-[0_2px_0_#2b1305,0_3px_6px_rgba(0,0,0,0.25)] hover:brightness-110 active:translate-y-0.5 active:shadow-[0_1px_0_#2b1305] transition-all focus-visible:outline-2 focus-visible:outline-[#86efac]"
                             >
                               Buy
                             </button>
@@ -759,9 +792,9 @@ export const ShopModal: React.FC<ShopModalProps> = ({
                             <button
                               type="button"
                               disabled
-                              className="min-h-[42px] whitespace-nowrap shrink-0 rounded-lg border border-[#d6e7dc] bg-[#f0f6f2] px-4 py-2 text-sm font-semibold text-[#5b7d72] cursor-not-allowed tabular-nums"
+                              className="min-h-[36px] whitespace-nowrap shrink-0 rounded-xl border-2 border-[#6d5138] bg-[#423020] px-3 py-1 text-xs font-semibold text-[#c9b49f] cursor-not-allowed tabular-nums"
                             >
-                              Need {shortfall}
+                              Need {shortfall} 💧
                             </button>
                           )}
                         </div>

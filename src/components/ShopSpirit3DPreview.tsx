@@ -1639,9 +1639,9 @@ export const ShopSpirit3DPreview: React.FC<ShopSpirit3DPreviewProps> = ({
     loadout.power === 'super_phoenix_wings' || loadout.power === 'super_dragon_wings';
 
   return (
-    <div className="flex flex-col gap-3">
-      {/* Enchanted Forest 3D Clearing Viewport */}
-      <div className="relative h-[260px] sm:h-[300px] w-full overflow-hidden rounded-xl border-2 border-[#9cd3b2] bg-[#d8f3df] shadow-md">
+    <div className="flex flex-col gap-2.5">
+      {/* Living Carved Wood & Moss Frame Viewport */}
+      <div className="relative h-[250px] sm:h-[285px] w-full rounded-2xl border-[6px] sm:border-[8px] border-[#533017] bg-[#1a2d1f] shadow-[0_8px_20px_rgba(15,8,4,0.4),inset_0_2px_4px_rgba(255,235,190,0.25)] overflow-hidden select-none">
         <img
           src={stageForestImg}
           alt="Sunlit enchanted forest clearing behind the character"
@@ -1650,12 +1650,49 @@ export const ShopSpirit3DPreview: React.FC<ShopSpirit3DPreviewProps> = ({
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#123d2d]/18 via-transparent to-[#ffffff]/15"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#123d2d]/25 via-transparent to-[#ffffff]/10"
         />
+
+        {/* Decorative corner moss & chanterelle mushrooms overlay */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-15">
+          {/* Top-left corner moss & leaves */}
+          <div className="absolute top-0 left-0">
+            <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+              <path d="M0 0C18 0 32 10 32 28C22 28 14 20 0 16V0Z" fill="#588b2b" />
+              <path d="M0 0C14 0 24 8 26 20C18 19 10 14 0 10V0Z" fill="#7db33f" />
+              <circle cx="28" cy="22" r="3" fill="#a4e25a" />
+              <circle cx="16" cy="18" r="2.5" fill="#fde047" />
+            </svg>
+          </div>
+          {/* Top-right corner foliage */}
+          <div className="absolute top-0 right-0">
+            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+              <path d="M36 0C22 0 10 8 10 22C18 22 24 16 36 12V0Z" fill="#588b2b" />
+              <circle cx="12" cy="18" r="2.5" fill="#86efac" />
+            </svg>
+          </div>
+          {/* Bottom-left chanterelle mushroom cluster */}
+          <div className="absolute bottom-1 left-2 flex items-end gap-1">
+            <div className="w-2.5 h-3.5 bg-[#fef3c7] rounded-t-sm relative">
+              <div className="absolute -top-1.5 -left-1.5 w-5 h-2.5 bg-[#f59e0b] rounded-t-full shadow-sm" />
+            </div>
+            <div className="w-2 h-2.5 bg-[#fef3c7] rounded-t-sm relative">
+              <div className="absolute -top-1 -left-1 w-4 h-2 bg-[#d97706] rounded-t-full shadow-sm" />
+            </div>
+            <div className="w-1.5 h-2 bg-[#a3e635] rounded-full" />
+          </div>
+          {/* Bottom-right chanterelle mushrooms */}
+          <div className="absolute bottom-1 right-2 flex items-end gap-1">
+            <div className="w-1.5 h-2 bg-[#a3e635] rounded-full" />
+            <div className="w-2 h-3 bg-[#fef3c7] rounded-t-sm relative">
+              <div className="absolute -top-1.5 -left-1 w-4 h-2.5 bg-[#f59e0b] rounded-t-full shadow-sm" />
+            </div>
+          </div>
+        </div>
 
         {webglUnavailable ? (
           <div className="relative z-10 flex h-full w-full flex-col items-center justify-center p-4 text-center">
-            <div className="rounded-xl bg-white/90 px-4 py-3 text-sm font-medium text-[#11352a] shadow">
+            <div className="rounded-xl bg-[#2a170a]/90 border border-[#8f5a2e] px-4 py-3 text-sm font-medium text-[#fff2d9] shadow">
               3D preview paused — try rotating or reopening the shop.
             </div>
           </div>
@@ -1663,66 +1700,80 @@ export const ShopSpirit3DPreview: React.FC<ShopSpirit3DPreviewProps> = ({
           <div ref={mountRef} className="relative z-10 h-full w-full cursor-grab active:cursor-grabbing" />
         )}
 
-        {/* Top-left clean guide text */}
-        <div className="pointer-events-none absolute top-2.5 left-2.5 z-20 rounded-md bg-white/88 px-2.5 py-1 text-xs font-semibold text-[#11352a] shadow-sm">
+        {/* Top-left guide pill */}
+        <div className="pointer-events-none absolute top-2 left-2 z-20 rounded-full bg-[#1b2f22]/80 backdrop-blur-sm border border-[#a2cb88]/60 px-2.5 py-0.5 text-[11px] sm:text-xs font-semibold text-[#f2ffea] shadow">
           Drag to turn 360°
         </div>
 
-        {/* Top-right Front Reset */}
+        {/* Top-right Front button */}
         <button
           type="button"
           onClick={handleResetView}
-          className="absolute top-2.5 right-2.5 z-20 min-h-[34px] rounded-md bg-white/90 px-2.5 py-1 text-xs font-semibold text-[#11352a] shadow-sm transition-colors hover:bg-white focus-visible:outline-2 focus-visible:outline-[#0f766e]"
+          className="absolute top-2 right-2 z-20 min-h-[26px] rounded-full bg-[#1b2f22]/80 hover:bg-[#284431] backdrop-blur-sm border border-[#a2cb88]/60 px-3 py-0.5 text-[11px] sm:text-xs font-semibold text-[#f2ffea] shadow transition-colors focus-visible:outline-2 focus-visible:outline-[#86efac]"
         >
           Front
         </button>
       </div>
 
-      {/* Turn 360° + Superpower Try-On Controls */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            onClick={() => handleTurnStep(-Math.PI / 4)}
-            aria-label="Turn character left"
-            className="min-h-[40px] rounded-lg border border-[#a9d5bc] bg-white px-3 py-1.5 text-sm font-semibold text-[#103328] transition-colors hover:bg-[#eaf7ef]"
-          >
-            ↺ Turn
-          </button>
-          <button
-            type="button"
-            onClick={handleToggleAutoSpin}
-            className={`min-h-[40px] rounded-lg border px-3 py-1.5 text-sm font-semibold transition-colors ${
-              autoSpin
-                ? 'border-[#109679] bg-[#dff7ef] text-[#0b4f40]'
-                : 'border-[#a9d5bc] bg-white text-[#103328] hover:bg-[#eaf7ef]'
-            }`}
-          >
-            {autoSpin ? 'Spinning' : 'Spin'}
-          </button>
-          <button
-            type="button"
-            onClick={() => handleTurnStep(Math.PI / 4)}
-            aria-label="Turn character right"
-            className="min-h-[40px] rounded-lg border border-[#a9d5bc] bg-white px-3 py-1.5 text-sm font-semibold text-[#103328] transition-colors hover:bg-[#eaf7ef]"
-          >
-            Turn ↻
-          </button>
-        </div>
+      {/* Row 1: Rustic Carved Wooden Turn Buttons with Leaf Accents */}
+      <div className="grid grid-cols-4 gap-1.5">
+        <button
+          type="button"
+          onClick={() => handleTurnStep(-Math.PI / 4)}
+          aria-label="Turn character left"
+          className="relative min-h-[38px] flex items-center justify-center gap-1 rounded-xl border-2 border-[#825028] bg-gradient-to-b from-[#6b3c1b] via-[#593014] to-[#45220c] px-1.5 py-1 text-xs font-bold text-[#fff3db] shadow-[0_2px_0_#2b1305,0_3px_6px_rgba(0,0,0,0.3)] hover:brightness-110 active:translate-y-0.5 active:shadow-[0_1px_0_#2b1305] transition-all"
+        >
+          <span className="text-[10px] text-[#a3e635]">🍃</span>
+          <span>↺ Turn</span>
+        </button>
 
         <button
           type="button"
-          onClick={() => {
-            if (isWingPower) {
-              onToggleFly?.();
-            }
-            onTriggerDemo?.();
-          }}
-          className="min-h-[40px] flex-1 min-w-[140px] whitespace-nowrap rounded-lg bg-gradient-to-r from-[#0f8c71] to-[#1ab386] px-4 py-2 text-sm font-bold text-white shadow-sm transition-opacity hover:opacity-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f766e]"
+          onClick={handleToggleAutoSpin}
+          className={`relative min-h-[38px] flex items-center justify-center gap-1 rounded-xl border-2 px-1.5 py-1 text-xs font-bold shadow-[0_2px_0_#2b1305,0_3px_6px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[0_1px_0_#2b1305] transition-all ${
+            autoSpin
+              ? 'border-[#a3e635] bg-gradient-to-b from-[#2e571c] to-[#1c380f] text-[#d9f99d]'
+              : 'border-[#825028] bg-gradient-to-b from-[#6b3c1b] via-[#593014] to-[#45220c] text-[#fff3db] hover:brightness-110'
+          }`}
         >
-          {powerActionLabel}
+          <span>{autoSpin ? 'Spinning' : 'Spin'}</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => handleTurnStep(Math.PI / 4)}
+          aria-label="Turn character right"
+          className="relative min-h-[38px] flex items-center justify-center gap-1 rounded-xl border-2 border-[#825028] bg-gradient-to-b from-[#6b3c1b] via-[#593014] to-[#45220c] px-1.5 py-1 text-xs font-bold text-[#fff3db] shadow-[0_2px_0_#2b1305,0_3px_6px_rgba(0,0,0,0.3)] hover:brightness-110 active:translate-y-0.5 active:shadow-[0_1px_0_#2b1305] transition-all"
+        >
+          <span>Turn ↻</span>
+          <span className="text-[10px] text-[#a3e635]">🍃</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleResetView}
+          aria-label="Reset character view to front"
+          className="relative min-h-[38px] flex items-center justify-center gap-1 rounded-xl border-2 border-[#825028] bg-gradient-to-b from-[#6b3c1b] via-[#593014] to-[#45220c] px-1.5 py-1 text-xs font-bold text-[#fff3db] shadow-[0_2px_0_#2b1305,0_3px_6px_rgba(0,0,0,0.3)] hover:brightness-110 active:translate-y-0.5 active:shadow-[0_1px_0_#2b1305] transition-all"
+        >
+          <span>Front</span>
         </button>
       </div>
+
+      {/* Row 2: Carved Wooden Plank Banner for Power / Jump Action */}
+      <button
+        type="button"
+        onClick={() => {
+          if (isWingPower) {
+            onToggleFly?.();
+          }
+          onTriggerDemo?.();
+        }}
+        className="relative w-full min-h-[40px] flex items-center justify-center gap-2 rounded-xl border-2 border-[#8d562b] bg-gradient-to-r from-[#4d2c14] via-[#653b1c] to-[#4d2c14] px-4 py-2 text-sm font-serif font-bold text-[#fff3cc] tracking-wide shadow-[0_3px_0_#291305,0_5px_10px_rgba(0,0,0,0.35)] hover:brightness-110 active:translate-y-0.5 active:shadow-[0_1px_0_#291305] transition-all focus-visible:outline-2 focus-visible:outline-[#86efac]"
+      >
+        <span className="text-[#facc15] text-xs">✨</span>
+        <span>{powerActionLabel}</span>
+        <span className="text-[#facc15] text-xs">✨</span>
+      </button>
     </div>
   );
 };
