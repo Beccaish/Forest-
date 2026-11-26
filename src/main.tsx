@@ -7,7 +7,7 @@ if (rootEl) {
   try {
     createRoot(rootEl).render(<App />);
   } catch (err) {
-    console.error('Failed to mount Whispering Grove:', err);
-    rootEl.textContent = 'Whispering Grove could not start. Please reload the page.';
+    console.error('Failed to mount Whispering Forest:', err);
+    rootEl.textContent = 'Whispering Forest could not start. Please reload the page.';
   }
 }

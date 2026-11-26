@@ -82,10 +82,10 @@ export const GameModals: React.FC<GameModalsProps> = ({
 
         <div className="max-w-xl my-auto py-2">
           <svg
-            viewBox="0 0 480 118"
-            className="w-full max-w-[320px] sm:max-w-[440px] h-auto mb-2 sm:mb-4"
+            viewBox="0 0 510 118"
+            className="w-full max-w-[335px] sm:max-w-[465px] h-auto mb-2 sm:mb-4"
             role="img"
-            aria-label="Whispering Grove"
+            aria-label="Whispering Forest"
           >
             <defs>
               <linearGradient id="titleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -117,7 +117,7 @@ export const GameModals: React.FC<GameModalsProps> = ({
               fontWeight="600"
               letterSpacing="0.5"
             >
-              Whispering Grove
+              Whispering Forest
             </text>
             <text
               x="14"

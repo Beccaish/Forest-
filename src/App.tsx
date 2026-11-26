@@ -25,14 +25,14 @@ class GameErrorBoundary extends Component<
   }
 
   componentDidCatch(err: Error, info: ErrorInfo) {
-    console.error('Whispering Grove runtime error:', err, info);
+    console.error('Whispering Forest runtime error:', err, info);
   }
 
   render() {
     if (this.state.errorMessage) {
       return (
         <main className="flex h-full w-full flex-col items-center justify-center bg-[#050d14] px-6 text-center text-[#eafbf8]">
-          <h1 className="font-display text-2xl font-semibold mb-2">Whispering Grove</h1>
+          <h1 className="font-display text-2xl font-semibold mb-2">Whispering Forest</h1>
           <p className="max-w-md text-sm text-[#b6ddd7] mb-5">{this.state.errorMessage}</p>
           <button
             type="button"
@@ -486,7 +486,7 @@ function ForestGameView() {
   if (engineError) {
     return (
       <main className="flex h-full w-full flex-col items-center justify-center bg-[#050d14] px-6 text-center text-[#eafbf8]">
-        <h1 className="font-display text-2xl font-semibold mb-2">Whispering Grove</h1>
+        <h1 className="font-display text-2xl font-semibold mb-2">Whispering Forest</h1>
         <p className="max-w-md text-sm text-[#b6ddd7] mb-5">{engineError}</p>
         <button
           type="button"
