@@ -64,12 +64,14 @@ const LEAF_PALETTES: Record<LevelId, string[]> = {
   1: ['#f5b855', '#e88b48', '#d96b43', '#8fd68f', '#ffd97d'],
   2: ['#ff7b54', '#ffb26b', '#d94854', '#f2a65a', '#ffe08a'],
   3: ['#d6f8ff', '#94e8ff', '#eefbff', '#a8d8ff', '#c7fff0'],
+  4: ['#e6faff', '#b8eeff', '#ffffff', '#94dcff', '#d4f6ff'],
 };
 
 const FLURRY_PALETTES: Record<LevelId, string[]> = {
   1: ['#e6fcff', '#a7fff2', '#fff0b3', '#d0e7ff'],
   2: ['#ffe2a8', '#ffc4d6', '#fff5cc', '#e5b8ff'],
   3: ['#ffffff', '#c9f6ff', '#e3baff', '#ffe6a3'],
+  4: ['#ffffff', '#b8f4ff', '#8fffe6', '#e0c7ff'],
 };
 
 export class DynamicWeatherSystem {
@@ -126,14 +128,14 @@ export class DynamicWeatherSystem {
       colorIndex: i % 4,
     }));
 
-    this.snow = Array.from({ length: 95 }, () => ({
+    this.snow = Array.from({ length: 140 }, () => ({
       x: Math.random() * 1800,
       y: Math.random() * 900,
-      r: 1.8 + Math.random() * 3.4,
-      vy: 34 + Math.random() * 38,
+      r: 1.8 + Math.random() * 3.5,
+      vy: 36 + Math.random() * 42,
       swayPhase: Math.random() * Math.PI * 2,
       swayAmp: 16 + Math.random() * 26,
-      alpha: 0.45 + Math.random() * 0.45,
+      alpha: 0.48 + Math.random() * 0.46,
     }));
 
     this.bubbles = Array.from({ length: 68 }, () => ({
@@ -304,7 +306,13 @@ export class DynamicWeatherSystem {
     if (rainW > 0.02) {
       const count = Math.ceil(this.raindrops.length * clamp(rainW * swell, 0.2, 1));
       const rainRgb =
-        levelId === 1 ? '176, 232, 255' : levelId === 2 ? '216, 186, 255' : '195, 238, 255';
+        levelId === 1
+          ? '176, 232, 255'
+          : levelId === 2
+            ? '216, 186, 255'
+            : levelId === 3
+              ? '195, 238, 255'
+              : '215, 246, 255';
       ctx.save();
       ctx.lineCap = 'round';
       ctx.lineWidth = 1.2;

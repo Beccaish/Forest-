@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import forestBackdropImg from '../assets/images/l1_emerald_glade_1795615998066.jpg';
+import meadowBackdropImg from '../assets/images/shop_meadow_backdrop_1795684177280.jpg';
 import {
   SHOP_ITEMS,
   type PlayerLoadout,
@@ -8,6 +8,7 @@ import {
   type ShopItem,
   type ShopItemId,
 } from '../game/shop';
+import { ShopSpirit3DPreview } from './ShopSpirit3DPreview';
 
 interface ShopModalProps {
   visible: boolean;
@@ -27,651 +28,352 @@ const CATEGORY_TABS: { id: CategoryFilter; label: string }[] = [
   { id: 'charm', label: 'Relics & Gear' },
 ];
 
-const CLOAK_PALETTES: Record<
-  string,
-  { fill: string; highlight: string; scarf: string }
-> = {
-  default: { fill: '#226d68', highlight: '#7cfce7', scarf: '#7cfce7' },
-  sunset_ember: { fill: '#a14328', highlight: '#ffb86c', scarf: '#ff9654' },
-  sakura_petal: { fill: '#b24b88', highlight: '#ff9ee4', scarf: '#ffd68a' },
-  ranger_cape: { fill: '#2c6b45', highlight: '#65d68a', scarf: '#d9b26f' },
-  starweave_mantle: { fill: '#3b4291', highlight: '#b8beff', scarf: '#98a2ff' },
-  ocean_tide: { fill: '#14698a', highlight: '#48e5ff', scarf: '#7cfce7' },
-  fairy_gossamer: { fill: '#9f4e9e', highlight: '#ffb8f2', scarf: '#ffe28a' },
-  prism_aurora: { fill: '#197b84', highlight: '#94ffe6', scarf: '#e4b3ff' },
-  dragonscale_cloak: { fill: '#781f24', highlight: '#ff7a52', scarf: '#ffc857' },
-  shadow_velvet: { fill: '#45286e', highlight: '#c28cff', scarf: '#ffe18c' },
+const CATEGORY_LABELS: Record<ShopCategory, string> = {
+  power: 'Super Power',
+  hat: 'Headwear',
+  cloak: 'Cloak',
+  charm: 'Relic',
 };
 
-const DewdropIcon: React.FC<{ size?: number }> = ({ size = 14 }) => (
+const DewdropIcon: React.FC<{ size?: number }> = ({ size = 16 }) => (
   <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
     <path
       d="M10 2.2C13.4 6.3 15.8 9.6 15.8 12.6C15.8 15.8 13.2 18 10 18C6.8 18 4.2 15.8 4.2 12.6C4.2 9.6 6.6 6.3 10 2.2Z"
-      fill="#7cfce7"
-      fillOpacity="0.4"
-      stroke="#ffe194"
-      strokeWidth="1.4"
+      fill="#38d9c0"
+      fillOpacity="0.6"
+      stroke="#b4690e"
+      strokeWidth="1.5"
     />
-    <circle cx="8.4" cy="11.8" r="1.5" fill="#ffffff" />
+    <circle cx="8.4" cy="11.8" r="1.6" fill="#ffffff" />
   </svg>
 );
 
-const ItemIcon: React.FC<{ id: ShopItemId }> = ({ id }) => {
+const ItemIcon: React.FC<{ id: ShopItemId; size?: number }> = ({ id, size = 48 }) => {
   switch (id) {
     case 'super_sky_leap':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M16 5L22 14H18V23H14V14H10L16 5Z" fill="#7cfce7" />
-          <ellipse cx="16" cy="25" rx="9" ry="2.6" stroke="#ffe194" strokeWidth="1.6" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M16 4L23 14H18.5V23H13.5V14H9L16 4Z" fill="#0ea58a" stroke="#085f50" strokeWidth="1" />
+          <ellipse cx="16" cy="25.5" rx="10" ry="2.8" stroke="#d97706" strokeWidth="2" />
         </svg>
       );
     case 'super_nova_pulse':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <circle cx="16" cy="16" r="9.5" stroke="#ffd86b" strokeWidth="1.8" strokeDasharray="3 3" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <circle cx="16" cy="16" r="10.5" stroke="#d97706" strokeWidth="2" strokeDasharray="3 3" />
           <path
-            d="M16 6L18.5 13.5L26 16L18.5 18.5L16 26L13.5 18.5L6 16L13.5 13.5L16 6Z"
-            fill="#ffe89e"
+            d="M16 5L19 13L27 16L19 19L16 27L13 19L5 16L13 13L16 5Z"
+            fill="#fbbf24"
+            stroke="#92400e"
+            strokeWidth="1"
           />
         </svg>
       );
     case 'super_star_magnet':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <circle cx="16" cy="16" r="10" stroke="#ff9ee8" strokeWidth="1.7" strokeDasharray="4 3" />
-          <circle cx="16" cy="16" r="4.5" fill="#ff9ee8" />
-          <circle cx="9" cy="10" r="1.8" fill="#ffe194" />
-          <circle cx="24" cy="21" r="1.8" fill="#7cfce7" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <circle cx="16" cy="16" r="10.5" stroke="#d946ef" strokeWidth="2" strokeDasharray="4 3" />
+          <circle cx="16" cy="16" r="5" fill="#ec4899" />
+          <circle cx="8.5" cy="9.5" r="2.2" fill="#f59e0b" />
+          <circle cx="24" cy="22" r="2.2" fill="#14b8a6" />
         </svg>
       );
     case 'super_phoenix_wings':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path
-            d="M16 18C12 12 6 9 4 11C6 16 10 19 15 21C16 21 16 21 17 21C22 19 26 16 28 11C26 9 20 12 16 18Z"
-            fill="#ff935c"
-            stroke="#ffe082"
-            strokeWidth="1.4"
+            d="M16 18C12 11 5.5 8 3.5 10.5C5.5 16.5 10 20 15 22C16 22 16 22 17 22C22 20 26.5 16.5 28.5 10.5C26.5 8 20 11 16 18Z"
+            fill="#f97316"
+            stroke="#b45309"
+            strokeWidth="1.3"
           />
-          <circle cx="16" cy="18" r="2.6" fill="#fff0c2" />
+          <circle cx="16" cy="18" r="2.8" fill="#fde047" />
         </svg>
       );
     case 'super_dragon_wings':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path
-            d="M15 20L4 10L7 19L12 22Z"
-            fill="#248f74"
-            stroke="#ff9966"
+            d="M15 21L3.5 9.5L7 19.5L12.5 22.5Z"
+            fill="#0f9d76"
+            stroke="#c2410c"
             strokeWidth="1.4"
           />
           <path
-            d="M17 20L28 10L25 19L20 22Z"
-            fill="#248f74"
-            stroke="#ff9966"
+            d="M17 21L28.5 9.5L25 19.5L19.5 22.5Z"
+            fill="#0f9d76"
+            stroke="#c2410c"
             strokeWidth="1.4"
           />
-          <circle cx="16" cy="20" r="2.2" fill="#ffc857" />
+          <circle cx="16" cy="20.5" r="2.6" fill="#f59e0b" />
         </svg>
       );
     case 'super_fairy_sparkle':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M16 5L18 12L25 14L18 16L16 23L14 16L7 14L14 12Z" fill="#ff9ef0" />
-          <circle cx="9" cy="8" r="1.8" fill="#ffe494" />
-          <circle cx="24" cy="23" r="2" fill="#7cfce7" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path
+            d="M16 4.5L18.5 12L26 14.5L18.5 17L16 24.5L13.5 17L6 14.5L13.5 12Z"
+            fill="#ec4899"
+            stroke="#9d174d"
+            strokeWidth="1"
+          />
+          <circle cx="8.5" cy="8" r="2.2" fill="#f59e0b" />
+          <circle cx="24" cy="23.5" r="2.3" fill="#14b8a6" />
         </svg>
       );
     case 'moss_crown':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path
-            d="M6 21C8 14 11 11 16 11C21 11 24 14 26 21"
-            stroke="#59d99a"
-            strokeWidth="2.4"
+            d="M5.5 21.5C7.5 14 11 11 16 11C21 11 24.5 14 26.5 21.5"
+            stroke="#10b981"
+            strokeWidth="2.8"
             strokeLinecap="round"
           />
-          <path d="M10 15L8 10L13 12Z" fill="#7cfce7" />
-          <path d="M22 15L24 10L19 12Z" fill="#7cfce7" />
-          <circle cx="16" cy="10.5" r="2.6" fill="#ffd97d" />
+          <path d="M9.5 15.5L7 9.5L13 12Z" fill="#059669" />
+          <path d="M22.5 15.5L25 9.5L19 12Z" fill="#059669" />
+          <circle cx="16" cy="10.5" r="3" fill="#f59e0b" />
         </svg>
       );
     case 'sunflower_crown':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M6 21C8 14 24 14 26 21" stroke="#ffbf3f" strokeWidth="2.4" strokeLinecap="round" />
-          <circle cx="10" cy="14" r="3" fill="#ffe678" />
-          <circle cx="16" cy="11" r="3.6" fill="#ffe678" />
-          <circle cx="22" cy="14" r="3" fill="#ffe678" />
-          <circle cx="16" cy="11" r="1.6" fill="#b5541c" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M6 21.5C8 14 24 14 26 21.5" stroke="#d97706" strokeWidth="2.6" strokeLinecap="round" />
+          <circle cx="9.5" cy="14" r="3.4" fill="#facc15" stroke="#ca8a04" strokeWidth="0.9" />
+          <circle cx="16" cy="10.8" r="4" fill="#facc15" stroke="#ca8a04" strokeWidth="0.9" />
+          <circle cx="22.5" cy="14" r="3.4" fill="#facc15" stroke="#ca8a04" strokeWidth="0.9" />
+          <circle cx="16" cy="10.8" r="1.8" fill="#9a3412" />
         </svg>
       );
     case 'moon_halo':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <ellipse cx="16" cy="14" rx="9" ry="3.6" stroke="#9ef4ff" strokeWidth="2" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <ellipse cx="16" cy="15.5" rx="10" ry="4" stroke="#0284c7" strokeWidth="2.4" />
           <path
-            d="M16 5.5C13.5 7 13.5 10.5 16 12C13.2 11.8 11.4 10 11.4 8.2C11.4 6.5 13.4 5.4 16 5.5Z"
-            fill="#e6fcff"
+            d="M17 5.5C14 7.5 14 11.5 17 13.2C13.6 13 11.4 10.8 11.4 8.6C11.4 6.6 13.8 5.4 17 5.5Z"
+            fill="#38bdf8"
+            stroke="#0369a1"
+            strokeWidth="1"
           />
         </svg>
       );
     case 'coral_tiara':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path
-            d="M7 22L5 12L12 17L16 8L20 17L27 12L25 22Z"
-            fill="#ff85b3"
-            stroke="#ffd4e7"
+            d="M6.5 22.5L4.5 11.5L12 17L16 7.5L20 17L27.5 11.5L25.5 22.5Z"
+            fill="#ec4899"
+            stroke="#9d174d"
             strokeWidth="1.2"
           />
-          <circle cx="16" cy="17" r="2.3" fill="#7cfce7" />
+          <circle cx="16" cy="17.5" r="2.6" fill="#2dd4bf" />
         </svg>
       );
     case 'frost_antlers':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path
-            d="M11 24C9.5 18 7.5 14 6 8M9.5 16L6 14M10 12L12.5 9"
-            stroke="#c7b8ff"
-            strokeWidth="2.2"
+            d="M11 24.5C9.5 18 7.5 14 5.5 7.5M9.5 16L5.5 14M10 12L12.5 8.5"
+            stroke="#4f46e5"
+            strokeWidth="2.6"
             strokeLinecap="round"
           />
           <path
-            d="M21 24C22.5 18 24.5 14 26 8M22.5 16L26 14M22 12L19.5 9"
-            stroke="#c7b8ff"
-            strokeWidth="2.2"
+            d="M21 24.5C22.5 18 24.5 14 26.5 7.5M22.5 16L26.5 14M22 12L19.5 8.5"
+            stroke="#4f46e5"
+            strokeWidth="2.6"
             strokeLinecap="round"
           />
-          <circle cx="16" cy="22" r="2.3" fill="#b4f5ff" />
+          <circle cx="16" cy="22" r="2.6" fill="#0ea5e9" />
         </svg>
       );
     case 'astral_wizard':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <ellipse cx="16" cy="23" rx="11" ry="3" fill="#4e2978" stroke="#d8a6ff" strokeWidth="1.5" />
-          <path d="M9 22L17 7L23 22Z" fill="#4e2978" stroke="#d8a6ff" strokeWidth="1.5" />
-          <circle cx="17" cy="7" r="2.2" fill="#ffe58f" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <ellipse cx="16" cy="23.5" rx="11.5" ry="3.2" fill="#5b21b6" stroke="#c084fc" strokeWidth="1.5" />
+          <path d="M8.5 22.5L17 6.5L23.5 22.5Z" fill="#5b21b6" stroke="#c084fc" strokeWidth="1.5" />
+          <circle cx="17" cy="6.5" r="2.6" fill="#facc15" />
         </svg>
       );
     case 'sunset_ember':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path
-            d="M10 8L22 8L25 24C20 26 12 26 7 24L10 8Z"
-            fill="#a3422a"
-            stroke="#ffb86c"
+            d="M10 7.5L22 7.5L25.5 24.5C20 26.8 12 26.8 6.5 24.5L10 7.5Z"
+            fill="#c2410c"
+            stroke="#fdba74"
             strokeWidth="1.6"
           />
-          <path d="M9 11H23" stroke="#ff9654" strokeWidth="2.6" strokeLinecap="round" />
+          <path d="M9 11H23" stroke="#fb923c" strokeWidth="3" strokeLinecap="round" />
         </svg>
       );
     case 'sakura_petal':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path
-            d="M10 8L22 8L25 24C20 26 12 26 7 24L10 8Z"
-            fill="#b24b88"
-            stroke="#ff9ee4"
+            d="M10 7.5L22 7.5L25.5 24.5C20 26.8 12 26.8 6.5 24.5L10 7.5Z"
+            fill="#be185d"
+            stroke="#f9a8d4"
             strokeWidth="1.6"
           />
-          <circle cx="16" cy="16" r="2.2" fill="#ffd68a" />
+          <circle cx="16" cy="16" r="2.6" fill="#fde047" />
         </svg>
       );
     case 'starweave_mantle':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path
-            d="M10 8L22 8L25 24C20 26 12 26 7 24L10 8Z"
-            fill="#384291"
-            stroke="#a6a8ff"
+            d="M10 7.5L22 7.5L25.5 24.5C20 26.8 12 26.8 6.5 24.5L10 7.5Z"
+            fill="#3730a3"
+            stroke="#a5b4fc"
             strokeWidth="1.6"
           />
-          <circle cx="14" cy="16" r="1.2" fill="#e8ecff" />
-          <circle cx="19" cy="20" r="1.2" fill="#e8ecff" />
-          <circle cx="17" cy="13" r="1" fill="#e8ecff" />
+          <circle cx="13.5" cy="15.5" r="1.5" fill="#ffffff" />
+          <circle cx="19" cy="20" r="1.5" fill="#ffffff" />
+          <circle cx="17" cy="12.5" r="1.2" fill="#ffffff" />
         </svg>
       );
     case 'ocean_tide':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path
-            d="M10 8L22 8L25 24C20 26 12 26 7 24L10 8Z"
-            fill="#14698a"
-            stroke="#48e5ff"
+            d="M10 7.5L22 7.5L25.5 24.5C20 26.8 12 26.8 6.5 24.5L10 7.5Z"
+            fill="#0369a1"
+            stroke="#67e8f9"
             strokeWidth="1.6"
           />
-          <path d="M9 17C13 15 19 19 23 17" stroke="#b8f8ff" strokeWidth="1.6" strokeLinecap="round" />
+          <path d="M9 17C13 15 19 19 23 17" stroke="#cffafe" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
       );
     case 'prism_aurora':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path
-            d="M10 8L22 8L25 24C20 26 12 26 7 24L10 8Z"
-            fill="#1a7680"
-            stroke="#7cfce7"
+            d="M10 7.5L22 7.5L25.5 24.5C20 26.8 12 26.8 6.5 24.5L10 7.5Z"
+            fill="#0f766e"
+            stroke="#5eead4"
             strokeWidth="1.6"
           />
-          <path d="M10 15C14 13 18 17 22 14" stroke="#ffe194" strokeWidth="1.6" strokeLinecap="round" />
-          <path d="M9 20C13 18 18 22 23 19" stroke="#e4b3ff" strokeWidth="1.4" strokeLinecap="round" />
+          <path d="M10 15C14 13 18 17 22 14" stroke="#fde047" strokeWidth="1.8" strokeLinecap="round" />
+          <path d="M9 20C13 18 18 22 23 19" stroke="#e9d5ff" strokeWidth="1.6" strokeLinecap="round" />
         </svg>
       );
     case 'shadow_velvet':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path
-            d="M10 8L22 8L25 24C20 26 12 26 7 24L10 8Z"
-            fill="#45286e"
-            stroke="#c28cff"
+            d="M10 7.5L22 7.5L25.5 24.5C20 26.8 12 26.8 6.5 24.5L10 7.5Z"
+            fill="#4c1d95"
+            stroke="#c4b5fd"
             strokeWidth="1.6"
           />
-          <circle cx="16" cy="11" r="2" fill="#ffe18c" />
+          <circle cx="16" cy="11.5" r="2.2" fill="#fde047" />
         </svg>
       );
     case 'firefly_sprite':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <circle cx="16" cy="16" r="8" fill="#ffe18c" fillOpacity="0.28" />
-          <ellipse cx="12.5" cy="13" rx="3.4" ry="2" transform="rotate(-25 12.5 13)" fill="#d9fff8" fillOpacity="0.9" />
-          <ellipse cx="19.5" cy="13" rx="3.4" ry="2" transform="rotate(25 19.5 13)" fill="#d9fff8" fillOpacity="0.9" />
-          <circle cx="16" cy="17" r="3.6" fill="#ffe18c" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <circle cx="16" cy="16" r="9.5" fill="#fde68a" fillOpacity="0.6" />
+          <ellipse cx="12" cy="12.5" rx="3.8" ry="2.2" transform="rotate(-25 12 12.5)" fill="#a7f3d0" stroke="#047857" strokeWidth="0.9" />
+          <ellipse cx="20" cy="12.5" rx="3.8" ry="2.2" transform="rotate(25 20 12.5)" fill="#a7f3d0" stroke="#047857" strokeWidth="0.9" />
+          <circle cx="16" cy="17.5" r="4" fill="#f59e0b" />
         </svg>
       );
     case 'wind_boots':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path
-            d="M8 18C12 18 15 15 18 11C18 15 16 19 12 21M12 22C17 22 21 19 24 14C23 19 20 23 14 25"
-            stroke="#8cf8e8"
-            strokeWidth="2.1"
+            d="M7.5 18C12 18 15 15 18 10.5C18 15 16 19 12 21M12 22.5C17 22.5 21 19 24.5 13.5C23.5 19 20 23.5 14 25.5"
+            stroke="#0d9488"
+            strokeWidth="2.5"
             strokeLinecap="round"
           />
-          <circle cx="22" cy="11" r="2" fill="#ffe194" />
+          <circle cx="22.5" cy="10.5" r="2.4" fill="#f59e0b" />
         </svg>
       );
     case 'mini_owl':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <ellipse cx="16" cy="17" rx="7" ry="8.5" fill="#d9f6ff" stroke="#89dcff" strokeWidth="1.4" />
-          <circle cx="13.2" cy="14.5" r="1.5" fill="#13263a" />
-          <circle cx="18.8" cy="14.5" r="1.5" fill="#13263a" />
-          <path d="M14.6 17L17.4 17L16 19.2Z" fill="#ffd27a" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <ellipse cx="16" cy="17" rx="7.5" ry="9" fill="#e0f2fe" stroke="#0284c7" strokeWidth="1.6" />
+          <circle cx="13.2" cy="14.5" r="1.7" fill="#0f172a" />
+          <circle cx="18.8" cy="14.5" r="1.7" fill="#0f172a" />
+          <path d="M14.5 17L17.5 17L16 19.6Z" fill="#f59e0b" />
         </svg>
       );
     case 'ranger_hood':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M7 22C7 12 13 8 21 8C23 13 24 18 25 22L16 19Z" fill="#2d6e46" stroke="#6ee79c" strokeWidth="1.5" />
-          <circle cx="19" cy="18" r="2" fill="#ffd67a" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M6.5 22.5C6.5 12 13 7.5 21.5 7.5C23.5 13 24.5 18 25.5 22.5L16 19Z" fill="#15803d" stroke="#86efac" strokeWidth="1.6" />
+          <circle cx="19" cy="18" r="2.2" fill="#facc15" />
         </svg>
       );
     case 'knight_helm':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M9 24V16C9 11 12 8 16 8C20 8 23 11 23 16V24Z" fill="#b4c9de" stroke="#e6f4ff" strokeWidth="1.4" />
-          <rect x="13" y="15" width="7" height="2.4" fill="#182b3d" />
-          <path d="M16 8C13 5 9 6 7 9C11 9 13 9 16 8Z" fill="#56e3cc" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M8.5 24.5V16C8.5 10.5 11.8 7.5 16 7.5C20.2 7.5 23.5 10.5 23.5 16V24.5Z" fill="#94a3b8" stroke="#334155" strokeWidth="1.5" />
+          <rect x="13" y="15" width="7.5" height="2.6" fill="#0f172a" />
+          <path d="M16 7.5C13 4.5 8.5 5.5 6.5 9C10.5 9 13 9 16 7.5Z" fill="#10b981" />
         </svg>
       );
     case 'fairy_sparkle_tiara':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M6 21C9 14 23 14 26 21" stroke="#ff9ee8" strokeWidth="2" strokeLinecap="round" />
-          <circle cx="16" cy="12" r="2.6" fill="#ffe68c" />
-          <circle cx="10" cy="15" r="1.6" fill="#ffb8f2" />
-          <circle cx="22" cy="15" r="1.6" fill="#ffb8f2" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M5.5 21.5C8.5 14 23.5 14 26.5 21.5" stroke="#d946ef" strokeWidth="2.4" strokeLinecap="round" />
+          <circle cx="16" cy="11.5" r="3" fill="#facc15" stroke="#ca8a04" strokeWidth="0.9" />
+          <circle cx="10" cy="15" r="2" fill="#f472b6" />
+          <circle cx="22" cy="15" r="2" fill="#f472b6" />
         </svg>
       );
     case 'ranger_cape':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M10 8L22 8L25 24L16 21L7 24Z" fill="#2c6b45" stroke="#65d68a" strokeWidth="1.6" />
-          <circle cx="16" cy="11" r="2" fill="#d9b26f" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M10 7.5L22 7.5L25.5 24.5L16 21L6.5 24.5Z" fill="#166534" stroke="#86efac" strokeWidth="1.6" />
+          <circle cx="16" cy="11" r="2.2" fill="#f59e0b" />
         </svg>
       );
     case 'dragonscale_cloak':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M10 8L22 8L25 24C20 26 12 26 7 24Z" fill="#781f24" stroke="#ff7a52" strokeWidth="1.6" />
-          <path d="M11 15L16 18L21 15" stroke="#ffc857" strokeWidth="1.6" strokeLinecap="round" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M10 7.5L22 7.5L25.5 24.5C20 26.8 12 26.8 6.5 24.5Z" fill="#b91c1c" stroke="#fb923c" strokeWidth="1.6" />
+          <path d="M11 15L16 18.5L21 15" stroke="#fde047" strokeWidth="1.8" strokeLinecap="round" />
         </svg>
       );
     case 'fairy_gossamer':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M10 8L22 8L25 24C20 26 12 26 7 24Z" fill="#9f4e9e" stroke="#ffb8f2" strokeWidth="1.6" />
-          <circle cx="14" cy="15" r="1.4" fill="#ffe28a" />
-          <circle cx="19" cy="19" r="1.4" fill="#ffe28a" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M10 7.5L22 7.5L25.5 24.5C20 26.8 12 26.8 6.5 24.5Z" fill="#a21caf" stroke="#f0abfc" strokeWidth="1.6" />
+          <circle cx="13.5" cy="15" r="1.6" fill="#fde047" />
+          <circle cx="19" cy="19.5" r="1.6" fill="#fde047" />
         </svg>
       );
     case 'fairy_sparkle_wand':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <line x1="9" y1="24" x2="20" y2="12" stroke="#ffe194" strokeWidth="2.2" strokeLinecap="round" />
-          <path d="M21 6L22.5 10L26.5 11.5L22.5 13L21 17L19.5 13L15.5 11.5L19.5 10Z" fill="#ffb6f6" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <line x1="8.5" y1="24.5" x2="20" y2="12" stroke="#d97706" strokeWidth="2.4" strokeLinecap="round" />
+          <path d="M21 5.5L22.6 10L27 11.6L22.6 13.2L21 17.5L19.4 13.2L15 11.6L19.4 10Z" fill="#ec4899" />
         </svg>
       );
     case 'knight_crest':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M9 8H23V17C23 22 16 26 16 26C16 26 9 22 9 17Z" fill="#3e6e94" stroke="#b8e0ff" strokeWidth="1.6" />
-          <path d="M16 11V22M12 16H20" stroke="#7cfce7" strokeWidth="1.6" strokeLinecap="round" />
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <path d="M8.5 7.5H23.5V17C23.5 22.5 16 26.5 16 26.5C16 26.5 8.5 22.5 8.5 17Z" fill="#2563eb" stroke="#1e3a8a" strokeWidth="1.6" />
+          <path d="M16 11V22M12 16H20" stroke="#6ee7b7" strokeWidth="2" strokeLinecap="round" />
         </svg>
       );
     case 'sanctuary_heart':
       return (
-        <svg width="28" height="28" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path
-            d="M16 25C16 25 7.5 19.4 7.5 13C7.5 9.8 10 7.5 12.8 7.5C14.5 7.5 15.5 8.4 16 9.5C16.5 8.4 17.5 7.5 19.2 7.5C22 7.5 24.5 9.8 24.5 13C24.5 19.4 16 25 16 25Z"
-            fill="#ff9ec7"
-            fillOpacity="0.4"
-            stroke="#ff9ec7"
-            strokeWidth="1.8"
+            d="M16 25.5C16 25.5 7 19.6 7 13C7 9.6 9.6 7.2 12.6 7.2C14.4 7.2 15.5 8.2 16 9.4C16.5 8.2 17.6 7.2 19.4 7.2C22.4 7.2 25 9.6 25 13C25 19.6 16 25.5 16 25.5Z"
+            fill="#f43f5e"
+            fillOpacity="0.82"
+            stroke="#9f1239"
+            strokeWidth="1.6"
           />
-          <circle cx="16" cy="15" r="2.2" fill="#fff0f6" />
+          <circle cx="16" cy="15" r="2.4" fill="#fff1f2" />
         </svg>
       );
   }
-};
-
-const AvatarPreviewSvg: React.FC<{ loadout: PlayerLoadout }> = ({ loadout }) => {
-  const cloakPalette = CLOAK_PALETTES[loadout.cloak ?? 'default'] ?? CLOAK_PALETTES.default;
-  const hat = loadout.hat;
-  const charm = loadout.charm;
-  const power = loadout.power;
-
-  return (
-    <svg
-      viewBox="0 0 180 180"
-      className="h-36 w-36 sm:h-44 sm:w-44 rounded-lg border border-[#7cfce7]/25"
-      role="img"
-      aria-label="Spirit avatar preview with equipped or tried-on wearables, relics, and Super Powers"
-    >
-      <defs>
-        <linearGradient id="forestStageSky" x1="0%" y1="0%" x2="0%" y2="100%">
-          <stop offset="0%" stopColor="#0e2a3f" />
-          <stop offset="52%" stopColor="#1b545a" />
-          <stop offset="100%" stopColor="#266b5c" />
-        </linearGradient>
-        <linearGradient id="sunbeamStage" x1="25%" y1="0%" x2="70%" y2="100%">
-          <stop offset="0%" stopColor="#ffe59e" stopOpacity="0.24" />
-          <stop offset="100%" stopColor="#7cfce7" stopOpacity="0" />
-        </linearGradient>
-        <radialGradient id="previewGlow" cx="50%" cy="54%" r="48%">
-          <stop offset="0%" stopColor={cloakPalette.highlight} stopOpacity="0.4" />
-          <stop offset="100%" stopColor="#0c2630" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-
-      {/* Enchanted Forest Stage Backdrop */}
-      <rect x="0" y="0" width="180" height="180" rx="10" fill="url(#forestStageSky)" />
-      <polygon points="36,0 82,0 138,160 66,160" fill="url(#sunbeamStage)" />
-
-      <path d="M10 155V55Q20 40 30 55V155Z" fill="#10383a" opacity="0.65" />
-      <path d="M148 155V48Q160 32 172 48V155Z" fill="#10383a" opacity="0.65" />
-      <circle cx="22" cy="52" r="24" fill="#184b49" opacity="0.7" />
-      <circle cx="158" cy="46" r="26" fill="#184b49" opacity="0.7" />
-
-      <circle cx="44" cy="30" r="1.6" fill="#ffe89e" opacity="0.85" />
-      <circle cx="132" cy="26" r="1.8" fill="#a8fff0" opacity="0.85" />
-      <circle cx="28" cy="96" r="1.4" fill="#ff9ee8" opacity="0.75" />
-      <circle cx="152" cy="108" r="1.5" fill="#ffe89e" opacity="0.8" />
-
-      <circle cx="90" cy="96" r="72" fill="url(#previewGlow)" />
-
-      {/* Glowing mossy meadow knoll & flowers */}
-      <path d="M0 146Q90 132 180 146V180H0Z" fill="#174d45" />
-      <path d="M0 148Q90 135 180 148" stroke="#69f0bd" strokeOpacity="0.45" strokeWidth="1.6" fill="none" />
-      <ellipse cx="90" cy="145" rx="34" ry="4.5" fill={cloakPalette.highlight} fillOpacity="0.22" />
-      <circle cx="32" cy="154" r="2.6" fill="#ffd67a" />
-      <circle cx="48" cy="158" r="2.2" fill="#ff9ee8" />
-      <circle cx="136" cy="156" r="2.6" fill="#7cfce7" />
-      <circle cx="149" cy="152" r="2.2" fill="#ffd67a" />
-
-      {/* Super Powers (behind spirit) */}
-      {power === 'super_phoenix_wings' && (
-        <g>
-          <ellipse cx="56" cy="98" rx="22" ry="11" transform="rotate(-24 56 98)" fill="#ff8648" fillOpacity="0.85" stroke="#ffe082" strokeWidth="1.6" />
-          <ellipse cx="124" cy="98" rx="22" ry="11" transform="rotate(24 124 98)" fill="#ff8648" fillOpacity="0.85" stroke="#ffe082" strokeWidth="1.6" />
-        </g>
-      )}
-      {power === 'super_dragon_wings' && (
-        <g>
-          <path d="M84 96L34 58L46 92L68 106Z" fill="#248f74" stroke="#ff9966" strokeWidth="1.8" />
-          <path d="M96 96L146 58L134 92L112 106Z" fill="#248f74" stroke="#ff9966" strokeWidth="1.8" />
-        </g>
-      )}
-      {power === 'super_fairy_sparkle' && (
-        <g>
-          <circle cx="42" cy="76" r="3" fill="#ff9ef0" />
-          <circle cx="138" cy="78" r="2.8" fill="#ffe494" />
-          <circle cx="54" cy="124" r="2.4" fill="#ffe494" />
-          <circle cx="132" cy="122" r="2.6" fill="#ff9ef0" />
-          <circle cx="90" cy="38" r="2.5" fill="#7cfce7" />
-        </g>
-      )}
-      {power === 'super_nova_pulse' && (
-        <circle cx="90" cy="96" r="54" stroke="#ffd86b" strokeOpacity="0.65" strokeWidth="2.4" fill="none" />
-      )}
-      {power === 'super_star_magnet' && (
-        <g>
-          <circle cx="90" cy="96" r="56" stroke="#ff9ee8" strokeOpacity="0.7" strokeWidth="2" strokeDasharray="6 5" fill="none" />
-          <circle cx="36" cy="82" r="3" fill="#ffe194" />
-          <circle cx="144" cy="108" r="3" fill="#7cfce7" />
-        </g>
-      )}
-      {power === 'super_sky_leap' && (
-        <ellipse cx="90" cy="140" rx="28" ry="6" stroke="#7cfce7" strokeOpacity="0.8" strokeWidth="2" fill="none" />
-      )}
-
-      {/* Flowing scarf */}
-      <path
-        d="M80 94C64 96 50 105 38 100C46 112 63 110 82 102Z"
-        fill={cloakPalette.scarf}
-        fillOpacity="0.92"
-      />
-
-      {/* Charms */}
-      {charm === 'sanctuary_heart' && (
-        <g>
-          <circle
-            cx="90"
-            cy="96"
-            r="46"
-            stroke="#ff9ec7"
-            strokeOpacity="0.6"
-            strokeWidth="1.6"
-            strokeDasharray="4 4"
-            fill="none"
-          />
-          <path
-            d="M142 66C142 66 135 61.5 135 56.5C135 54 137 52.2 139.2 52.2C140.5 52.2 141.5 53 142 54C142.5 53 143.5 52.2 144.8 52.2C147 52.2 149 54 149 56.5C149 61.5 142 66 142 66Z"
-            fill="#ff9ec7"
-          />
-        </g>
-      )}
-
-      {charm === 'firefly_sprite' && (
-        <g>
-          <circle cx="44" cy="64" r="12" fill="#ffe18c" fillOpacity="0.3" />
-          <ellipse cx="40" cy="60" rx="4" ry="2.2" transform="rotate(-24 40 60)" fill="#dffff8" />
-          <ellipse cx="48" cy="60" rx="4" ry="2.2" transform="rotate(24 48 60)" fill="#dffff8" />
-          <circle cx="44" cy="64" r="3.8" fill="#ffe18c" />
-        </g>
-      )}
-
-      {charm === 'fairy_sparkle_wand' && (
-        <g>
-          <circle cx="44" cy="66" r="13" fill="#ffb6f6" fillOpacity="0.32" />
-          <circle cx="44" cy="66" r="4.5" fill="#ffd1fa" />
-          <circle cx="37" cy="59" r="1.8" fill="#ffe194" />
-          <circle cx="51" cy="72" r="1.6" fill="#ffe194" />
-        </g>
-      )}
-
-      {charm === 'knight_crest' && (
-        <g>
-          <path
-            d="M132 82H148V93C148 100 140 105 140 105C140 105 132 100 132 93Z"
-            fill="#3e6e94"
-            stroke="#b8e0ff"
-            strokeWidth="1.8"
-          />
-          <path d="M140 86V100M135 93H145" stroke="#7cfce7" strokeWidth="1.6" strokeLinecap="round" />
-        </g>
-      )}
-
-      {charm === 'mini_owl' && (
-        <g>
-          <circle cx="44" cy="66" r="13" fill="#a8ebff" fillOpacity="0.22" />
-          <ellipse cx="44" cy="67" rx="7" ry="8.5" fill="#dff7ff" stroke="#8ce0ff" strokeWidth="1.2" />
-          <circle cx="41.5" cy="64.5" r="1.4" fill="#13263a" />
-          <circle cx="46.5" cy="64.5" r="1.4" fill="#13263a" />
-          <path d="M42.8 66.5L45.2 66.5L44 68.5Z" fill="#ffd27a" />
-        </g>
-      )}
-
-      {/* Spirit legs & boots */}
-      <line x1="82" y1="120" x2="80" y2="141" stroke="#c8fff8" strokeWidth="3.5" strokeLinecap="round" />
-      <line x1="98" y1="120" x2="100" y2="141" stroke="#c8fff8" strokeWidth="3.5" strokeLinecap="round" />
-      {charm === 'wind_boots' && (
-        <g>
-          <path d="M76 136L67 131L74 140Z" fill="#8cf8e8" />
-          <path d="M104 136L113 131L106 140Z" fill="#8cf8e8" />
-        </g>
-      )}
-
-      {/* Cloak body */}
-      <path
-        d="M74 88C74 79 106 79 106 88L114 126C101 131 79 131 66 126Z"
-        fill={cloakPalette.fill}
-        stroke={cloakPalette.highlight}
-        strokeWidth="1.6"
-      />
-      {loadout.cloak === 'starweave_mantle' && (
-        <g fill="#eef1ff">
-          <circle cx="84" cy="105" r="1.4" />
-          <circle cx="97" cy="112" r="1.5" />
-          <circle cx="91" cy="119" r="1.2" />
-        </g>
-      )}
-      {loadout.cloak === 'prism_aurora' && (
-        <path
-          d="M72 112C82 108 96 116 108 110"
-          stroke="#ffe194"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          fill="none"
-        />
-      )}
-      {loadout.cloak === 'ocean_tide' && (
-        <path
-          d="M71 116C82 111 98 121 109 115"
-          stroke="#aef8ff"
-          strokeWidth="1.8"
-          strokeLinecap="round"
-          fill="none"
-        />
-      )}
-      {loadout.cloak === 'shadow_velvet' && (
-        <circle cx="90" cy="96" r="3" fill="#ffe18c" />
-      )}
-
-      {/* Spirit Head & Hood */}
-      <circle cx="90" cy="74" r="17" fill="#e9fffc" />
-      <path
-        d="M72 76C72 58 108 58 108 76C103 68 77 68 72 76Z"
-        fill={cloakPalette.fill}
-        stroke={cloakPalette.highlight}
-        strokeWidth="1.4"
-      />
-      {/* Eyes */}
-      <ellipse cx="85" cy="76" rx="2.3" ry="3.2" fill="#092129" />
-      <ellipse cx="96" cy="76" rx="2.3" ry="3.2" fill="#092129" />
-      <circle cx="85.8" cy="75" r="0.8" fill="#ffffff" />
-      <circle cx="96.8" cy="75" r="0.8" fill="#ffffff" />
-
-      {/* Headwear */}
-      {hat === 'moss_crown' && (
-        <g>
-          <path
-            d="M74 62C78 55 102 55 106 62"
-            stroke="#5ce09e"
-            strokeWidth="3.2"
-            strokeLinecap="round"
-            fill="none"
-          />
-          <path d="M78 58L74 51L82 55Z" fill="#7cfce7" />
-          <path d="M102 58L106 51L98 55Z" fill="#7cfce7" />
-          <circle cx="90" cy="54" r="3" fill="#ffd97d" />
-        </g>
-      )}
-      {hat === 'sunflower_crown' && (
-        <g>
-          <path d="M74 62C78 55 102 55 106 62" stroke="#ffbf3f" strokeWidth="3" strokeLinecap="round" fill="none" />
-          <circle cx="80" cy="56" r="3.4" fill="#ffe678" />
-          <circle cx="90" cy="53" r="4.2" fill="#ffe678" />
-          <circle cx="100" cy="56" r="3.4" fill="#ffe678" />
-          <circle cx="90" cy="53" r="1.9" fill="#b5541c" />
-        </g>
-      )}
-      {hat === 'moon_halo' && (
-        <g>
-          <ellipse cx="90" cy="49" rx="16" ry="4.5" stroke="#9ef4ff" strokeWidth="2.2" fill="none" />
-          <path
-            d="M90 36C86.5 38.5 86.5 43.5 90 46C85.8 45.6 83 43.2 83 40.8C83 38.2 86 36.2 90 36Z"
-            fill="#e9fcff"
-          />
-        </g>
-      )}
-      {hat === 'coral_tiara' && (
-        <g>
-          <path
-            d="M76 61L73 47L83 54L90 42L97 54L107 47L104 61Z"
-            fill="#ff85b3"
-            stroke="#ffd4e7"
-            strokeWidth="1.2"
-          />
-          <circle cx="90" cy="54" r="2.8" fill="#7cfce7" />
-        </g>
-      )}
-      {hat === 'frost_antlers' && (
-        <g stroke="#c7b8ff" strokeWidth="2.6" strokeLinecap="round" fill="none">
-          <path d="M81 59C77 50 73 43 68 35M76 49L69 47M78 44L83 40" />
-          <path d="M99 59C103 50 107 43 112 35M104 49L111 47M102 44L97 40" />
-        </g>
-      )}
-      {hat === 'ranger_hood' && (
-        <g>
-          <path d="M70 72C68 50 82 44 96 47C106 49 111 60 110 72C100 63 80 63 70 72Z" fill="#2d6e46" stroke="#6ee79c" strokeWidth="1.6" />
-          <circle cx="101" cy="62" r="2.4" fill="#ffd67a" />
-        </g>
-      )}
-      {hat === 'fairy_sparkle_tiara' && (
-        <g>
-          <path d="M74 62C78 55 102 55 106 62" stroke="#ff9ee8" strokeWidth="2.6" strokeLinecap="round" fill="none" />
-          <circle cx="90" cy="52" r="3.4" fill="#ffe68c" />
-          <circle cx="80" cy="56" r="2.1" fill="#ffb8f2" />
-          <circle cx="100" cy="56" r="2.1" fill="#ffb8f2" />
-        </g>
-      )}
-      {hat === 'knight_helm' && (
-        <g>
-          <path d="M72 78V66C72 55 80 49 90 49C100 49 108 55 108 66V78Z" fill="#b4c9de" stroke="#e6f4ff" strokeWidth="1.6" />
-          <rect x="83" y="66" width="16" height="4" rx="1" fill="#182b3d" />
-          <path d="M90 49C84 40 74 41 69 47C77 48 82 50 90 49Z" fill="#56e3cc" />
-        </g>
-      )}
-      {hat === 'astral_wizard' && (
-        <g>
-          <ellipse cx="90" cy="59" rx="22" ry="5" fill="#47266b" stroke="#d8a6ff" strokeWidth="1.8" />
-          <path d="M77 58L91 31L103 58Z" fill="#47266b" stroke="#d8a6ff" strokeWidth="1.8" />
-          <circle cx="91" cy="31" r="3" fill="#ffe58f" />
-        </g>
-      )}
-    </svg>
-  );
 };
 
 export const ShopModal: React.FC<ShopModalProps> = ({
@@ -683,10 +385,13 @@ export const ShopModal: React.FC<ShopModalProps> = ({
 }) => {
   const [category, setCategory] = useState<CategoryFilter>('all');
   const [previewLoadout, setPreviewLoadout] = useState<PlayerLoadout | null>(null);
+  const [flyingActive, setFlyingActive] = useState(false);
+  const [demoNonce, setDemoNonce] = useState(0);
 
   useEffect(() => {
     if (!visible) {
       setPreviewLoadout(null);
+      setFlyingActive(false);
     }
   }, [visible]);
 
@@ -711,25 +416,54 @@ export const ShopModal: React.FC<ShopModalProps> = ({
     category === 'all' ? SHOP_ITEMS : SHOP_ITEMS.filter((item) => item.category === category);
 
   const handleTryOn = (item: ShopItem) => {
+    const nextValue = displayedLoadout[item.category] === item.id ? null : item.id;
     setPreviewLoadout((curr) => {
       const base = curr ?? { ...progress.equipped };
-      const nextValue = base[item.category] === item.id ? null : item.id;
       return {
         ...base,
         [item.category]: nextValue,
       };
     });
+
+    if (item.category === 'power') {
+      if (nextValue === 'super_phoenix_wings' || nextValue === 'super_dragon_wings') {
+        setFlyingActive(true);
+        setDemoNonce((n) => n + 1);
+      } else {
+        setFlyingActive(false);
+        if (nextValue) {
+          setDemoNonce((n) => n + 1);
+        }
+      }
+    }
   };
 
   const handleEquipClick = (item: ShopItem) => {
     const nextEquipped = progress.equipped[item.category] === item.id ? null : item.id;
     onToggleEquip(item.id);
     setPreviewLoadout((curr) => (curr ? { ...curr, [item.category]: nextEquipped } : null));
+    if (item.category === 'power') {
+      if (nextEquipped === 'super_phoenix_wings' || nextEquipped === 'super_dragon_wings') {
+        setFlyingActive(true);
+        setDemoNonce((n) => n + 1);
+      } else {
+        setFlyingActive(false);
+        if (nextEquipped) setDemoNonce((n) => n + 1);
+      }
+    }
   };
 
   const handleBuyClick = (item: ShopItem) => {
     onBuy(item.id);
     setPreviewLoadout((curr) => (curr ? { ...curr, [item.category]: item.id } : null));
+    if (item.category === 'power') {
+      if (item.id === 'super_phoenix_wings' || item.id === 'super_dragon_wings') {
+        setFlyingActive(true);
+      } else {
+        setFlyingActive(false);
+      }
+      setDemoNonce((n) => n + 1);
+    }
   };
 
   const formatSlotLabel = (slot: ShopCategory, fallback: string) => {
@@ -746,117 +480,130 @@ export const ShopModal: React.FC<ShopModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-30 flex items-center justify-center bg-[#040c14]/82 p-3 sm:p-6 overflow-y-auto"
+      className="fixed inset-0 z-30 flex items-center justify-center bg-[#0f2b21]/58 p-2.5 sm:p-5 overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-labelledby="grove-shop-title"
     >
-      <div className="relative w-full max-w-4xl max-h-[92dvh] flex flex-col rounded-xl border border-[#7cfce7]/32 bg-[#0a212b] shadow-2xl overflow-hidden">
-        {/* Soft illustrated forest backdrop wash */}
+      <div className="relative w-full max-w-6xl max-h-[93dvh] flex flex-col rounded-2xl border-2 border-[#8ec8a7] bg-[#f4fbf5] shadow-2xl overflow-hidden">
+        {/* Bright sunlit enchanted meadow wash */}
         <img
-          src={forestBackdropImg}
+          src={meadowBackdropImg}
           alt=""
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-22"
+          referrerPolicy="no-referrer"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-28"
         />
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#0b2733]/90 via-[#0d2236]/86 to-[#1a1836]/92"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#f6fcf6]/92 via-[#edf8ef]/88 to-[#e4f5ea]/90"
         />
 
         {/* Header Bar */}
-        <div className="relative z-10 flex items-center justify-between gap-3 border-b border-[#7cfce7]/22 bg-[#081c26]/72 px-4 py-3 sm:px-6 sm:py-4 shrink-0">
-          <div className="flex flex-wrap items-center gap-3 sm:gap-5">
+        <div className="relative z-10 flex items-center justify-between gap-4 border-b border-[#b9dfc7] bg-white/88 px-4 py-3 sm:px-6 sm:py-3.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-4 sm:gap-6">
             <h2
               id="grove-shop-title"
-              className="font-display text-lg sm:text-2xl font-semibold text-[#f0fffc]"
+              className="font-display text-xl sm:text-2xl font-bold text-[#0f2f25]"
             >
               Grove Shop
             </h2>
-            <div className="flex items-center gap-1.5 text-sm sm:text-base font-semibold text-[#ffe194]">
-              <DewdropIcon size={17} />
+            <div className="flex items-center gap-2 rounded-lg border border-[#e7c572] bg-[#fff7dc] px-3 py-1.5 text-sm sm:text-base font-bold text-[#7c4a03]">
+              <DewdropIcon size={18} />
               <span className="tabular-nums">{progress.dewdrops}</span>
-              <span className="text-xs font-normal text-[#c2ebe4]">Dewdrops</span>
+              <span className="text-xs sm:text-sm font-semibold text-[#945c0c]">Dewdrops</span>
             </div>
           </div>
 
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#7cfce7]/35 bg-[#0f2c38] px-4 py-2 text-xs sm:text-sm font-medium text-[#e9fbf8] transition-colors hover:border-[#7cfce7]/70 hover:bg-[#163d4d] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
+            className="min-h-[42px] whitespace-nowrap shrink-0 rounded-lg border border-[#8ec8a7] bg-white px-5 py-2 text-sm font-semibold text-[#103429] transition-colors hover:bg-[#e5f5eb] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f766e]"
           >
             Close
           </button>
         </div>
 
-        {/* Scrollable Content */}
+        {/* Scrollable Two-Column Workspace */}
         <div className="relative z-10 overflow-y-auto p-4 sm:p-6" style={{ touchAction: 'pan-y' }}>
-          <div className="grid grid-cols-1 md:grid-cols-[232px_1fr] gap-4 sm:gap-6 items-start">
-            {/* Left Column: Avatar Preview & Try-On Loadout */}
-            <div className="rounded-lg border border-[#7cfce7]/24 bg-[#081b25]/88 p-4 flex flex-row md:flex-col items-center md:items-stretch gap-4">
-              <div className="flex justify-center shrink-0">
-                <AvatarPreviewSvg loadout={displayedLoadout} />
-              </div>
-              <div className="flex-1 text-left space-y-2 text-xs">
+          <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-5 sm:gap-6 items-start">
+            {/* Left Column: 3D Forest Turntable & Try-On Status */}
+            <div className="rounded-xl border border-[#b6dec4] bg-white/90 p-4 shadow-sm flex flex-col gap-4">
+              <ShopSpirit3DPreview
+                loadout={displayedLoadout}
+                flyingActive={flyingActive}
+                demoNonce={demoNonce}
+                onToggleFly={() => setFlyingActive((v) => !v)}
+                onTriggerDemo={() => setDemoNonce((n) => n + 1)}
+              />
+
+              {/* Clean Active / Trying Loadout Summary */}
+              <div className="border-t border-[#d6ecde] pt-3 space-y-2.5 text-sm">
                 <div className="flex items-center justify-between gap-2">
-                  <span className="font-semibold text-[#ffe194] tracking-wide">
-                    {isPreviewDirty ? 'Trying On' : 'Active Loadout'}
+                  <span className="font-bold text-[#0f2f25]">
+                    {isPreviewDirty ? 'Trying On Preview' : 'Wearing Now'}
                   </span>
                   {isPreviewDirty && (
                     <button
                       type="button"
-                      onClick={() => setPreviewLoadout(null)}
-                      className="min-h-[32px] whitespace-nowrap shrink-0 rounded px-2.5 py-1 text-[11px] font-medium text-[#8cf8e8] border border-[#8cf8e8]/35 bg-[#0f2f3c] hover:bg-[#164252]"
+                      onClick={() => {
+                        setPreviewLoadout(null);
+                        setFlyingActive(false);
+                      }}
+                      className="min-h-[34px] whitespace-nowrap shrink-0 rounded-md border border-[#96cfad] bg-[#eef9f2] px-3 py-1 text-xs font-semibold text-[#0d5442] hover:bg-[#dcf3e6]"
                     >
-                      Reset
+                      Reset Try-On
                     </button>
                   )}
                 </div>
-                <div className="flex justify-between gap-2 border-t border-[#7cfce7]/14 pt-2">
-                  <span className="text-[#9fd1c9]">Power</span>
-                  <span
-                    className={`font-medium text-right ${
-                      powerInfo.differsFromEquipped ? 'text-[#ffd884]' : 'text-[#ffe39a]'
-                    }`}
-                  >
-                    {powerInfo.name}
-                  </span>
-                </div>
-                <div className="flex justify-between gap-2 border-t border-[#7cfce7]/14 pt-2">
-                  <span className="text-[#9fd1c9]">Headwear</span>
-                  <span
-                    className={`font-medium text-right ${
-                      hatInfo.differsFromEquipped ? 'text-[#ffd884]' : 'text-[#e9fbf8]'
-                    }`}
-                  >
-                    {hatInfo.name}
-                  </span>
-                </div>
-                <div className="flex justify-between gap-2 border-t border-[#7cfce7]/14 pt-2">
-                  <span className="text-[#9fd1c9]">Cloak</span>
-                  <span
-                    className={`font-medium text-right ${
-                      cloakInfo.differsFromEquipped ? 'text-[#ffd884]' : 'text-[#e9fbf8]'
-                    }`}
-                  >
-                    {cloakInfo.name}
-                  </span>
-                </div>
-                <div className="flex justify-between gap-2 border-t border-[#7cfce7]/14 pt-2">
-                  <span className="text-[#9fd1c9]">Relic</span>
-                  <span
-                    className={`font-medium text-right ${
-                      charmInfo.differsFromEquipped ? 'text-[#ffd884]' : 'text-[#e9fbf8]'
-                    }`}
-                  >
-                    {charmInfo.name}
-                  </span>
+
+                <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                  <div>
+                    <div className="text-xs font-medium text-[#477365]">Super Power</div>
+                    <div
+                      className={`font-semibold truncate ${
+                        powerInfo.differsFromEquipped ? 'text-[#b45309]' : 'text-[#103429]'
+                      }`}
+                    >
+                      {powerInfo.name}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-[#477365]">Headwear</div>
+                    <div
+                      className={`font-semibold truncate ${
+                        hatInfo.differsFromEquipped ? 'text-[#b45309]' : 'text-[#103429]'
+                      }`}
+                    >
+                      {hatInfo.name}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-[#477365]">Cloak</div>
+                    <div
+                      className={`font-semibold truncate ${
+                        cloakInfo.differsFromEquipped ? 'text-[#b45309]' : 'text-[#103429]'
+                      }`}
+                    >
+                      {cloakInfo.name}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-medium text-[#477365]">Relic</div>
+                    <div
+                      className={`font-semibold truncate ${
+                        charmInfo.differsFromEquipped ? 'text-[#b45309]' : 'text-[#103429]'
+                      }`}
+                    >
+                      {charmInfo.name}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            {/* Right Column: Filter Tabs & Colorful Forest Catalog */}
-            <div className="flex flex-col gap-3 sm:gap-4 min-w-0">
+            {/* Right Column: Big, Clear Sunlit Forest Item Grid */}
+            <div className="flex flex-col gap-4 min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 {CATEGORY_TABS.map((tab) => {
                   const active = category === tab.id;
@@ -865,10 +612,10 @@ export const ShopModal: React.FC<ShopModalProps> = ({
                       key={tab.id}
                       type="button"
                       onClick={() => setCategory(tab.id)}
-                      className={`min-h-[40px] whitespace-nowrap shrink-0 rounded-md px-3.5 py-2 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-[#7cfce7] ${
+                      className={`min-h-[42px] whitespace-nowrap shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-[#0f766e] ${
                         active
-                          ? 'bg-gradient-to-r from-[#56e3cc] to-[#8cf8e8] text-[#041b1f] font-semibold'
-                          : 'border border-[#7cfce7]/25 bg-[#0c2633]/85 text-[#d7f5f0] hover:border-[#7cfce7]/55 hover:text-white'
+                          ? 'bg-[#0f8c71] text-white shadow-sm'
+                          : 'border border-[#b2dbc2] bg-white/95 text-[#143d31] hover:bg-[#e7f6ec]'
                       }`}
                     >
                       {tab.label}
@@ -877,7 +624,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({
                 })}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {filteredItems.map((item) => {
                   const owned = ownedSet.has(item.id);
                   const equipped = progress.equipped[item.category] === item.id;
@@ -892,90 +639,97 @@ export const ShopModal: React.FC<ShopModalProps> = ({
                         borderColor: tryingOn
                           ? item.accentColor
                           : equipped
-                            ? 'rgba(86, 227, 204, 0.7)'
-                            : `${item.accentColor}44`,
-                        background: tryingOn
-                          ? 'linear-gradient(145deg, rgba(16, 48, 60, 0.94), rgba(20, 32, 58, 0.94))'
-                          : 'linear-gradient(145deg, rgba(12, 34, 46, 0.88), rgba(16, 26, 46, 0.88))',
+                            ? '#0f9d76'
+                            : '#c5e3cf',
                       }}
-                      className="rounded-lg border p-3.5 sm:p-4 flex flex-col justify-between gap-3 transition-colors"
+                      className={`rounded-xl border-2 p-4 sm:p-5 flex flex-col justify-between gap-4 transition-colors shadow-sm ${
+                        tryingOn ? 'bg-[#f8fffb]' : 'bg-white/95'
+                      }`}
                     >
-                      <div className="flex items-start gap-3">
+                      <div className="flex items-center gap-4">
                         <div
                           style={{
-                            borderColor: `${item.accentColor}66`,
-                            backgroundColor: '#071922',
+                            borderColor: `${item.accentColor}55`,
+                            backgroundColor: `${item.accentColor}18`,
                           }}
-                          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border"
+                          className="flex h-[72px] w-[72px] shrink-0 items-center justify-center rounded-xl border-2"
                         >
-                          <ItemIcon id={item.id} />
+                          <ItemIcon id={item.id} size={50} />
                         </div>
+
                         <div className="min-w-0 flex-1">
-                          <div className="flex items-baseline justify-between gap-2">
-                            <h3 className="text-sm font-semibold text-[#f0fffc] leading-snug">
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="text-base sm:text-lg font-bold text-[#0e2d23] leading-snug">
                               {item.name}
                             </h3>
-                            <span className="flex items-center gap-1 text-xs font-semibold text-[#ffe194] shrink-0 tabular-nums">
-                              <DewdropIcon size={12} />
+                            <span className="flex items-center gap-1 text-base font-bold text-[#8a5100] shrink-0 tabular-nums">
+                              <DewdropIcon size={15} />
                               {item.price}
                             </span>
                           </div>
-                          <p className="mt-1 text-xs text-[#c2ebe4] leading-relaxed">
-                            {item.description}
+                          <p className="mt-1 text-sm font-medium text-[#2c5749] leading-snug">
+                            {item.shortPerk}
                           </p>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-end gap-2 pt-1">
-                        <button
-                          type="button"
-                          onClick={() => handleTryOn(item)}
-                          style={
-                            tryingOn
-                              ? {
-                                  borderColor: item.accentColor,
-                                  color: item.accentColor,
-                                }
-                              : undefined
-                          }
-                          className={`min-h-[40px] whitespace-nowrap shrink-0 rounded-md px-3.5 py-2 text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7] ${
-                            tryingOn
-                              ? 'border bg-[#0c2b36] font-semibold'
-                              : 'border border-[#7cfce7]/28 bg-[#09202b] text-[#d7f5f0] hover:border-[#7cfce7]/60 hover:bg-[#10303f]'
-                          }`}
-                        >
-                          {tryingOn ? 'Trying' : 'Try On'}
-                        </button>
+                      <div className="flex items-center justify-between gap-3 border-t border-[#e2f1e7] pt-3">
+                        <span className="text-xs font-semibold text-[#527d6f]">
+                          {CATEGORY_LABELS[item.category]}
+                        </span>
 
-                        {owned ? (
+                        <div className="flex items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => handleEquipClick(item)}
-                            className={`min-h-[40px] whitespace-nowrap shrink-0 rounded-md px-4 py-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7] ${
-                              equipped
-                                ? 'border border-[#56e3cc] bg-[#56e3cc]/22 text-[#8cf8e8] hover:bg-[#56e3cc]/32'
-                                : 'border border-[#7cfce7]/35 bg-[#0d2836] text-[#f0fffc] hover:border-[#7cfce7]/65 hover:bg-[#14394c]'
+                            onClick={() => handleTryOn(item)}
+                            style={
+                              tryingOn
+                                ? {
+                                    borderColor: item.accentColor,
+                                    color: '#0e2d23',
+                                    backgroundColor: `${item.accentColor}22`,
+                                  }
+                                : undefined
+                            }
+                            className={`min-h-[42px] whitespace-nowrap shrink-0 rounded-lg px-4 py-2 text-sm font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f766e] ${
+                              tryingOn
+                                ? 'border-2'
+                                : 'border border-[#b2dbc2] bg-[#f4fbf6] text-[#12382c] hover:bg-[#e3f4e9]'
                             }`}
                           >
-                            {equipped ? 'Equipped' : 'Equip'}
+                            {tryingOn ? 'Trying' : 'Try On'}
                           </button>
-                        ) : affordable ? (
-                          <button
-                            type="button"
-                            onClick={() => handleBuyClick(item)}
-                            className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md bg-gradient-to-r from-[#56e3cc] to-[#8cf8e8] px-4 py-2 text-xs font-semibold text-[#041b1f] transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#e6fffb]"
-                          >
-                            Buy
-                          </button>
-                        ) : (
-                          <button
-                            type="button"
-                            disabled
-                            className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#7cfce7]/18 bg-[#081822] px-3.5 py-2 text-xs font-medium text-[#8cb5ae] opacity-80 cursor-not-allowed tabular-nums"
-                          >
-                            Need {shortfall}
-                          </button>
-                        )}
+
+                          {owned ? (
+                            <button
+                              type="button"
+                              onClick={() => handleEquipClick(item)}
+                              className={`min-h-[42px] whitespace-nowrap shrink-0 rounded-lg px-4 py-2 text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f766e] ${
+                                equipped
+                                  ? 'border-2 border-[#0f8c71] bg-[#d8f6ea] text-[#084d3d] hover:bg-[#c5f0df]'
+                                  : 'bg-[#144436] text-white hover:bg-[#1a5745]'
+                              }`}
+                            >
+                              {equipped ? 'Equipped' : 'Equip'}
+                            </button>
+                          ) : affordable ? (
+                            <button
+                              type="button"
+                              onClick={() => handleBuyClick(item)}
+                              className="min-h-[42px] whitespace-nowrap shrink-0 rounded-lg bg-[#0f8c71] px-5 py-2 text-sm font-bold text-white shadow-sm transition-colors hover:bg-[#0c7860] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#0f766e]"
+                            >
+                              Buy
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled
+                              className="min-h-[42px] whitespace-nowrap shrink-0 rounded-lg border border-[#d6e7dc] bg-[#f0f6f2] px-4 py-2 text-sm font-semibold text-[#5b7d72] cursor-not-allowed tabular-nums"
+                            >
+                              Need {shortfall}
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );

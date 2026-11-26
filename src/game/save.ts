@@ -50,7 +50,10 @@ export function loadGameState(): SavedGameState | null {
     const parsed = JSON.parse(raw) as Partial<SavedGameState>;
     if (
       parsed.version !== 1 ||
-      (parsed.levelId !== 1 && parsed.levelId !== 2 && parsed.levelId !== 3) ||
+      (parsed.levelId !== 1 &&
+        parsed.levelId !== 2 &&
+        parsed.levelId !== 3 &&
+        parsed.levelId !== 4) ||
       typeof parsed.playerX !== 'number' ||
       typeof parsed.playerY !== 'number'
     ) {

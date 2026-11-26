@@ -1,15 +1,48 @@
 import type { MagicalCreatureKind } from './types';
+import type { WeatherWeights } from './world';
 
 const PENTATONIC_NOTES = [
   261.63, 293.66, 329.63, 392.0, 440.0, 523.25, 587.33, 659.25, 783.99,
 ];
+
+interface LofiChordBar {
+  notes: number[];
+  melodyA: number;
+  melodyB: number;
+  sparkle: number;
+}
+
+// Gentle 72 BPM chill progression: Fmaj7 -> Em7 -> Dm9 -> Cmaj7
+const LOFI_PROGRESSION: LofiChordBar[] = [
+  { notes: [174.61, 220.0, 261.63, 329.63], melodyA: 523.25, melodyB: 440.0, sparkle: 659.25 },
+  { notes: [164.81, 196.0, 246.94, 293.66], melodyA: 493.88, melodyB: 392.0, sparkle: 587.33 },
+  { notes: [146.83, 220.0, 261.63, 329.63], melodyA: 440.0, melodyB: 349.23, sparkle: 523.25 },
+  { notes: [130.81, 196.0, 246.94, 329.63], melodyA: 392.0, melodyB: 493.88, sparkle: 659.25 },
+];
+
+const DEFAULT_WEIGHTS: WeatherWeights = {
+  leaves: 1,
+  rain: 0,
+  flurry: 0,
+  snow: 0,
+  underwater: 0,
+};
 
 class ForestAudioEngine {
   private ctx: AudioContext | null = null;
   private enabled = true;
   private ambientStarted = false;
   private windGain: GainNode | null = null;
+  private windFilter: BiquadFilterNode | null = null;
   private rainGain: GainNode | null = null;
+  private rainWarmGain: GainNode | null = null;
+  private musicMasterGain: GainNode | null = null;
+  private musicLowpass: BiquadFilterNode | null = null;
+  private noiseBuffer: AudioBuffer | null = null;
+  private weatherWeights: WeatherWeights = { ...DEFAULT_WEIGHTS };
+  private lofiStep = 0;
+  private nextStepTime = 0;
+  private schedulerId: number | null = null;
 
   init(): void {
     if (this.ctx) {
@@ -41,26 +74,27 @@ class ForestAudioEngine {
       lastOut = data[i];
       data[i] *= 2.2;
     }
+    this.noiseBuffer = noiseBuffer;
 
     // Gentle forest wind
     const windSrc = this.ctx.createBufferSource();
     windSrc.buffer = noiseBuffer;
     windSrc.loop = true;
 
-    const windFilter = this.ctx.createBiquadFilter();
-    windFilter.type = 'bandpass';
-    windFilter.frequency.value = 340;
-    windFilter.Q.value = 1.4;
+    this.windFilter = this.ctx.createBiquadFilter();
+    this.windFilter.type = 'bandpass';
+    this.windFilter.frequency.value = 340;
+    this.windFilter.Q.value = 1.4;
 
     this.windGain = this.ctx.createGain();
-    this.windGain.gain.value = this.enabled ? 0.032 : 0;
+    this.windGain.gain.value = this.enabled ? 0.024 : 0;
 
-    windSrc.connect(windFilter);
-    windFilter.connect(this.windGain);
+    windSrc.connect(this.windFilter);
+    this.windFilter.connect(this.windGain);
     this.windGain.connect(this.ctx.destination);
     windSrc.start();
 
-    // Soft rain shimmer layer (modulated dynamically by rain weather weight)
+    // Soft lofi rain layers (crisp patter + cozy warm mid-patter)
     const rainBuffer = this.ctx.createBuffer(1, sampleRate * 2, sampleRate);
     const rData = rainBuffer.getChannelData(0);
     for (let i = 0; i < rData.length; i++) {
@@ -71,8 +105,9 @@ class ForestAudioEngine {
     rainSrc.loop = true;
 
     const rainFilter = this.ctx.createBiquadFilter();
-    rainFilter.type = 'highpass';
-    rainFilter.frequency.value = 1850;
+    rainFilter.type = 'bandpass';
+    rainFilter.frequency.value = 2100;
+    rainFilter.Q.value = 0.7;
 
     this.rainGain = this.ctx.createGain();
     this.rainGain.gain.value = 0;
@@ -80,16 +115,197 @@ class ForestAudioEngine {
     rainSrc.connect(rainFilter);
     rainFilter.connect(this.rainGain);
     this.rainGain.connect(this.ctx.destination);
+
+    const rainWarmFilter = this.ctx.createBiquadFilter();
+    rainWarmFilter.type = 'bandpass';
+    rainWarmFilter.frequency.value = 720;
+    rainWarmFilter.Q.value = 0.8;
+
+    this.rainWarmGain = this.ctx.createGain();
+    this.rainWarmGain.gain.value = 0;
+
+    rainSrc.connect(rainWarmFilter);
+    rainWarmFilter.connect(this.rainWarmGain);
+    this.rainWarmGain.connect(this.ctx.destination);
     rainSrc.start();
+
+    // Soft Lofi Chill Music Master Bus (warm low-pass filtered Rhodes & brush texture)
+    this.musicLowpass = this.ctx.createBiquadFilter();
+    this.musicLowpass.type = 'lowpass';
+    this.musicLowpass.frequency.value = 1600;
+    this.musicLowpass.Q.value = 0.65;
+
+    this.musicMasterGain = this.ctx.createGain();
+    this.musicMasterGain.gain.value = this.enabled ? 0.14 : 0;
+
+    this.musicLowpass.connect(this.musicMasterGain);
+    this.musicMasterGain.connect(this.ctx.destination);
+
+    this.nextStepTime = this.ctx.currentTime + 0.08;
+    this.schedulerId = window.setInterval(() => this.scheduleLofiLookahead(), 110);
+    this.applyWeatherAudioTargets();
+  }
+
+  private scheduleLofiLookahead(): void {
+    if (!this.ctx || !this.musicLowpass) return;
+    if (this.ctx.state !== 'running') return;
+
+    const stepDuration = 60 / 72 / 2; // 72 BPM eighth-note (~0.4167s)
+    // Recover gracefully if tab was backgrounded
+    if (this.nextStepTime < this.ctx.currentTime - 0.5) {
+      this.nextStepTime = this.ctx.currentTime + 0.05;
+    }
+
+    while (this.nextStepTime < this.ctx.currentTime + 0.2) {
+      this.scheduleLofiStep(this.nextStepTime, this.lofiStep);
+      this.nextStepTime += stepDuration;
+      this.lofiStep = (this.lofiStep + 1) % 32;
+    }
+  }
+
+  private scheduleRhodesVoice(
+    time: number,
+    freq: number,
+    duration: number,
+    peakGain: number
+  ): void {
+    if (!this.ctx || !this.musicLowpass) return;
+    const osc = this.ctx.createOscillator();
+    const overtone = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, time);
+    // Gentle lofi tape warmth wobble
+    osc.detune.setValueAtTime((Math.random() - 0.5) * 7, time);
+
+    overtone.type = 'triangle';
+    overtone.frequency.setValueAtTime(freq * 2, time);
+
+    const overGain = this.ctx.createGain();
+    overGain.gain.setValueAtTime(0.16, time);
+    overGain.gain.exponentialRampToValueAtTime(0.02, time + Math.min(duration * 0.55, 0.9));
+
+    gain.gain.setValueAtTime(0.0001, time);
+    gain.gain.linearRampToValueAtTime(peakGain, time + 0.028);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
+
+    osc.connect(gain);
+    overtone.connect(overGain);
+    overGain.connect(gain);
+    gain.connect(this.musicLowpass);
+
+    osc.start(time);
+    overtone.start(time);
+    osc.stop(time + duration + 0.05);
+    overtone.stop(time + duration + 0.05);
+  }
+
+  private scheduleSoftKick(time: number): void {
+    if (!this.ctx || !this.musicLowpass) return;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(98, time);
+    osc.frequency.exponentialRampToValueAtTime(42, time + 0.14);
+    gain.gain.setValueAtTime(0.0001, time);
+    gain.gain.linearRampToValueAtTime(0.11, time + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.22);
+    osc.connect(gain);
+    gain.connect(this.musicLowpass);
+    osc.start(time);
+    osc.stop(time + 0.24);
+  }
+
+  private scheduleSoftBrush(time: number, accent: boolean): void {
+    if (!this.ctx || !this.musicLowpass || !this.noiseBuffer) return;
+    const src = this.ctx.createBufferSource();
+    src.buffer = this.noiseBuffer;
+
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.setValueAtTime(accent ? 1350 : 2100, time);
+    filter.Q.value = 1.1;
+
+    const gain = this.ctx.createGain();
+    const peak = accent ? 0.038 : 0.016;
+    const dur = accent ? 0.095 : 0.055;
+    gain.gain.setValueAtTime(0.0001, time);
+    gain.gain.linearRampToValueAtTime(peak, time + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + dur);
+
+    src.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.musicLowpass);
+    src.start(time, Math.random() * 1.4, dur + 0.03);
+  }
+
+  private scheduleLofiStep(time: number, step: number): void {
+    const bar = LOFI_PROGRESSION[Math.floor(step / 8)];
+    const stepInBar = step % 8;
+    const w = this.weatherWeights;
+
+    // 1. Warm strummed Rhodes chord at the start of every bar
+    if (stepInBar === 0) {
+      bar.notes.forEach((freq, idx) => {
+        this.scheduleRhodesVoice(time + idx * 0.038, freq, 2.85, idx === 0 ? 0.16 : 0.11);
+      });
+    }
+
+    // 2. Gentle sparse lofi melody & weather-specific harmonic textures
+    if (stepInBar === 3) {
+      this.scheduleRhodesVoice(time, bar.melodyA, 1.35, 0.075);
+    } else if (stepInBar === 6) {
+      this.scheduleRhodesVoice(time, bar.melodyB, 1.45, 0.07);
+    }
+
+    // Rain weather: soft raindrop fifths
+    if (w.rain > 0.2 && (stepInBar === 2 || stepInBar === 5)) {
+      this.scheduleRhodesVoice(time + 0.02, bar.sparkle * 1.5, 0.9, 0.032 * w.rain);
+    }
+
+    // Snow weather: delicate winter celesta bell sparkles
+    if (w.snow > 0.2 && (stepInBar === 1 || stepInBar === 4 || stepInBar === 7)) {
+      const bellFreq = stepInBar === 4 ? bar.sparkle * 2 : bar.melodyA * 2;
+      this.scheduleRhodesVoice(time, bellFreq, 1.1, 0.026 * w.snow);
+    }
+
+    // Underwater weather: soft bubbly kalimba plucks
+    if (w.underwater > 0.2 && (stepInBar === 2 || stepInBar === 4 || stepInBar === 6)) {
+      this.scheduleRhodesVoice(time, bar.notes[(stepInBar / 2) % bar.notes.length] * 2, 0.5, 0.065 * w.underwater);
+    }
+
+    // Starlight flurry weather: shimmering high 9th chord chimes
+    if (w.flurry > 0.2 && (stepInBar === 1 || stepInBar === 5)) {
+      this.scheduleRhodesVoice(time, bar.sparkle * 2, 1.25, 0.028 * w.flurry);
+    }
+
+    // 3. Soft lofi groove (muted kick + subtle brush texture, softer underwater)
+    const drumDamp = 1 - w.underwater * 0.5;
+    if (stepInBar === 0 || stepInBar === 4) {
+      if (drumDamp > 0.3) this.scheduleSoftKick(time);
+    }
+    if (stepInBar === 2 || stepInBar === 6) {
+      this.scheduleSoftBrush(time, true);
+    } else if (stepInBar % 2 === 1) {
+      this.scheduleSoftBrush(time, false);
+    }
   }
 
   setEnabled(on: boolean): void {
     this.enabled = on;
-    if (this.windGain && this.ctx) {
-      this.windGain.gain.setTargetAtTime(on ? 0.032 : 0, this.ctx.currentTime, 0.15);
+    if (!this.ctx) return;
+    if (this.windGain) {
+      this.windGain.gain.setTargetAtTime(on ? 0.024 : 0, this.ctx.currentTime, 0.15);
     }
-    if (this.rainGain && this.ctx && !on) {
-      this.rainGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.12);
+    if (this.musicMasterGain) {
+      this.musicMasterGain.gain.setTargetAtTime(on ? 0.14 : 0, this.ctx.currentTime, 0.18);
+    }
+    if (!on) {
+      if (this.rainGain) this.rainGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.12);
+      if (this.rainWarmGain) this.rainWarmGain.gain.setTargetAtTime(0, this.ctx.currentTime, 0.12);
+    } else {
+      this.applyWeatherAudioTargets();
     }
   }
 
@@ -98,9 +314,40 @@ class ForestAudioEngine {
   }
 
   updateRainIntensity(rainWeight: number): void {
-    if (!this.rainGain || !this.ctx) return;
-    const target = this.enabled ? Math.max(0, Math.min(1, rainWeight)) * 0.028 : 0;
-    this.rainGain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.3);
+    this.updateWeatherAudio({ ...this.weatherWeights, rain: rainWeight });
+  }
+
+  updateWeatherAudio(weights: WeatherWeights): void {
+    this.weatherWeights = weights;
+    this.applyWeatherAudioTargets();
+  }
+
+  private applyWeatherAudioTargets(): void {
+    if (!this.ctx) return;
+    const w = this.weatherWeights;
+    const now = this.ctx.currentTime;
+
+    if (this.rainGain) {
+      const targetRain = this.enabled ? Math.max(0, Math.min(1, w.rain)) * 0.042 : 0;
+      this.rainGain.gain.setTargetAtTime(targetRain, now, 0.35);
+    }
+    if (this.rainWarmGain) {
+      const targetWarm = this.enabled ? Math.max(0, Math.min(1, w.rain)) * 0.036 : 0;
+      this.rainWarmGain.gain.setTargetAtTime(targetWarm, now, 0.35);
+    }
+    if (this.windFilter && this.windGain) {
+      // Crisp alpine hush in snow, deep muffled rumble underwater, gentle breeze in forest
+      const windFreq = 340 + w.snow * 170 - w.underwater * 180;
+      this.windFilter.frequency.setTargetAtTime(windFreq, now, 0.45);
+      const windLevel = this.enabled ? 0.022 + w.snow * 0.012 - w.underwater * 0.008 : 0;
+      this.windGain.gain.setTargetAtTime(Math.max(0, windLevel), now, 0.4);
+    }
+    if (this.musicLowpass) {
+      // Underwater gets cozy submerged lofi cutoff (~540Hz); rain gets warm cozy ~1220Hz; open woods ~1650Hz
+      const targetCutoff =
+        1650 - w.underwater * 1110 - w.rain * 430 - w.snow * 140 + w.flurry * 180;
+      this.musicLowpass.frequency.setTargetAtTime(Math.max(460, targetCutoff), now, 0.5);
+    }
   }
 
   playTone(freq: number, duration = 0.7, volume = 0.08, type: OscillatorType = 'sine'): void {

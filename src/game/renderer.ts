@@ -177,8 +177,10 @@ export function renderForestScene(
     drawLevel1Celestials(ctx, centerWorldX, cameraX, viewW, viewH, time);
   } else if (levelId === 2) {
     drawLevel2Celestials(ctx, world, centerWorldX, cameraX, viewW, viewH, time);
-  } else {
+  } else if (levelId === 3) {
     drawLevel3Celestials(ctx, world, centerWorldX, cameraX, viewW, viewH, time);
+  } else {
+    drawLevel4Celestials(ctx, world, centerWorldX, cameraX, viewW, viewH, time);
   }
 
   // 5. Translucent Distant Silhouettes (adds extra depth without hiding the painted backdrop)
@@ -190,9 +192,9 @@ export function renderForestScene(
     const mx = m.x - cameraX * 0.1;
     if (mx + m.w < -50 || mx > viewW + 50) continue;
     const base = viewH * 0.9;
-    if (levelId === 2 || levelId === 3) {
+    if (levelId >= 2) {
       ctx.moveTo(mx, base);
-      ctx.lineTo(mx + m.w * 0.48, base - m.h * 0.85);
+      ctx.lineTo(mx + m.w * 0.48, base - m.h * (levelId === 4 ? 0.98 : 0.85));
       ctx.lineTo(mx + m.w, base);
       ctx.lineTo(mx + m.w, viewH);
       ctx.lineTo(mx, viewH);
@@ -211,13 +213,23 @@ export function renderForestScene(
     const tx = t.x - cameraX * 0.22;
     if (tx + 120 < 0 || tx - 120 > viewW) continue;
     const base = viewH * 0.94;
-    ctx.beginPath();
-    ctx.moveTo(tx - t.w * 0.5, base);
-    ctx.lineTo(tx - t.w * 0.22 + t.lean, base - t.h * 0.82);
-    ctx.lineTo(tx + t.w * 0.22 + t.lean, base - t.h * 0.82);
-    ctx.lineTo(tx + t.w * 0.5, base);
-    ctx.closePath();
-    ctx.fill();
+    if (levelId === 4) {
+      // Conical pine silhouette
+      ctx.beginPath();
+      ctx.moveTo(tx, base - t.h * 0.95);
+      ctx.lineTo(tx + t.canopyR * 0.68, base);
+      ctx.lineTo(tx - t.canopyR * 0.68, base);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.moveTo(tx - t.w * 0.5, base);
+      ctx.lineTo(tx - t.w * 0.22 + t.lean, base - t.h * 0.82);
+      ctx.lineTo(tx + t.w * 0.22 + t.lean, base - t.h * 0.82);
+      ctx.lineTo(tx + t.w * 0.5, base);
+      ctx.closePath();
+      ctx.fill();
+    }
   }
   ctx.restore();
 
@@ -630,6 +642,75 @@ function drawLevel3Celestials(
   }
 }
 
+function drawLevel4Celestials(
+  ctx: CanvasRenderingContext2D,
+  world: WorldData,
+  centerWorldX: number,
+  cameraX: number,
+  viewW: number,
+  viewH: number,
+  time: number
+): void {
+  // Crisp Frost Moon
+  const mx = viewW * 0.74 - cameraX * 0.012;
+  const my = viewH * 0.2;
+  ctx.save();
+  const halo = ctx.createRadialGradient(mx, my, 16, mx, my, 165);
+  halo.addColorStop(0, 'rgba(210, 250, 255, 0.44)');
+  halo.addColorStop(1, 'rgba(130, 230, 255, 0)');
+  ctx.fillStyle = halo;
+  ctx.beginPath();
+  ctx.arc(mx, my, 165, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = '#f2fcff';
+  ctx.beginPath();
+  ctx.arc(mx, my, 36, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+
+  // Drifting Frost-Star Lanterns
+  ctx.save();
+  for (const sl of world.skyLanterns) {
+    const lx =
+      (((sl.x - cameraX * 0.1 + Math.sin(time * 0.48 + sl.swayPhase) * 16) % viewW) + viewW) %
+      viewW;
+    const ly = (((sl.y - time * sl.vy * 0.85) % (viewH * 0.78)) + viewH * 0.78) % (viewH * 0.78);
+    const glow = ctx.createRadialGradient(lx, ly, 1, lx, ly, sl.r * 3.1);
+    glow.addColorStop(0, sl.hue);
+    glow.addColorStop(1, 'rgba(140, 248, 255, 0)');
+    ctx.globalAlpha = 0.65;
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(lx, ly, sl.r * 3.1, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // Alpine Aurora Borealis across peaks and summit
+  const aurVis = clamp((centerWorldX - 2400) / 1400, 0.24, 1);
+  ctx.save();
+  ctx.globalAlpha = aurVis * 0.36;
+  for (let r = 0; r < 2; r++) {
+    const grad = ctx.createLinearGradient(0, viewH * 0.03, 0, viewH * 0.4);
+    grad.addColorStop(0, 'rgba(110, 255, 220, 0)');
+    grad.addColorStop(0.5, r === 0 ? '#69ffd9' : '#a8b8ff');
+    grad.addColorStop(1, 'rgba(110, 255, 220, 0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.moveTo(0, viewH * 0.34);
+    for (let x = 0; x <= viewW + 40; x += 40) {
+      const y = viewH * (0.11 + r * 0.065) + Math.sin(x * 0.0048 + time * 0.68 + r * 2.1) * 34;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(viewW, viewH * 0.45);
+    ctx.lineTo(0, viewH * 0.45);
+    ctx.closePath();
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 function drawWaterfalls(
   ctx: CanvasRenderingContext2D,
   world: WorldData,
@@ -640,7 +721,13 @@ function drawWaterfalls(
   time: number
 ): void {
   const tint =
-    levelId === 1 ? '145, 252, 245' : levelId === 2 ? '212, 175, 255' : '165, 235, 255';
+    levelId === 1
+      ? '145, 252, 245'
+      : levelId === 2
+        ? '212, 175, 255'
+        : levelId === 3
+          ? '165, 235, 255'
+          : '195, 245, 255';
   for (const wf of world.waterfalls) {
     const wx = wf.x - cameraX * 0.45;
     if (wx + wf.w < -40 || wx - wf.w > viewW + 40) continue;
@@ -687,6 +774,34 @@ function drawMidTrees(
     const tx = t.x - cameraX * 0.45;
     if (tx + 150 < 0 || tx - 150 > viewW) continue;
     const base = viewH * 0.95;
+
+    if (levelId === 4) {
+      // Tiered snow-laden pine silhouettes
+      ctx.fillStyle = midCol;
+      ctx.fillRect(tx - t.w * 0.16, base - t.h * 0.3, t.w * 0.32, t.h * 0.3);
+      for (let tier = 0; tier < 3; tier++) {
+        const tierBot = base - t.h * (0.2 + tier * 0.24);
+        const tierTop = tierBot - t.h * 0.36;
+        const halfW = t.canopyR * (0.72 - tier * 0.16);
+        ctx.fillStyle = midCol;
+        ctx.beginPath();
+        ctx.moveTo(tx + t.lean * (tier * 0.25), tierTop);
+        ctx.lineTo(tx + halfW, tierBot);
+        ctx.lineTo(tx - halfW, tierBot);
+        ctx.closePath();
+        ctx.fill();
+
+        // Frosted snow dusting on pine bough tips
+        ctx.fillStyle = 'rgba(225, 248, 255, 0.36)';
+        ctx.beginPath();
+        ctx.moveTo(tx + t.lean * (tier * 0.25), tierTop);
+        ctx.lineTo(tx + halfW * 0.55, tierTop + (tierBot - tierTop) * 0.42);
+        ctx.lineTo(tx - halfW * 0.55, tierTop + (tierBot - tierTop) * 0.42);
+        ctx.closePath();
+        ctx.fill();
+      }
+      continue;
+    }
 
     ctx.fillStyle = midCol;
     ctx.beginPath();
@@ -843,17 +958,72 @@ function drawWindStream(
 
 function drawPlatform(ctx: CanvasRenderingContext2D, p: Platform, levelId: LevelId): void {
   ctx.save();
-  if (p.type === 'branch') {
-    ctx.fillStyle = levelId === 1 ? '#183333' : levelId === 2 ? '#36211e' : '#1c324a';
+  if (p.type === 'ice') {
+    // Hanging crystalline icicles along underside
+    const icicleCount = Math.max(3, Math.floor(p.w / 26));
+    const step = (p.w - 18) / Math.max(1, icicleCount - 1);
+    ctx.fillStyle = 'rgba(165, 240, 255, 0.76)';
+    for (let i = 0; i < icicleCount; i++) {
+      const ix = p.x + 9 + i * step;
+      const ih = 9 + ((i * 7) % 10);
+      ctx.beginPath();
+      ctx.moveTo(ix - 4, p.y + 15);
+      ctx.lineTo(ix + 4, p.y + 15);
+      ctx.lineTo(ix, p.y + 15 + ih);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Glacial translucent ice slab body
+    const iceGrad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + 16);
+    iceGrad.addColorStop(0, '#c8f8ff');
+    iceGrad.addColorStop(0.45, '#5ec2eb');
+    iceGrad.addColorStop(1, '#266996');
+    ctx.shadowColor = '#8ef4ff';
+    ctx.shadowBlur = 10;
+    ctx.fillStyle = iceGrad;
+    ctx.beginPath();
+    ctx.roundRect(p.x, p.y, p.w, 16, 6);
+    ctx.fill();
+
+    // Crisp specular diagonal crystal sheen
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+    for (let sx = p.x + 16; sx < p.x + p.w - 18; sx += 34) {
+      ctx.beginPath();
+      ctx.moveTo(sx, p.y + 3);
+      ctx.lineTo(sx + 8, p.y + 3);
+      ctx.lineTo(sx + 2, p.y + 14);
+      ctx.lineTo(sx - 6, p.y + 14);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Fresh white snow crest along top edge
+    ctx.fillStyle = '#f2fcff';
+    ctx.beginPath();
+    ctx.roundRect(p.x + 2, p.y, p.w - 4, 4.5, 3);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(210, 252, 255, 0.75)';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.roundRect(p.x, p.y, p.w, 16, 6);
+    ctx.stroke();
+  } else if (p.type === 'branch') {
+    ctx.fillStyle =
+      levelId === 1 ? '#183333' : levelId === 2 ? '#36211e' : levelId === 3 ? '#1c324a' : '#182e45';
     ctx.beginPath();
     ctx.roundRect(p.x, p.y, p.w, 16, 8);
     ctx.fill();
-    ctx.fillStyle = levelId === 1 ? '#38a68a' : levelId === 2 ? '#d98448' : '#7ad6ef';
+    ctx.fillStyle =
+      levelId === 1 ? '#38a68a' : levelId === 2 ? '#d98448' : levelId === 3 ? '#7ad6ef' : '#dff8ff';
     ctx.beginPath();
     ctx.roundRect(p.x + 4, p.y, p.w - 8, 5, 3);
     ctx.fill();
   } else if (p.type === 'stone') {
-    ctx.fillStyle = levelId === 1 ? '#243c4a' : levelId === 2 ? '#34244a' : '#25395c';
+    ctx.fillStyle =
+      levelId === 1 ? '#243c4a' : levelId === 2 ? '#34244a' : levelId === 3 ? '#25395c' : '#263e5e';
     ctx.beginPath();
     ctx.roundRect(p.x, p.y, p.w, 18, 6);
     ctx.fill();
@@ -862,7 +1032,7 @@ function drawPlatform(ctx: CanvasRenderingContext2D, p: Platform, levelId: Level
         ? 'rgba(130, 245, 225, 0.45)'
         : levelId === 2
           ? 'rgba(220, 175, 255, 0.45)'
-          : 'rgba(165, 238, 255, 0.5)';
+          : 'rgba(185, 244, 255, 0.55)';
     ctx.lineWidth = 1.5;
     ctx.stroke();
   } else {
@@ -871,13 +1041,13 @@ function drawPlatform(ctx: CanvasRenderingContext2D, p: Platform, levelId: Level
         ? `rgba(98, 245, 225, ${0.18 + p.glow * 0.28})`
         : levelId === 2
           ? `rgba(255, 200, 130, ${0.18 + p.glow * 0.28})`
-          : `rgba(170, 225, 255, ${0.2 + p.glow * 0.3})`;
+          : `rgba(170, 232, 255, ${0.22 + p.glow * 0.3})`;
     ctx.strokeStyle =
       levelId === 1
         ? `rgba(165, 255, 242, ${0.5 + p.glow * 0.5})`
         : levelId === 2
           ? `rgba(255, 224, 158, ${0.5 + p.glow * 0.5})`
-          : `rgba(210, 245, 255, ${0.55 + p.glow * 0.45})`;
+          : `rgba(210, 248, 255, ${0.58 + p.glow * 0.42})`;
     ctx.lineWidth = 2;
     ctx.shadowColor = levelId === 1 ? '#6fffe9' : levelId === 2 ? '#ffd085' : '#9ef0ff';
     ctx.shadowBlur = 14 * p.glow;
@@ -898,10 +1068,10 @@ function drawMovingPlatform(
   ctx.save();
   const pulse = 0.72 + 0.28 * Math.sin(time * 2.8 + mp.phase);
 
-  // Soft floating cloud puffs beneath the skywood ledge
+  // Soft floating cloud / frost puffs beneath the moving ledge
   ctx.fillStyle =
-    levelId === 3
-      ? `rgba(210, 244, 255, ${0.32 * pulse})`
+    levelId >= 3
+      ? `rgba(215, 246, 255, ${0.34 * pulse})`
       : `rgba(255, 224, 185, ${0.28 * pulse})`;
   ctx.beginPath();
   ctx.arc(mp.x + mp.w * 0.22, mp.y + 16, 13, 0, Math.PI * 2);
@@ -909,16 +1079,29 @@ function drawMovingPlatform(
   ctx.arc(mp.x + mp.w * 0.78, mp.y + 16, 13, 0, Math.PI * 2);
   ctx.fill();
 
-  // Luminous skywood platform deck
-  ctx.shadowColor = levelId === 3 ? '#94ecff' : '#ffd58c';
+  if (levelId === 4) {
+    ctx.fillStyle = 'rgba(180, 242, 255, 0.72)';
+    for (let i = 0; i < 4; i++) {
+      const ix = mp.x + 14 + i * ((mp.w - 28) / 3);
+      ctx.beginPath();
+      ctx.moveTo(ix - 3.5, mp.y + 14);
+      ctx.lineTo(ix + 3.5, mp.y + 14);
+      ctx.lineTo(ix, mp.y + 24);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  // Luminous skywood / glacier platform deck
+  ctx.shadowColor = levelId >= 3 ? '#94ecff' : '#ffd58c';
   ctx.shadowBlur = 14;
-  ctx.fillStyle = levelId === 3 ? '#26446b' : '#3d2a42';
+  ctx.fillStyle = levelId === 4 ? '#35749e' : levelId === 3 ? '#26446b' : '#3d2a42';
   ctx.beginPath();
   ctx.roundRect(mp.x, mp.y, mp.w, 15, 7);
   ctx.fill();
 
-  // Frost-moss / cloud-crest top rim
-  ctx.fillStyle = levelId === 3 ? '#aef4ff' : '#ffdba6';
+  // Frost-moss / snow-crest top rim
+  ctx.fillStyle = levelId === 4 ? '#eefcff' : levelId === 3 ? '#aef4ff' : '#ffdba6';
   ctx.beginPath();
   ctx.roundRect(mp.x + 5, mp.y + 1, mp.w - 10, 4.5, 3);
   ctx.fill();
@@ -1096,12 +1279,18 @@ function drawSanctuaryTree(
           ? 'rgba(255, 215, 130, 0.88)'
           : 'rgba(255, 155, 195, 0.88)'
         : 'rgba(245, 175, 140, 0.58)';
-    } else {
+    } else if (levelId === 3) {
       ctx.fillStyle = sanctuaryAwakened
         ? idx % 2 === 0
           ? 'rgba(155, 246, 255, 0.9)'
           : 'rgba(210, 175, 255, 0.9)'
         : 'rgba(155, 218, 255, 0.6)';
+    } else {
+      ctx.fillStyle = sanctuaryAwakened
+        ? idx % 2 === 0
+          ? 'rgba(140, 255, 232, 0.9)'
+          : 'rgba(255, 232, 158, 0.9)'
+        : 'rgba(195, 245, 255, 0.65)';
     }
     ctx.beginPath();
     ctx.arc(tx + dx, ty + dy, r, 0, Math.PI * 2);
@@ -1141,7 +1330,7 @@ function drawTerrain(
   ctx.fill();
 
   ctx.strokeStyle = rimCol;
-  ctx.lineWidth = 2.4;
+  ctx.lineWidth = levelId === 4 ? 3.2 : 2.4;
   ctx.beginPath();
   for (let x = startX; x <= endX; x += 24) {
     const y = getTerrainY(x, levelId);
@@ -1159,7 +1348,7 @@ function drawGrassAndFlowers(
   viewW: number
 ): void {
   const bladeColor =
-    levelId === 1 ? '#3dc79f' : levelId === 2 ? '#c9794b' : '#6cc8e8';
+    levelId === 1 ? '#3dc79f' : levelId === 2 ? '#c9794b' : levelId === 3 ? '#6cc8e8' : '#94e4ff';
   for (const g of world.grassTufts) {
     if (g.x < cameraX - 20 || g.x > cameraX + viewW + 20) continue;
     const tipX = g.x + g.bend * g.h;

@@ -77,6 +77,8 @@ export class ForestGameEngine {
   private hudSyncTimer = 0;
   private phoenixRegenTimer = 0;
   private shieldCooldown = 0;
+  private onIcePlatform = false;
+  private onSnowGround = false;
 
   public input: InputState = {
     left: false,
@@ -251,7 +253,8 @@ export class ForestGameEngine {
   }
 
   startNextLevel(): void {
-    const next: LevelId = this.levelId === 1 ? 2 : this.levelId === 2 ? 3 : 1;
+    const next: LevelId =
+      this.levelId === 1 ? 2 : this.levelId === 2 ? 3 : this.levelId === 3 ? 4 : 1;
     this.startNewGame(next);
   }
 
@@ -419,6 +422,8 @@ export class ForestGameEngine {
     this.sanctuaryAwakened = false;
     this.hitstopTimer = 0;
     this.shakeTimer = 0;
+    this.onIcePlatform = false;
+    this.onSnowGround = false;
     this.cameraX = 0;
     this.cameraY = this.player.y - (this.viewH / this.worldScale) * 0.65;
   }
@@ -605,7 +610,7 @@ export class ForestGameEngine {
     const virtualW = this.viewW / this.worldScale;
     const virtualH = this.viewH / this.worldScale;
     const blend = getBiomeBlend(this.cameraX + virtualW * 0.5, this.levelId);
-    audioEngine.updateRainIntensity(blend.weights.rain);
+    audioEngine.updateWeatherAudio(blend.weights);
 
     for (const s of this.world.floatingSpores) {
       s.x += (s.vx + Math.sin(this.time * 0.7 + s.phase) * 10) * dt;
@@ -712,8 +717,30 @@ export class ForestGameEngine {
       (isFlying ? 85 : 0) +
       (hasPhoenix && !p.onGround ? 55 : 0) +
       (hasDragonWings ? 60 : 0);
-    const accel = p.onGround ? (hasBoots ? 2150 : 1950) : hasBoots ? 1420 : 1280;
-    const decel = p.onGround ? 1800 : 540;
+    const isSlipperyIce = p.onGround && this.onIcePlatform;
+    const isSnowyGround = p.onGround && !this.onIcePlatform && this.onSnowGround;
+    const accel = p.onGround
+      ? isSlipperyIce
+        ? hasBoots
+          ? 1040
+          : 880
+        : isSnowyGround
+          ? hasBoots
+            ? 1480
+            : 1280
+          : hasBoots
+            ? 2150
+            : 1950
+      : hasBoots
+        ? 1420
+        : 1280;
+    const decel = p.onGround
+      ? isSlipperyIce
+        ? 215
+        : isSnowyGround
+          ? 490
+          : 1800
+      : 540;
 
     if (moveDir !== 0) {
       p.vx += moveDir * accel * dt;
@@ -724,6 +751,26 @@ export class ForestGameEngine {
       p.vx = 0;
     } else {
       p.vx -= Math.sign(p.vx) * decel * dt;
+    }
+
+    // Frost skid sparks when sliding on ice platforms or snowy Frozen Pine Peaks trails
+    if (
+      p.onGround &&
+      (isSlipperyIce || isSnowyGround) &&
+      Math.abs(p.vx) > 65 &&
+      (moveDir === 0 || Math.sign(p.vx) !== moveDir) &&
+      Math.random() < (isSlipperyIce ? 0.55 : 0.25)
+    ) {
+      this.particles.push({
+        x: p.x + (Math.random() - 0.5) * 10,
+        y: p.y - 2,
+        vx: -p.vx * 0.22 + (Math.random() - 0.5) * 28,
+        vy: -18 - Math.random() * 24,
+        r: 1.4 + Math.random() * 1.4,
+        life: 0.38,
+        maxLife: 0.38,
+        color: '#e8fbff',
+      });
     }
 
     const hasTripleJump = p.extraAirJumpTimer > 0 || hasSkyLeap;
@@ -824,6 +871,8 @@ export class ForestGameEngine {
     p.y = Math.max(getTerrainY(p.x, this.levelId) - 430, p.y + p.vy * dt);
 
     let landedThisFrame = false;
+    let landedOnIce = false;
+    let landedOnSnow = false;
 
     if (p.vy >= 0) {
       for (const plat of this.world.platforms) {
@@ -836,6 +885,7 @@ export class ForestGameEngine {
           p.y = plat.y;
           p.vy = 0;
           landedThisFrame = true;
+          landedOnIce = plat.type === 'ice';
           if (plat.type === 'spirit') plat.glow = Math.max(plat.glow, 0.85);
           break;
         }
@@ -853,6 +903,7 @@ export class ForestGameEngine {
             p.y = mp.y;
             p.vy = 0;
             landedThisFrame = true;
+            landedOnIce = this.levelId === 4;
             break;
           }
         }
@@ -904,18 +955,23 @@ export class ForestGameEngine {
       p.y = groundY;
       p.vy = 0;
       landedThisFrame = true;
+      landedOnSnow = this.levelId === 4 || playerBlend.weights.snow > 0.45;
     }
 
     if (landedThisFrame) {
       if (!p.onGround) {
         p.squash = 0.78;
-        this.spawnDust(p.x, p.y, '#7debd3', 5);
+        this.spawnDust(p.x, p.y, landedOnIce ? '#d6faff' : '#7debd3', 5);
       }
       p.onGround = true;
+      this.onIcePlatform = landedOnIce;
+      this.onSnowGround = landedOnSnow;
       p.coyoteTime = 0.12;
       p.jumpsLeft = hasTripleJump ? 3 : 2;
     } else {
       p.onGround = false;
+      this.onIcePlatform = false;
+      this.onSnowGround = false;
     }
 
     p.scarf[0].x = p.x - p.facing * 4;
