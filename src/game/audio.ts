@@ -1,4 +1,4 @@
-import type { MagicalCreatureKind } from './types';
+import type { LevelId, MagicalCreatureKind } from './types';
 import type { WeatherWeights } from './world';
 
 const PENTATONIC_NOTES = [
@@ -12,13 +12,113 @@ interface LofiChordBar {
   sparkle: number;
 }
 
-// Gentle 72 BPM chill progression: Fmaj7 -> Em7 -> Dm9 -> Cmaj7
-const LOFI_PROGRESSION: LofiChordBar[] = [
-  { notes: [174.61, 220.0, 261.63, 329.63], melodyA: 523.25, melodyB: 440.0, sparkle: 659.25 },
-  { notes: [164.81, 196.0, 246.94, 293.66], melodyA: 493.88, melodyB: 392.0, sparkle: 587.33 },
-  { notes: [146.83, 220.0, 261.63, 329.63], melodyA: 440.0, melodyB: 349.23, sparkle: 523.25 },
-  { notes: [130.81, 196.0, 246.94, 329.63], melodyA: 392.0, melodyB: 493.88, sparkle: 659.25 },
-];
+interface LofiLevelTheme {
+  bpm: number;
+  progression: LofiChordBar[];
+  strumDelay: number;
+  chordDuration: number;
+  kickSteps: number[];
+  kickPitchStart: number;
+  kickPitchEnd: number;
+  accentBrushSteps: number[];
+  softBrushSteps: number[];
+  overtoneType: OscillatorType;
+  overtoneRatio: number;
+  overtoneGain: number;
+  baseCutoff: number;
+  melodyPattern: 'classic' | 'syncopated' | 'arp' | 'winter';
+}
+
+const LEVEL_LOFI_THEMES: Record<LevelId, LofiLevelTheme> = {
+  // Level 1 · Whispering Woods: Warm 72 BPM emerald forest Rhodes (Fmaj7 -> Em7 -> Dm9 -> Cmaj7)
+  1: {
+    bpm: 72,
+    progression: [
+      { notes: [174.61, 220.0, 261.63, 329.63], melodyA: 523.25, melodyB: 440.0, sparkle: 659.25 },
+      { notes: [164.81, 196.0, 246.94, 293.66], melodyA: 493.88, melodyB: 392.0, sparkle: 587.33 },
+      { notes: [146.83, 220.0, 261.63, 329.63], melodyA: 440.0, melodyB: 349.23, sparkle: 523.25 },
+      { notes: [130.81, 196.0, 246.94, 329.63], melodyA: 392.0, melodyB: 493.88, sparkle: 659.25 },
+    ],
+    strumDelay: 0.038,
+    chordDuration: 2.85,
+    kickSteps: [0, 4],
+    kickPitchStart: 98,
+    kickPitchEnd: 42,
+    accentBrushSteps: [2, 6],
+    softBrushSteps: [1, 3, 5, 7],
+    overtoneType: 'triangle',
+    overtoneRatio: 2,
+    overtoneGain: 0.16,
+    baseCutoff: 1650,
+    melodyPattern: 'classic',
+  },
+  // Level 2 · Amber & Crystal Hollows: Deep cozy 66 BPM autumn felt-piano groove (Cmaj7 -> Bm7 -> Am9 -> Gmaj7)
+  2: {
+    bpm: 66,
+    progression: [
+      { notes: [130.81, 164.81, 196.0, 246.94], melodyA: 493.88, melodyB: 392.0, sparkle: 587.33 },
+      { notes: [123.47, 146.83, 185.0, 220.0], melodyA: 440.0, melodyB: 369.99, sparkle: 587.33 },
+      { notes: [110.0, 164.81, 196.0, 246.94], melodyA: 392.0, melodyB: 493.88, sparkle: 659.25 },
+      { notes: [146.83, 196.0, 246.94, 369.99], melodyA: 392.0, melodyB: 369.99, sparkle: 587.33 },
+    ],
+    strumDelay: 0.048,
+    chordDuration: 3.1,
+    kickSteps: [0, 3, 4],
+    kickPitchStart: 86,
+    kickPitchEnd: 38,
+    accentBrushSteps: [2, 6],
+    softBrushSteps: [1, 5, 7],
+    overtoneType: 'sine',
+    overtoneRatio: 1.5,
+    overtoneGain: 0.19,
+    baseCutoff: 1380,
+    melodyPattern: 'syncopated',
+  },
+  // Level 3 · Frostbloom Skywoods: Airy 78 BPM floating harp-rhodes (Gmaj9 -> F#m7 -> Em9 -> Dmaj7)
+  3: {
+    bpm: 78,
+    progression: [
+      { notes: [196.0, 246.94, 293.66, 369.99], melodyA: 587.33, melodyB: 440.0, sparkle: 739.99 },
+      { notes: [185.0, 220.0, 277.18, 329.63], melodyA: 554.37, melodyB: 440.0, sparkle: 659.25 },
+      { notes: [164.81, 246.94, 293.66, 369.99], melodyA: 493.88, melodyB: 587.33, sparkle: 739.99 },
+      { notes: [146.83, 220.0, 277.18, 369.99], melodyA: 440.0, melodyB: 554.37, sparkle: 659.25 },
+    ],
+    strumDelay: 0.068,
+    chordDuration: 2.6,
+    kickSteps: [0, 5],
+    kickPitchStart: 92,
+    kickPitchEnd: 44,
+    accentBrushSteps: [2, 6],
+    softBrushSteps: [1, 3, 4, 7],
+    overtoneType: 'triangle',
+    overtoneRatio: 2,
+    overtoneGain: 0.14,
+    baseCutoff: 1850,
+    melodyPattern: 'arp',
+  },
+  // Level 4 · Frozen Pine Peaks: Serene 62 BPM winter celesta & aurora lofi (Abmaj7 -> Gm7 -> Fm9 -> Ebmaj7)
+  4: {
+    bpm: 62,
+    progression: [
+      { notes: [207.65, 261.63, 311.13, 392.0], melodyA: 622.25, melodyB: 523.25, sparkle: 783.99 },
+      { notes: [196.0, 233.08, 293.66, 349.23], melodyA: 587.33, melodyB: 466.16, sparkle: 698.46 },
+      { notes: [174.61, 207.65, 261.63, 349.23], melodyA: 523.25, melodyB: 466.16, sparkle: 783.99 },
+      { notes: [155.56, 196.0, 233.08, 293.66], melodyA: 466.16, melodyB: 587.33, sparkle: 698.46 },
+    ],
+    strumDelay: 0.055,
+    chordDuration: 3.35,
+    kickSteps: [0, 4],
+    kickPitchStart: 80,
+    kickPitchEnd: 36,
+    accentBrushSteps: [2, 6],
+    softBrushSteps: [3, 7],
+    overtoneType: 'sine',
+    overtoneRatio: 3,
+    overtoneGain: 0.13,
+    baseCutoff: 1520,
+    melodyPattern: 'winter',
+  },
+};
 
 const DEFAULT_WEIGHTS: WeatherWeights = {
   leaves: 1,
@@ -45,6 +145,7 @@ class ForestAudioEngine {
   private musicLowpass: BiquadFilterNode | null = null;
   private noiseBuffer: AudioBuffer | null = null;
   private weatherWeights: WeatherWeights = { ...DEFAULT_WEIGHTS };
+  private levelId: LevelId = 1;
   private lofiStep = 0;
   private nextStepTime = 0;
   private schedulerId: number | null = null;
@@ -397,18 +498,29 @@ class ForestAudioEngine {
     this.applyWeatherAudioTargets();
   }
 
+  setLevel(levelId: LevelId): void {
+    if (this.levelId === levelId) return;
+    this.levelId = levelId;
+    this.lofiStep = 0;
+    if (this.ctx) {
+      this.nextStepTime = Math.max(this.nextStepTime, this.ctx.currentTime + 0.06);
+      this.applyWeatherAudioTargets();
+    }
+  }
+
   private scheduleLofiLookahead(): void {
     if (!this.ctx || !this.musicLowpass) return;
     if (this.ctx.state !== 'running') return;
 
-    const stepDuration = 60 / 72 / 2; // 72 BPM eighth-note (~0.4167s)
+    const theme = LEVEL_LOFI_THEMES[this.levelId];
+    const stepDuration = 60 / theme.bpm / 2; // Eighth-note pulse for the current level's BPM
     // Recover gracefully if tab was backgrounded
     if (this.nextStepTime < this.ctx.currentTime - 0.5) {
       this.nextStepTime = this.ctx.currentTime + 0.05;
     }
 
     while (this.nextStepTime < this.ctx.currentTime + 0.2) {
-      this.scheduleLofiStep(this.nextStepTime, this.lofiStep);
+      this.scheduleLofiStep(this.nextStepTime, this.lofiStep, theme);
       this.nextStepTime += stepDuration;
       this.lofiStep = (this.lofiStep + 1) % 32;
     }
@@ -418,7 +530,10 @@ class ForestAudioEngine {
     time: number,
     freq: number,
     duration: number,
-    peakGain: number
+    peakGain: number,
+    overtoneType: OscillatorType = 'triangle',
+    overtoneRatio = 2,
+    overtoneGain = 0.16
   ): void {
     if (!this.ctx || !this.musicLowpass) return;
     const osc = this.ctx.createOscillator();
@@ -430,12 +545,12 @@ class ForestAudioEngine {
     // Gentle lofi tape warmth wobble
     osc.detune.setValueAtTime((Math.random() - 0.5) * 7, time);
 
-    overtone.type = 'triangle';
-    overtone.frequency.setValueAtTime(freq * 2, time);
+    overtone.type = overtoneType;
+    overtone.frequency.setValueAtTime(freq * overtoneRatio, time);
 
     const overGain = this.ctx.createGain();
-    overGain.gain.setValueAtTime(0.16, time);
-    overGain.gain.exponentialRampToValueAtTime(0.02, time + Math.min(duration * 0.55, 0.9));
+    overGain.gain.setValueAtTime(overtoneGain, time);
+    overGain.gain.exponentialRampToValueAtTime(0.018, time + Math.min(duration * 0.55, 0.9));
 
     gain.gain.setValueAtTime(0.0001, time);
     gain.gain.linearRampToValueAtTime(peakGain, time + 0.028);
@@ -452,13 +567,13 @@ class ForestAudioEngine {
     overtone.stop(time + duration + 0.05);
   }
 
-  private scheduleSoftKick(time: number): void {
+  private scheduleSoftKick(time: number, startHz = 98, endHz = 42): void {
     if (!this.ctx || !this.musicLowpass) return;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(98, time);
-    osc.frequency.exponentialRampToValueAtTime(42, time + 0.14);
+    osc.frequency.setValueAtTime(startHz, time);
+    osc.frequency.exponentialRampToValueAtTime(endHz, time + 0.14);
     gain.gain.setValueAtTime(0.0001, time);
     gain.gain.linearRampToValueAtTime(0.11, time + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.22);
@@ -491,23 +606,55 @@ class ForestAudioEngine {
     src.start(time, Math.random() * 1.4, dur + 0.03);
   }
 
-  private scheduleLofiStep(time: number, step: number): void {
-    const bar = LOFI_PROGRESSION[Math.floor(step / 8)];
+  private scheduleLofiStep(time: number, step: number, theme: LofiLevelTheme): void {
+    const bar = theme.progression[Math.floor(step / 8)];
     const stepInBar = step % 8;
     const w = this.weatherWeights;
 
-    // 1. Warm strummed Rhodes chord at the start of every bar
+    // 1. Warm strummed chord at the start of every bar
     if (stepInBar === 0) {
       bar.notes.forEach((freq, idx) => {
-        this.scheduleRhodesVoice(time + idx * 0.038, freq, 2.85, idx === 0 ? 0.16 : 0.11);
+        this.scheduleRhodesVoice(
+          time + idx * theme.strumDelay,
+          freq,
+          theme.chordDuration,
+          idx === 0 ? 0.16 : 0.105,
+          theme.overtoneType,
+          theme.overtoneRatio,
+          theme.overtoneGain
+        );
       });
     }
 
-    // 2. Gentle sparse lofi melody & weather-specific harmonic textures
-    if (stepInBar === 3) {
-      this.scheduleRhodesVoice(time, bar.melodyA, 1.35, 0.075);
-    } else if (stepInBar === 6) {
-      this.scheduleRhodesVoice(time, bar.melodyB, 1.45, 0.07);
+    // 2. Realm-specific gentle lofi melody pattern
+    if (theme.melodyPattern === 'classic') {
+      if (stepInBar === 3) {
+        this.scheduleRhodesVoice(time, bar.melodyA, 1.35, 0.075);
+      } else if (stepInBar === 6) {
+        this.scheduleRhodesVoice(time, bar.melodyB, 1.45, 0.07);
+      }
+    } else if (theme.melodyPattern === 'syncopated') {
+      // Amber & Crystal Hollows: cozy lantern syncopation + deep crystal drop
+      if (stepInBar === 2) {
+        this.scheduleRhodesVoice(time, bar.melodyA, 1.25, 0.072, 'sine', 1.5, 0.16);
+      } else if (stepInBar === 5) {
+        this.scheduleRhodesVoice(time, bar.melodyB, 1.1, 0.065, 'sine', 1.5, 0.16);
+        this.scheduleRhodesVoice(time + 0.08, bar.sparkle, 0.9, 0.036, 'sine', 2, 0.12);
+      }
+    } else if (theme.melodyPattern === 'arp') {
+      // Frostbloom Skywoods: airy floating harp arpeggio notes
+      if (stepInBar === 2 || stepInBar === 4 || stepInBar === 7) {
+        const note =
+          stepInBar === 2 ? bar.melodyB : stepInBar === 4 ? bar.melodyA : bar.sparkle;
+        this.scheduleRhodesVoice(time, note, 1.3, 0.06, 'triangle', 2, 0.13);
+      }
+    } else {
+      // Frozen Pine Peaks: delicate sparse winter celesta bells
+      if (stepInBar === 1 || stepInBar === 3 || stepInBar === 6) {
+        const note =
+          stepInBar === 1 ? bar.sparkle : stepInBar === 3 ? bar.melodyA : bar.melodyB;
+        this.scheduleRhodesVoice(time, note, 1.55, 0.056, 'sine', 3, 0.12);
+      }
     }
 
     // Rain weather: soft raindrop fifths
@@ -518,7 +665,7 @@ class ForestAudioEngine {
     // Snow weather: delicate winter celesta bell sparkles
     if (w.snow > 0.2 && (stepInBar === 1 || stepInBar === 4 || stepInBar === 7)) {
       const bellFreq = stepInBar === 4 ? bar.sparkle * 2 : bar.melodyA * 2;
-      this.scheduleRhodesVoice(time, bellFreq, 1.1, 0.026 * w.snow);
+      this.scheduleRhodesVoice(time, bellFreq, 1.1, 0.024 * w.snow, 'sine', 2, 0.1);
     }
 
     // Underwater weather: soft bubbly kalimba plucks
@@ -531,14 +678,14 @@ class ForestAudioEngine {
       this.scheduleRhodesVoice(time, bar.sparkle * 2, 1.25, 0.028 * w.flurry);
     }
 
-    // 3. Soft lofi groove (muted kick + subtle brush texture, softer underwater)
+    // 3. Soft realm-specific lofi groove (muted kick + subtle brush texture, softer underwater)
     const drumDamp = 1 - w.underwater * 0.5;
-    if (stepInBar === 0 || stepInBar === 4) {
-      if (drumDamp > 0.3) this.scheduleSoftKick(time);
+    if (drumDamp > 0.3 && theme.kickSteps.includes(stepInBar)) {
+      this.scheduleSoftKick(time, theme.kickPitchStart, theme.kickPitchEnd);
     }
-    if (stepInBar === 2 || stepInBar === 6) {
+    if (theme.accentBrushSteps.includes(stepInBar)) {
       this.scheduleSoftBrush(time, true);
-    } else if (stepInBar % 2 === 1) {
+    } else if (theme.softBrushSteps.includes(stepInBar)) {
       this.scheduleSoftBrush(time, false);
     }
   }
@@ -646,9 +793,10 @@ class ForestAudioEngine {
       this.windGain.gain.setTargetAtTime(windLevel, now, 0.4);
     }
     if (this.musicLowpass) {
-      // Underwater gets cozy submerged lofi cutoff (~540Hz); rain gets warm cozy ~1220Hz; open woods ~1650Hz
+      // Base warmth filter per level, then blended with dynamic weather cutoffs
+      const baseCutoff = LEVEL_LOFI_THEMES[this.levelId].baseCutoff;
       const targetCutoff =
-        1650 - w.underwater * 1110 - w.rain * 430 - w.snow * 140 + w.flurry * 180;
+        baseCutoff - w.underwater * 980 - w.rain * 380 - w.snow * 140 + w.flurry * 180;
       this.musicLowpass.frequency.setTargetAtTime(Math.max(460, targetCutoff), now, 0.5);
     }
   }

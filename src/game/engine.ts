@@ -102,6 +102,7 @@ export class ForestGameEngine {
     this.onHudUpdate = onHudUpdate;
 
     backdropCache.preloadLevel(this.levelId);
+    audioEngine.setLevel(this.levelId);
     this.world = generateWorld(this.levelId);
     this.weather = new DynamicWeatherSystem();
     this.player = this.createInitialPlayer(this.levelId);
@@ -449,6 +450,7 @@ export class ForestGameEngine {
 
   private resetWorldState(levelId: LevelId): void {
     backdropCache.preloadLevel(levelId);
+    audioEngine.setLevel(levelId);
     this.world = generateWorld(levelId);
     this.player = this.createInitialPlayer(levelId);
     this.particles = [];
