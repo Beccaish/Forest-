@@ -21,6 +21,8 @@ export interface SavedGameState {
   litLanternIndices: number[];
   blessedCreatureIds: number[];
   pacifiedBaddieIds: number[];
+  helpedAnimalIds?: number[];
+  collectedTrashIds?: number[];
 }
 
 export interface SavedGameSummary {
@@ -93,6 +95,12 @@ export function loadGameState(): SavedGameState | null {
         : [],
       pacifiedBaddieIds: Array.isArray(parsed.pacifiedBaddieIds)
         ? parsed.pacifiedBaddieIds.filter((n): n is number => typeof n === 'number')
+        : [],
+      helpedAnimalIds: Array.isArray(parsed.helpedAnimalIds)
+        ? parsed.helpedAnimalIds.filter((n): n is number => typeof n === 'number')
+        : [],
+      collectedTrashIds: Array.isArray(parsed.collectedTrashIds)
+        ? parsed.collectedTrashIds.filter((n): n is number => typeof n === 'number')
         : [],
     };
   } catch {

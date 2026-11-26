@@ -629,6 +629,20 @@ class ForestAudioEngine {
     this.playTone(293.66, 0.18, 0.06, 'triangle');
     window.setTimeout(() => this.playTone(587.33, 0.32, 0.045, 'sine'), 45);
   }
+
+  playAnimalHealed(): void {
+    [523.25, 659.25, 783.99, 1046.5, 1318.51].forEach((f, i) => {
+      window.setTimeout(() => {
+        this.playTone(f, 0.9, 0.055, 'sine');
+        if (i >= 2) this.playTone(f * 1.5, 0.55, 0.024, 'triangle');
+      }, i * 52);
+    });
+  }
+
+  playTrashPickup(): void {
+    this.playTone(440.0, 0.24, 0.045, 'triangle');
+    window.setTimeout(() => this.playTone(659.25, 0.32, 0.045, 'sine'), 48);
+  }
 }
 
 export const audioEngine = new ForestAudioEngine();

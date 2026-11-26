@@ -76,6 +76,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
   if (hud.phase !== 'PLAYING') return null;
 
   const hasActiveBuffs =
+    hud.wardShieldLeft > 0 ||
     hud.crystalBoostActive ||
     hud.tripleJumpActive ||
     hud.highJumpCharges > 0 ||
@@ -183,6 +184,12 @@ export const GameHUD: React.FC<GameHUDProps> = ({
                   <span>{hud.dewdrops}</span>
                 </span>
 
+                {hud.wardShieldLeft > 0 && (
+                  <span className="font-semibold text-[#ffe896] tabular-nums shrink-0">
+                    Safe {hud.wardShieldLeft.toFixed(1)}s
+                  </span>
+                )}
+
                 {hud.flyingTimeLeft > 0 && (
                   <span className="font-semibold text-[#ff9ce3] tabular-nums shrink-0">
                     Fly {hud.flyingTimeLeft.toFixed(1)}s
@@ -199,7 +206,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
             {pointsExpanded && (
               <div
                 onClick={() => setPointsExpanded(false)}
-                className="absolute left-0 top-full mt-1.5 z-40 w-[235px] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-xl border border-[#8cf8e8]/28 bg-[#071923]/90 p-3 text-[#eefcf9] shadow-2xl backdrop-blur-md"
+                className="absolute left-0 top-full mt-1.5 z-40 w-[245px] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-xl border border-[#8cf8e8]/28 bg-[#071923]/90 p-3 text-[#eafbf9] shadow-2xl backdrop-blur-md"
               >
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <span className="font-semibold text-[#c5ede6]">
@@ -238,10 +245,21 @@ export const GameHUD: React.FC<GameHUDProps> = ({
                     <span className="text-[11px] text-[#ffe194]">Dewdrops</span>
                     <span className="font-bold text-[#ffe194] tabular-nums">{hud.dewdrops}</span>
                   </div>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[11px] text-[#ffb8d8]">Animals</span>
+                    <span className="font-semibold text-[#ffd6eb] tabular-nums">{hud.animalsHelped}/{hud.animalsTotal}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[11px] text-[#9effef]">Trash</span>
+                    <span className="font-semibold text-[#b8fff2] tabular-nums">{hud.trashCollected}/{hud.trashTotal}</span>
+                  </div>
                 </div>
 
                 {hasActiveBuffs && (
                   <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 border-t border-[#8cf8e8]/15 pt-1.5 text-[11px] font-medium">
+                    {hud.wardShieldLeft > 0 && (
+                      <span className="text-[#ffe896] tabular-nums">Safe Shield {hud.wardShieldLeft.toFixed(1)}s</span>
+                    )}
                     {powerLabel && <span className="text-[#ffe39a]">{powerLabel}</span>}
                     {hud.highJumpCharges > 0 && (
                       <span className="text-[#7cfce7] tabular-nums">Jump ×{hud.highJumpCharges}</span>
@@ -572,10 +590,49 @@ export const GameHUD: React.FC<GameHUDProps> = ({
               </span>
               <span className="font-bold text-[#ffe194] tabular-nums">{hud.dewdrops}</span>
             </div>
+
+            <div className="flex items-center justify-between gap-1" aria-label={`Animals helped ${hud.animalsHelped} of ${hud.animalsTotal}`}>
+              <span className="flex items-center gap-1.5 text-[#ffb8d8]">
+                <svg width="12" height="12" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path
+                    d="M10 17C10 17 3.5 12.5 3.5 7.8C3.5 5.4 5.4 3.6 7.7 3.6C9 3.6 9.6 4.3 10 5C10.4 4.3 11 3.6 12.3 3.6C14.6 3.6 16.5 5.4 16.5 7.8C16.5 12.5 10 17 10 17Z"
+                    fill="#ff9ec7"
+                    fillOpacity="0.7"
+                    stroke="#ffd6eb"
+                    strokeWidth="1.2"
+                  />
+                </svg>
+                <span className="text-[11px]">Animals</span>
+              </span>
+              <span className="font-semibold text-[#ffd6eb] tabular-nums">
+                {hud.animalsHelped}/{hud.animalsTotal}
+              </span>
+            </div>
+
+            <div className="flex items-center justify-between gap-1" aria-label={`Trash cleaned ${hud.trashCollected} of ${hud.trashTotal}`}>
+              <span className="flex items-center gap-1.5 text-[#9effef]">
+                <svg width="12" height="12" viewBox="0 0 20 20" fill="none" aria-hidden="true">
+                  <path
+                    d="M5 7H15L13.8 16.5H6.2L5 7ZM8 4H12M3.8 7H16.2"
+                    stroke="#7cfce7"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <span className="text-[11px]">Trash</span>
+              </span>
+              <span className="font-semibold text-[#b8fff2] tabular-nums">
+                {hud.trashCollected}/{hud.trashTotal}
+              </span>
+            </div>
           </div>
 
           {hasActiveBuffs && (
             <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-0.5 border-t border-[#8cf8e8]/15 pt-1.5 text-[11px] font-medium">
+              {hud.wardShieldLeft > 0 && (
+                <span className="text-[#ffe896] tabular-nums">Safe Shield {hud.wardShieldLeft.toFixed(1)}s</span>
+              )}
               {powerLabel && <span className="text-[#ffe39a]">{powerLabel}</span>}
               {hud.highJumpCharges > 0 && (
                 <span className="text-[#7cfce7] tabular-nums">Jump ×{hud.highJumpCharges}</span>

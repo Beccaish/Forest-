@@ -34,6 +34,11 @@ export interface HudSnapshot {
   starseedsTotal: number;
   lanternsLit: number;
   lanternsTotal: number;
+  animalsHelped: number;
+  animalsTotal: number;
+  trashCollected: number;
+  trashTotal: number;
+  wardShieldLeft: number;
   petals: number;
   maxPetals: number;
   biomeName: string;
@@ -282,6 +287,42 @@ export interface ForestBaddie {
   facing: number;
 }
 
+export type SickAnimalKind = 'hedgehog' | 'fawn' | 'bunny' | 'bird' | 'otter';
+
+export interface SickAnimal {
+  id: number;
+  kind: SickAnimalKind;
+  name: string;
+  x: number;
+  y: number;
+  helped: boolean;
+  healAnimTimer: number;
+  phase: number;
+  facing: number;
+}
+
+export type TrashKind = 'bottle' | 'can' | 'wrapper' | 'cup';
+
+export interface TrashItem {
+  id: number;
+  kind: TrashKind;
+  x: number;
+  y: number;
+  collected: boolean;
+  phase: number;
+  rot: number;
+}
+
+export interface FloatingPopup {
+  x: number;
+  y: number;
+  vy: number;
+  text: string;
+  color: string;
+  life: number;
+  maxLife: number;
+}
+
 export interface Particle {
   x: number;
   y: number;
@@ -291,6 +332,10 @@ export interface Particle {
   life: number;
   maxLife: number;
   color: string;
+  kind?: 'dust' | 'glitter';
+  twinklePhase?: number;
+  drag?: number;
+  gravity?: number;
 }
 
 export interface PulseRing {
@@ -324,6 +369,8 @@ export interface PlayerState {
   flyingFlowers: number;
   flyingTimer: number;
   invulnTimer: number;
+  wardShieldTimer: number;
+  glitterBurstTimer: number;
   petals: number;
   maxPetals: number;
   checkpointX: number;

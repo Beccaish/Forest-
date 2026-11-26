@@ -11,6 +11,7 @@ import {
   type ShopItemId,
 } from './shop';
 import type {
+  FloatingPopup,
   GamePhase,
   HudSnapshot,
   LevelId,
@@ -18,7 +19,9 @@ import type {
   Particle,
   PlayerState,
   PulseRing,
+  SickAnimal,
   SpiritLantern,
+  TrashItem,
 } from './types';
 import { DynamicWeatherSystem } from './weather';
 import {
@@ -51,6 +54,7 @@ export class ForestGameEngine {
   private player: PlayerState;
   private particles: Particle[] = [];
   private pulses: PulseRing[] = [];
+  private floatingPopups: FloatingPopup[] = [];
 
   private phase: GamePhase = 'TITLE_MENU';
   private time = 0;
@@ -127,6 +131,8 @@ export class ForestGameEngine {
       flyingFlowers: 0,
       flyingTimer: 0,
       invulnTimer: 0,
+      wardShieldTimer: 0,
+      glitterBurstTimer: 0,
       petals: maxPetals,
       maxPetals,
       checkpointX: startX,
@@ -298,6 +304,8 @@ export class ForestGameEngine {
     });
     const blessedCreatureIds = this.world.creatures.filter((c) => c.blessed).map((c) => c.id);
     const pacifiedBaddieIds = this.world.baddies.filter((b) => b.pacifiedOnce).map((b) => b.id);
+    const helpedAnimalIds = this.world.sickAnimals.filter((a) => a.helped).map((a) => a.id);
+    const collectedTrashIds = this.world.trashItems.filter((t) => t.collected).map((t) => t.id);
 
     const ok = saveGameState({
       version: 1,
@@ -319,6 +327,8 @@ export class ForestGameEngine {
       litLanternIndices,
       blessedCreatureIds,
       pacifiedBaddieIds,
+      helpedAnimalIds,
+      collectedTrashIds,
     });
     saveShopProgress(this.shopProgress);
     if (ok) {
@@ -360,6 +370,20 @@ export class ForestGameEngine {
     for (const b of this.world.baddies) {
       if (pacifiedSet.has(b.id)) {
         b.pacifiedOnce = true;
+      }
+    }
+
+    const helpedSet = new Set(saved.helpedAnimalIds ?? []);
+    for (const a of this.world.sickAnimals) {
+      if (helpedSet.has(a.id)) {
+        a.helped = true;
+      }
+    }
+
+    const trashSet = new Set(saved.collectedTrashIds ?? []);
+    for (const t of this.world.trashItems) {
+      if (trashSet.has(t.id)) {
+        t.collected = true;
       }
     }
 
@@ -415,6 +439,7 @@ export class ForestGameEngine {
     this.player = this.createInitialPlayer(levelId);
     this.particles = [];
     this.pulses = [];
+    this.floatingPopups = [];
     this.orbsCollected = 0;
     this.blossomsCollected = 0;
     this.crystalsCollected = 0;
@@ -427,6 +452,133 @@ export class ForestGameEngine {
     this.onSnowGround = false;
     this.cameraX = 0;
     this.cameraY = this.player.y - (this.viewH / this.worldScale) * 0.65;
+  }
+
+  private screenToWorld(clientX: number, clientY: number): { wx: number; wy: number } {
+    const rect = this.canvas.getBoundingClientRect();
+    const sx = clientX - rect.left;
+    const sy = clientY - rect.top;
+    return {
+      wx: sx / this.worldScale + this.cameraX,
+      wy: sy / this.worldScale + this.cameraY,
+    };
+  }
+
+  private findClickableAnimalAt(wx: number, wy: number): SickAnimal | null {
+    const virtualW = this.viewW / this.worldScale;
+    let best: SickAnimal | null = null;
+    let bestDist = Infinity;
+    for (const a of this.world.sickAnimals) {
+      if (a.helped) continue;
+      if (a.x < this.cameraX - 60 || a.x > this.cameraX + virtualW + 60) continue;
+      // Cover both the animal sprite and the floating "Click to Help" tag right above it
+      const dx = Math.abs(wx - a.x);
+      const dy = wy - (a.y - 26);
+      const dist = Math.hypot(dx, dy);
+      if (dist <= 56 && dist < bestDist) {
+        bestDist = dist;
+        best = a;
+      }
+    }
+    return best;
+  }
+
+  private findClickableTrashAt(wx: number, wy: number): TrashItem | null {
+    const virtualW = this.viewW / this.worldScale;
+    let best: TrashItem | null = null;
+    let bestDist = Infinity;
+    for (const t of this.world.trashItems) {
+      if (t.collected) continue;
+      if (t.x < this.cameraX - 50 || t.x > this.cameraX + virtualW + 50) continue;
+      const dist = Math.hypot(wx - t.x, wy - (t.y - 12));
+      if (dist <= 42 && dist < bestDist) {
+        bestDist = dist;
+        best = t;
+      }
+    }
+    return best;
+  }
+
+  isInteractivePointAt(clientX: number, clientY: number): boolean {
+    if (this.phase !== 'PLAYING') return false;
+    const { wx, wy } = this.screenToWorld(clientX, clientY);
+    return Boolean(this.findClickableAnimalAt(wx, wy) || this.findClickableTrashAt(wx, wy));
+  }
+
+  handleCanvasPointerDown(clientX: number, clientY: number): boolean {
+    if (this.phase !== 'PLAYING') return false;
+    const { wx, wy } = this.screenToWorld(clientX, clientY);
+    const animal = this.findClickableAnimalAt(wx, wy);
+    if (animal) {
+      audioEngine.init();
+      this.helpSickAnimal(animal);
+      return true;
+    }
+    const trash = this.findClickableTrashAt(wx, wy);
+    if (trash) {
+      audioEngine.init();
+      this.collectTrashItem(trash);
+      return true;
+    }
+    return false;
+  }
+
+  private helpSickAnimal(animal: SickAnimal): void {
+    if (animal.helped) return;
+    animal.helped = true;
+    animal.healAnimTimer = 2.0;
+
+    // 5 seconds immunity from all bad guys & 2 seconds glitter burst!
+    this.player.wardShieldTimer = 5.0;
+    this.player.glitterBurstTimer = 2.0;
+
+    this.earnDewdrops(35);
+    let healedPetal = false;
+    if (this.player.petals < this.player.maxPetals) {
+      this.player.petals++;
+      healedPetal = true;
+    }
+
+    audioEngine.playAnimalHealed();
+    this.spawnGlitterBurst(animal.x, animal.y - 24, 58, 2.0);
+    this.spawnGlitterBurst(this.player.x, this.player.y - 22, 34, 2.0);
+    this.pulses.push({
+      x: animal.x,
+      y: animal.y - 20,
+      r: 8,
+      maxR: 135,
+      alpha: 0.9,
+    });
+
+    this.floatingPopups.push({
+      x: animal.x,
+      y: animal.y - 52,
+      vy: -38,
+      text: healedPetal ? '+1 Petal · +35 Dew · 5s Safe!' : '+35 Dew · 5s Safe Shield!',
+      color: '#ffe896',
+      life: 2.1,
+      maxLife: 2.1,
+    });
+
+    this.emitHudSnapshot();
+  }
+
+  private collectTrashItem(t: TrashItem): void {
+    if (t.collected) return;
+    t.collected = true;
+    this.earnDewdrops(15);
+    audioEngine.playTrashPickup();
+    this.spawnDust(t.x, t.y - 10, '#8cf8e8', 16);
+    this.floatingPopups.push({
+      x: t.x,
+      y: t.y - 28,
+      vy: -36,
+      text: '+15 Dew · Clean Forest!',
+      color: '#9effef',
+      life: 1.5,
+      maxLife: 1.5,
+    });
+    this.emitHudSnapshot();
   }
 
   triggerJump(): void {
@@ -638,10 +790,19 @@ export class ForestGameEngine {
       const p = this.particles[i];
       p.x += p.vx * dt;
       p.y += p.vy * dt;
-      p.vx *= 0.96;
-      p.vy *= 0.96;
+      const drag = p.drag ?? 0.96;
+      p.vx *= Math.pow(drag, dt * 60);
+      p.vy *= Math.pow(drag, dt * 60);
+      if (p.gravity) p.vy += p.gravity * dt;
       p.life -= dt;
       if (p.life <= 0) this.particles.splice(i, 1);
+    }
+
+    for (let i = this.floatingPopups.length - 1; i >= 0; i--) {
+      const fp = this.floatingPopups[i];
+      fp.y += fp.vy * dt;
+      fp.life -= dt;
+      if (fp.life <= 0) this.floatingPopups.splice(i, 1);
     }
 
     for (let i = this.pulses.length - 1; i >= 0; i--) {
@@ -670,7 +831,35 @@ export class ForestGameEngine {
     p.coyoteTime = Math.max(0, p.coyoteTime - dt);
     p.jumpBuffer = Math.max(0, p.jumpBuffer - dt);
     p.invulnTimer = Math.max(0, p.invulnTimer - dt);
+    p.wardShieldTimer = Math.max(0, p.wardShieldTimer - dt);
+    p.glitterBurstTimer = Math.max(0, p.glitterBurstTimer - dt);
     p.squash = lerp(p.squash, 1, Math.min(1, dt * 12));
+
+    for (const a of this.world.sickAnimals) {
+      if (a.healAnimTimer > 0) {
+        a.healAnimTimer = Math.max(0, a.healAnimTimer - dt);
+      }
+    }
+
+    if (p.glitterBurstTimer > 0 && Math.random() < 0.7) {
+      const colors = ['#ffe885', '#ff9ee8', '#8cf8e8', '#ffffff', '#d8b4ff'];
+      const ang = Math.random() * Math.PI * 2;
+      const spd = 25 + Math.random() * 75;
+      this.particles.push({
+        x: p.x + (Math.random() - 0.5) * 24,
+        y: p.y - 18 + (Math.random() - 0.5) * 24,
+        vx: Math.cos(ang) * spd,
+        vy: Math.sin(ang) * spd - 24,
+        r: 2.4 + Math.random() * 2.4,
+        life: 0.75 + Math.random() * 0.45,
+        maxLife: 1.2,
+        color: colors[Math.floor(Math.random() * colors.length)],
+        kind: 'glitter',
+        twinklePhase: Math.random() * Math.PI * 2,
+        drag: 0.97,
+        gravity: 28,
+      });
+    }
 
     const playerBlend = getBiomeBlend(p.x, this.levelId);
     const isUnderwater = playerBlend.weights.underwater > 0.45;
@@ -1087,7 +1276,13 @@ export class ForestGameEngine {
         w.telegraphTimer = Math.max(0, w.telegraphTimer - dt * 1.5);
       }
 
-      if (distToPlayer < 26 && p.invulnTimer <= 0) {
+      if (distToPlayer < 34 && p.wardShieldTimer > 0) {
+        w.stunnedTimer = 3.5;
+        this.spawnDust(w.x, w.y, '#ffe896', 12);
+        continue;
+      }
+
+      if (distToPlayer < 26 && p.invulnTimer <= 0 && p.wardShieldTimer <= 0) {
         if (hasShield && this.shieldCooldown <= 0) {
           this.shieldCooldown = 22;
           p.invulnTimer = 1.25;
@@ -1184,8 +1379,19 @@ export class ForestGameEngine {
         continue;
       }
 
+      // Protected 5-second Safe Shield repels baddies cleanly
+      if (Math.hypot(b.x - p.x, b.y - 16 - (p.y - 20)) < 34 && p.wardShieldTimer > 0) {
+        b.stunnedTimer = 3.5;
+        this.spawnDust(b.x, b.y - 18, '#ffe896', 14);
+        continue;
+      }
+
       // Side collision check
-      if (Math.hypot(b.x - p.x, b.y - 16 - (p.y - 20)) < 25 && p.invulnTimer <= 0) {
+      if (
+        Math.hypot(b.x - p.x, b.y - 16 - (p.y - 20)) < 25 &&
+        p.invulnTimer <= 0 &&
+        p.wardShieldTimer <= 0
+      ) {
         if (hasShield && this.shieldCooldown <= 0) {
           this.shieldCooldown = 22;
           p.invulnTimer = 1.25;
@@ -1212,6 +1418,14 @@ export class ForestGameEngine {
           this.emitHudSnapshot();
           return;
         }
+      }
+    }
+
+    // Pick up Trash / Litter along the route
+    for (const trash of this.world.trashItems) {
+      if (trash.collected) continue;
+      if (Math.hypot(trash.x - p.x, trash.y - 10 - (p.y - 16)) < 38) {
+        this.collectTrashItem(trash);
       }
     }
 
@@ -1331,6 +1545,7 @@ export class ForestGameEngine {
       player: this.player,
       particles: this.particles,
       pulses: this.pulses,
+      floatingPopups: this.floatingPopups,
       weather: this.weather,
       cameraX: this.cameraX,
       cameraY: this.cameraY,
@@ -1362,6 +1577,29 @@ export class ForestGameEngine {
     }
   }
 
+  private spawnGlitterBurst(x: number, y: number, count: number, duration = 2.0): void {
+    const glitterColors = ['#ffe985', '#ff9ee8', '#8cf8e8', '#ffffff', '#c7b8ff', '#ffd078'];
+    for (let i = 0; i < count; i++) {
+      const ang = (Math.PI * 2 * i) / count + (Math.random() - 0.5) * 0.35;
+      const spd = 38 + Math.random() * 145;
+      const life = duration * (0.85 + Math.random() * 0.25);
+      this.particles.push({
+        x: x + (Math.random() - 0.5) * 14,
+        y: y + (Math.random() - 0.5) * 14,
+        vx: Math.cos(ang) * spd,
+        vy: Math.sin(ang) * spd - 55,
+        r: 2.6 + Math.random() * 3.0,
+        life,
+        maxLife: life,
+        color: glitterColors[i % glitterColors.length],
+        kind: 'glitter',
+        twinklePhase: Math.random() * Math.PI * 2,
+        drag: 0.968,
+        gravity: 36,
+      });
+    }
+  }
+
   private emitHudSnapshot(): void {
     const blend = getBiomeBlend(this.player.x, this.levelId);
     const biome = LEVEL_BIOMES[this.levelId][blend.mainIndex];
@@ -1370,6 +1608,8 @@ export class ForestGameEngine {
     const blossomsTotal = this.world.collectibles.filter((c) => c.kind === 'blossom').length;
     const crystalsTotal = this.world.collectibles.filter((c) => c.kind === 'crystal').length;
     const starseedsTotal = this.world.collectibles.filter((c) => c.kind === 'starseed').length;
+    const animalsHelped = this.world.sickAnimals.filter((a) => a.helped).length;
+    const trashCollected = this.world.trashItems.filter((t) => t.collected).length;
     const progressPct = clamp(
       Math.round(((this.player.x - 130) / (SANCTUARY_X - 130)) * 100),
       0,
@@ -1390,6 +1630,11 @@ export class ForestGameEngine {
       starseedsTotal,
       lanternsLit,
       lanternsTotal: this.world.lanterns.length,
+      animalsHelped,
+      animalsTotal: this.world.sickAnimals.length,
+      trashCollected,
+      trashTotal: this.world.trashItems.length,
+      wardShieldLeft: Math.max(0, Math.round(this.player.wardShieldTimer * 10) / 10),
       petals: this.player.petals,
       maxPetals: this.player.maxPetals,
       biomeName: biome.name,

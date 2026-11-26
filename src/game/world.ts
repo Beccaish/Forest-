@@ -14,12 +14,16 @@ import type {
   MovingPlatform,
   NearTree,
   Platform,
+  SickAnimal,
+  SickAnimalKind,
   SkyLantern,
   SkyRing,
   SpiritLantern,
   Star,
   StoneArch,
   ThornWisp,
+  TrashItem,
+  TrashKind,
   Waterfall,
   WeatherKind,
   WindStream,
@@ -474,6 +478,8 @@ export interface WorldData {
   butterflies: WoodlandButterfly[];
   creatures: MagicalCreature[];
   baddies: ForestBaddie[];
+  sickAnimals: SickAnimal[];
+  trashItems: TrashItem[];
 }
 
 export function generateWorld(levelId: LevelId = 1): WorldData {
@@ -1416,6 +1422,84 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
     };
   });
 
+  // Sick Woodland Animals along the route that players can click/tap to help!
+  const animalConfigs: Array<{ x: number; kind: SickAnimalKind; name: string }> =
+    levelId === 1
+      ? [
+          { x: 560, kind: 'hedgehog', name: 'Hedgehog' },
+          { x: 1480, kind: 'fawn', name: 'Fawn' },
+          { x: 2740, kind: 'bunny', name: 'Bunny' },
+          { x: 3940, kind: 'bird', name: 'Songbird' },
+          { x: 5340, kind: 'otter', name: 'Otter' },
+          { x: 6760, kind: 'fawn', name: 'Fawn' },
+          { x: 8120, kind: 'hedgehog', name: 'Hedgehog' },
+          { x: 9460, kind: 'bird', name: 'Songbird' },
+        ]
+      : levelId === 2
+        ? [
+            { x: 520, kind: 'bunny', name: 'Bunny' },
+            { x: 1440, kind: 'hedgehog', name: 'Hedgehog' },
+            { x: 2780, kind: 'bird', name: 'Songbird' },
+            { x: 3880, kind: 'fawn', name: 'Fawn' },
+            { x: 5320, kind: 'otter', name: 'Otter' },
+            { x: 6680, kind: 'hedgehog', name: 'Hedgehog' },
+            { x: 8080, kind: 'bunny', name: 'Bunny' },
+            { x: 9380, kind: 'fawn', name: 'Fawn' },
+          ]
+        : levelId === 3
+          ? [
+              { x: 540, kind: 'fawn', name: 'Fawn' },
+              { x: 1460, kind: 'otter', name: 'Otter' },
+              { x: 2680, kind: 'bird', name: 'Songbird' },
+              { x: 3820, kind: 'bunny', name: 'Bunny' },
+              { x: 5260, kind: 'hedgehog', name: 'Hedgehog' },
+              { x: 6700, kind: 'fawn', name: 'Fawn' },
+              { x: 8040, kind: 'bird', name: 'Songbird' },
+              { x: 9360, kind: 'otter', name: 'Otter' },
+            ]
+          : [
+              { x: 540, kind: 'bunny', name: 'Snow Hare' },
+              { x: 1420, kind: 'otter', name: 'River Otter' },
+              { x: 2640, kind: 'hedgehog', name: 'Hedgehog' },
+              { x: 3780, kind: 'bird', name: 'Frost Robin' },
+              { x: 5220, kind: 'fawn', name: 'Alpine Fawn' },
+              { x: 6640, kind: 'bunny', name: 'Snow Hare' },
+              { x: 8020, kind: 'hedgehog', name: 'Hedgehog' },
+              { x: 9320, kind: 'fawn', name: 'Alpine Fawn' },
+            ];
+
+  const sickAnimals: SickAnimal[] = animalConfigs.map((cfg, idx) => ({
+    id: idx + 1,
+    kind: cfg.kind,
+    name: cfg.name,
+    x: cfg.x,
+    y: getTerrainY(cfg.x, levelId),
+    helped: false,
+    healAnimTimer: 0,
+    phase: rng() * Math.PI * 2,
+    facing: idx % 2 === 0 ? -1 : 1,
+  }));
+
+  // Scattered Trash / Litter along the route to clean up!
+  const trashXs =
+    levelId === 1
+      ? [330, 920, 1340, 1920, 2440, 3100, 3680, 4340, 5020, 5780, 6580, 7320, 8240, 9080, 9840]
+      : levelId === 2
+        ? [350, 880, 1320, 1890, 2400, 3140, 3720, 4380, 5080, 5820, 6620, 7360, 8280, 9120, 9880]
+        : levelId === 3
+          ? [360, 910, 1360, 1950, 2460, 3180, 3760, 4420, 5100, 5860, 6660, 7400, 8320, 9160, 9920]
+          : [340, 890, 1330, 1910, 2420, 3120, 3700, 4360, 5060, 5800, 6600, 7340, 8260, 9100, 9860];
+  const trashKinds: TrashKind[] = ['bottle', 'can', 'wrapper', 'cup'];
+  const trashItems: TrashItem[] = trashXs.map((tx, idx) => ({
+    id: idx + 1,
+    kind: trashKinds[idx % trashKinds.length],
+    x: tx,
+    y: getTerrainY(tx, levelId),
+    collected: false,
+    phase: rng() * Math.PI * 2,
+    rot: (rng() - 0.5) * 0.55,
+  }));
+
   return {
     levelId,
     stars,
@@ -1440,5 +1524,7 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
     butterflies,
     creatures,
     baddies,
+    sickAnimals,
+    trashItems,
   };
 }

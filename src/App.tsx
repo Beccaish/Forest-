@@ -62,6 +62,11 @@ const INITIAL_HUD: HudSnapshot = {
   starseedsTotal: 3,
   lanternsLit: 0,
   lanternsTotal: 8,
+  animalsHelped: 0,
+  animalsTotal: 8,
+  trashCollected: 0,
+  trashTotal: 15,
+  wardShieldLeft: 0,
   petals: 3,
   maxPetals: 3,
   biomeName: 'Emerald Sunbeam Glade',
@@ -144,6 +149,7 @@ function ForestGameView() {
   const [isTouchDevice, setIsTouchDevice] = useState<boolean>(detectCoarsePointer);
   const [isPortrait, setIsPortrait] = useState<boolean>(detectPortraitViewport);
   const [portraitDismissed, setPortraitDismissed] = useState(false);
+  const [canvasCursorPointer, setCanvasCursorPointer] = useState(false);
   const [engineError, setEngineError] = useState<string | null>(null);
 
   const showPortraitPrompt = isTouchDevice && isPortrait && !portraitDismissed;
@@ -531,8 +537,17 @@ function ForestGameView() {
     <main className="relative h-full w-full overflow-hidden bg-[#050d14]" style={{ touchAction: 'none' }}>
       <canvas
         ref={canvasRef}
-        className="block h-full w-full"
+        className={`block h-full w-full ${canvasCursorPointer ? 'cursor-pointer' : ''}`}
         style={{ touchAction: 'none' }}
+        onPointerDown={(e) => {
+          engineRef.current?.handleCanvasPointerDown(e.clientX, e.clientY);
+        }}
+        onPointerMove={(e) => {
+          if (e.pointerType === 'mouse' && engineRef.current) {
+            const hovering = engineRef.current.isInteractivePointAt(e.clientX, e.clientY);
+            setCanvasCursorPointer((prev) => (prev === hovering ? prev : hovering));
+          }
+        }}
         onTouchStart={(e) => e.preventDefault()}
       />
 

@@ -1,6 +1,7 @@
 import { backdropCache, drawParallaxBackdrop } from './backgrounds';
 import type {
   CollectibleItem,
+  FloatingPopup,
   ForestBaddie,
   GlowMushroom,
   LevelId,
@@ -10,10 +11,12 @@ import type {
   Platform,
   PlayerState,
   PulseRing,
+  SickAnimal,
   SkyRing,
   SpiritLantern,
   StoneArch,
   ThornWisp,
+  TrashItem,
   WindStream,
   WoodlandButterfly,
 } from './types';
@@ -57,6 +60,7 @@ export interface RenderContextState {
   player: PlayerState;
   particles: Particle[];
   pulses: PulseRing[];
+  floatingPopups: FloatingPopup[];
   weather: DynamicWeatherSystem;
   cameraX: number;
   cameraY: number;
@@ -79,6 +83,7 @@ export function renderForestScene(
     player,
     particles,
     pulses,
+    floatingPopups,
     weather,
     cameraX,
     cameraY,
@@ -312,6 +317,16 @@ export function renderForestScene(
 
   drawGrassAndFlowers(ctx, world, levelId, cameraX, virtualW);
 
+  for (const trash of world.trashItems) {
+    if (trash.collected || trash.x + 50 < cameraX || trash.x - 50 > cameraX + virtualW) continue;
+    drawTrashItem(ctx, trash, time);
+  }
+
+  for (const animal of world.sickAnimals) {
+    if (animal.x + 90 < cameraX || animal.x - 90 > cameraX + virtualW) continue;
+    drawSickAnimal(ctx, animal, time);
+  }
+
   for (const c of world.creatures) {
     if (c.homeX + 90 < cameraX || c.homeX - 90 > cameraX + virtualW) continue;
     if (c.emerge > 0.04) {
@@ -359,14 +374,62 @@ export function renderForestScene(
   drawPlayer(ctx, player, time, equipped);
 
   for (const p of particles) {
-    const alpha = clamp(p.life / p.maxLife, 0, 1);
-    ctx.globalAlpha = alpha;
-    ctx.fillStyle = p.color;
-    ctx.beginPath();
-    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-    ctx.fill();
+    const lifeNorm = clamp(p.life / p.maxLife, 0, 1);
+    if (p.kind === 'glitter') {
+      const twinkle = 0.45 + 0.55 * Math.abs(Math.sin(time * 14 + (p.twinklePhase ?? 0)));
+      const alpha = clamp(lifeNorm * 1.35, 0, 1) * twinkle;
+      const size = p.r * (0.75 + 0.5 * twinkle);
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(p.x, p.y);
+      ctx.rotate(time * 2.5 + (p.twinklePhase ?? 0));
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 10;
+      // 4-point star glitter mote
+      ctx.beginPath();
+      for (let i = 0; i < 8; i++) {
+        const rad = i % 2 === 0 ? size * 1.45 : size * 0.38;
+        const ang = (i * Math.PI) / 4;
+        if (i === 0) ctx.moveTo(Math.cos(ang) * rad, Math.sin(ang) * rad);
+        else ctx.lineTo(Math.cos(ang) * rad, Math.sin(ang) * rad);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(0, 0, Math.max(0.9, size * 0.34), 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    } else {
+      ctx.globalAlpha = lifeNorm;
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
   ctx.globalAlpha = 1;
+
+  for (const fp of floatingPopups) {
+    const alpha = clamp(fp.life / Math.min(0.65, fp.maxLife), 0, 1);
+    ctx.save();
+    ctx.globalAlpha = alpha;
+    ctx.font = '600 12px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const textW = ctx.measureText(fp.text).width + 16;
+    ctx.fillStyle = 'rgba(5, 19, 28, 0.78)';
+    ctx.beginPath();
+    ctx.roundRect(fp.x - textW * 0.5, fp.y - 11, textW, 22, 11);
+    ctx.fill();
+    ctx.strokeStyle = fp.color;
+    ctx.lineWidth = 1.1;
+    ctx.stroke();
+    ctx.fillStyle = fp.color;
+    ctx.fillText(fp.text, fp.x, fp.y + 0.5);
+    ctx.restore();
+  }
 
   ctx.restore();
 
@@ -2602,6 +2665,477 @@ function drawPlayer(
   ctx.beginPath();
   ctx.arc(5, -29, 1.8, 0, Math.PI * 2);
   ctx.fill();
+
+  ctx.restore();
+
+  // 5-second Safe Sanctuary Shield around Spirit after helping a sick animal
+  if (player.wardShieldTimer > 0) {
+    ctx.save();
+    const shieldCenterY = player.y - 22;
+    const pulseR = 34 + Math.sin(time * 7) * 2.5;
+    const shieldGrad = ctx.createRadialGradient(
+      player.x,
+      shieldCenterY,
+      10,
+      player.x,
+      shieldCenterY,
+      pulseR + 8
+    );
+    shieldGrad.addColorStop(0, 'rgba(255, 238, 150, 0.05)');
+    shieldGrad.addColorStop(0.7, 'rgba(130, 255, 230, 0.24)');
+    shieldGrad.addColorStop(1, 'rgba(255, 232, 145, 0)');
+    ctx.fillStyle = shieldGrad;
+    ctx.beginPath();
+    ctx.arc(player.x, shieldCenterY, pulseR + 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = 'rgba(255, 232, 145, 0.88)';
+    ctx.lineWidth = 2.2;
+    ctx.shadowColor = '#ffe48f';
+    ctx.shadowBlur = 14;
+    ctx.beginPath();
+    ctx.arc(player.x, shieldCenterY, pulseR, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Orbiting protective star crests
+    for (let s = 0; s < 3; s++) {
+      const ang = time * 3.4 + (s * Math.PI * 2) / 3;
+      const sx = player.x + Math.cos(ang) * pulseR;
+      const sy = shieldCenterY + Math.sin(ang) * pulseR;
+      ctx.fillStyle = s % 2 === 0 ? '#ffe99e' : '#8cf8e8';
+      ctx.beginPath();
+      ctx.arc(sx, sy, 3.1, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+  }
+}
+
+function drawTrashItem(ctx: CanvasRenderingContext2D, t: TrashItem, time: number): void {
+  ctx.save();
+  const glint = 0.5 + 0.5 * Math.sin(time * 3.6 + t.phase);
+
+  // Subtle eco-cleanup ring underneath so litter stands out cleanly on grass or snow
+  ctx.fillStyle = `rgba(124, 252, 231, ${0.14 + glint * 0.14})`;
+  ctx.beginPath();
+  ctx.ellipse(t.x, t.y - 2, 15, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.translate(t.x, t.y - 7);
+  ctx.rotate(t.rot);
+
+  if (t.kind === 'bottle') {
+    // Tilted plastic/glass bottle
+    ctx.fillStyle = 'rgba(175, 232, 245, 0.85)';
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.roundRect(-8, -4.5, 13, 9, 3);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#ff7b7b';
+    ctx.fillRect(5, -2.5, 4, 5);
+    // Label stripe
+    ctx.fillStyle = '#56b4e9';
+    ctx.fillRect(-4, -4, 5, 8);
+  } else if (t.kind === 'can') {
+    // Dented tin soda can
+    ctx.fillStyle = '#d4e2eb';
+    ctx.strokeStyle = '#708796';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.roundRect(-7, -5, 14, 10, 2);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#ff6b78';
+    ctx.fillRect(-3, -4.5, 6, 9);
+  } else if (t.kind === 'wrapper') {
+    // Crumpled bright snack wrapper
+    ctx.fillStyle = '#ffd166';
+    ctx.strokeStyle = '#d96b43';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-9, -4);
+    ctx.lineTo(-4, -6);
+    ctx.lineTo(4, -3);
+    ctx.lineTo(9, -5);
+    ctx.lineTo(7, 5);
+    ctx.lineTo(0, 3);
+    ctx.lineTo(-7, 5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  } else {
+    // Discarded takeaway cup with lid & straw
+    ctx.fillStyle = '#f5f7fa';
+    ctx.strokeStyle = '#7a8e9c';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-6, -5);
+    ctx.lineTo(6, -5);
+    ctx.lineTo(4.5, 6);
+    ctx.lineTo(-4.5, 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#e76f51';
+    ctx.fillRect(-7, -7, 14, 2.5);
+    ctx.strokeStyle = '#56e3cc';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(2, -7);
+    ctx.lineTo(5, -13);
+    ctx.stroke();
+  }
+
+  // Tiny glint spark above litter
+  ctx.rotate(-t.rot);
+  ctx.fillStyle = `rgba(185, 255, 240, ${0.45 + glint * 0.5})`;
+  ctx.beginPath();
+  ctx.arc(0, -14 - glint * 2, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawSickAnimal(ctx: CanvasRenderingContext2D, a: SickAnimal, time: number): void {
+  ctx.save();
+  const helped = a.helped;
+  const shiver = helped ? 0 : Math.sin(time * 22 + a.phase) * 1.1;
+  const happyHop = helped ? Math.abs(Math.sin(time * 6.5 + a.phase)) * 6 : 0;
+
+  // Soft aura behind animal (worried violet-blue when sick, warm gold-mint when helped)
+  const auraR = helped && a.healAnimTimer > 0 ? 48 + (2 - a.healAnimTimer) * 14 : 34;
+  const aura = ctx.createRadialGradient(a.x, a.y - 16, 3, a.x, a.y - 16, auraR);
+  if (helped) {
+    aura.addColorStop(0, 'rgba(255, 236, 150, 0.72)');
+    aura.addColorStop(0.55, 'rgba(124, 252, 231, 0.3)');
+    aura.addColorStop(1, 'rgba(124, 252, 231, 0)');
+  } else {
+    aura.addColorStop(0, 'rgba(165, 195, 255, 0.55)');
+    aura.addColorStop(0.55, 'rgba(255, 145, 185, 0.25)');
+    aura.addColorStop(1, 'rgba(145, 165, 255, 0)');
+  }
+  ctx.fillStyle = aura;
+  ctx.beginPath();
+  ctx.arc(a.x, a.y - 16, auraR, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Animated expanding glitter ring for 2 seconds right after helping!
+  if (helped && a.healAnimTimer > 0) {
+    const prog = 1 - a.healAnimTimer / 2.0;
+    ctx.save();
+    ctx.strokeStyle = `rgba(255, 232, 145, ${(1 - prog) * 0.9})`;
+    ctx.lineWidth = 2.4;
+    ctx.beginPath();
+    ctx.arc(a.x, a.y - 18, 16 + prog * 44, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  ctx.save();
+  ctx.translate(a.x + shiver, a.y - happyHop);
+  ctx.scale(a.facing, helped ? 1 : 0.93);
+
+  if (a.kind === 'hedgehog') {
+    // Spiny back
+    ctx.fillStyle = '#6e4e42';
+    ctx.beginPath();
+    ctx.arc(-1, -10, 13, Math.PI, 0);
+    ctx.closePath();
+    ctx.fill();
+    // Little spine tips
+    ctx.fillStyle = '#8c695a';
+    for (let s = -10; s <= 6; s += 4) {
+      ctx.beginPath();
+      ctx.moveTo(s - 3, -17);
+      ctx.lineTo(s, -25);
+      ctx.lineTo(s + 3, -17);
+      ctx.closePath();
+      ctx.fill();
+    }
+    // Cream belly & snout
+    ctx.fillStyle = '#f5dec9';
+    ctx.beginPath();
+    ctx.ellipse(5, -7, 9, 6.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Tiny nose & eye
+    ctx.fillStyle = '#241816';
+    ctx.beginPath();
+    ctx.arc(13.5, -7.5, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+    if (helped) {
+      ctx.fillStyle = '#1b1414';
+      ctx.beginPath();
+      ctx.arc(7.5, -9, 1.5, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = '#3a2926';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(5.5, -9.5);
+      ctx.lineTo(9.5, -8.5);
+      ctx.stroke();
+    }
+  } else if (a.kind === 'fawn') {
+    // Slender legs
+    ctx.strokeStyle = '#c48352';
+    ctx.lineWidth = 2.6;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(-6, -8);
+    ctx.lineTo(-6, 0);
+    ctx.moveTo(5, -8);
+    ctx.lineTo(5, 0);
+    ctx.stroke();
+    // Warm fawn body + white spots
+    ctx.fillStyle = '#d9955f';
+    ctx.beginPath();
+    ctx.ellipse(0, -12, 12, 7.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#fff3df';
+    ctx.beginPath();
+    ctx.arc(-5, -13, 1.6, 0, Math.PI * 2);
+    ctx.arc(-1, -15, 1.5, 0, Math.PI * 2);
+    ctx.arc(2, -12, 1.3, 0, Math.PI * 2);
+    ctx.fill();
+    // Neck & head (drooping slightly when sick)
+    const headDrop = helped ? 0 : 4;
+    ctx.fillStyle = '#d9955f';
+    ctx.beginPath();
+    ctx.ellipse(8, -19 + headDrop * 0.4, 4, 7, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(11, -24 + headDrop, 6.2, 0, Math.PI * 2);
+    ctx.fill();
+    // Ears
+    ctx.beginPath();
+    ctx.ellipse(6, -29 + headDrop, 2.4, 5, helped ? -0.3 : -1.1, 0, Math.PI * 2);
+    ctx.fill();
+    // Eye & nose
+    ctx.fillStyle = '#241812';
+    ctx.beginPath();
+    ctx.arc(16.5, -23.5 + headDrop, 1.4, 0, Math.PI * 2);
+    ctx.fill();
+    if (helped) {
+      ctx.beginPath();
+      ctx.arc(12.2, -25 + headDrop, 1.4, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = '#2b1b14';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(10.5, -25 + headDrop);
+      ctx.lineTo(13.8, -24.2 + headDrop);
+      ctx.stroke();
+    }
+  } else if (a.kind === 'bunny') {
+    // Fluffy tail
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.arc(-10, -7, 3.8, 0, Math.PI * 2);
+    ctx.fill();
+    // Plump body
+    ctx.fillStyle = '#f2f7ff';
+    ctx.beginPath();
+    ctx.ellipse(-1, -10, 9.5, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Head
+    ctx.beginPath();
+    ctx.arc(7, -17, 6.2, 0, Math.PI * 2);
+    ctx.fill();
+    // Long ears (flopped down when sick, perked tall when helped!)
+    ctx.fillStyle = '#e2edff';
+    if (helped) {
+      ctx.beginPath();
+      ctx.ellipse(5, -28, 2.5, 7, -0.15, 0, Math.PI * 2);
+      ctx.ellipse(8.5, -28, 2.5, 7, 0.15, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.beginPath();
+      ctx.ellipse(2, -16, 2.4, 6.5, -1.2, 0, Math.PI * 2);
+      ctx.ellipse(4, -14, 2.2, 6, -1.0, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // Pink nose & eye
+    ctx.fillStyle = '#ff8eb3';
+    ctx.beginPath();
+    ctx.arc(12.8, -16.5, 1.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#1f2836';
+    if (helped) {
+      ctx.beginPath();
+      ctx.arc(9.2, -18, 1.4, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = '#334054';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(7.6, -18.3);
+      ctx.lineTo(10.8, -17.5);
+      ctx.stroke();
+    }
+  } else if (a.kind === 'bird') {
+    // Little legs
+    ctx.strokeStyle = '#ffb36b';
+    ctx.lineWidth = 1.8;
+    ctx.beginPath();
+    ctx.moveTo(-2, -6);
+    ctx.lineTo(-2, 0);
+    ctx.moveTo(3, -6);
+    ctx.lineTo(3, 0);
+    ctx.stroke();
+    // Robin/Songbird body & warm breast
+    ctx.fillStyle = '#5c97c9';
+    ctx.beginPath();
+    ctx.ellipse(0, -11, 9.5, 7.5, -0.15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ff986e';
+    ctx.beginPath();
+    ctx.ellipse(4.5, -10, 5.2, 5.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Head
+    ctx.fillStyle = '#5c97c9';
+    ctx.beginPath();
+    ctx.arc(6.5, -18, 5.4, 0, Math.PI * 2);
+    ctx.fill();
+    // Wing (drooping when sick, fluttering up when helped)
+    ctx.fillStyle = '#3e73a3';
+    const wingAngle = helped ? -0.45 + Math.sin(time * 16) * 0.25 : 0.35;
+    ctx.beginPath();
+    ctx.ellipse(-2, -11, 6.5, 3.6, wingAngle, 0, Math.PI * 2);
+    ctx.fill();
+    // Beak
+    ctx.fillStyle = '#ffd166';
+    ctx.beginPath();
+    ctx.moveTo(11.5, -18.5);
+    ctx.lineTo(16, -17);
+    ctx.lineTo(11.5, -15.5);
+    ctx.closePath();
+    ctx.fill();
+    // Eye
+    ctx.fillStyle = '#152230';
+    if (helped) {
+      ctx.beginPath();
+      ctx.arc(8.2, -19, 1.3, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = '#1d2d3d';
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(6.8, -19);
+      ctx.lineTo(9.8, -18.3);
+      ctx.stroke();
+    }
+  } else {
+    // River Otter
+    // Long thick tail
+    ctx.fillStyle = '#704f3d';
+    ctx.beginPath();
+    ctx.moveTo(-7, -6);
+    ctx.quadraticCurveTo(-20, -4, -18, -11);
+    ctx.quadraticCurveTo(-13, -10, -6, -9);
+    ctx.fill();
+    // Body
+    ctx.fillStyle = '#855f4a';
+    ctx.beginPath();
+    ctx.ellipse(0, -10, 10.5, 8.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#e8d0b8';
+    ctx.beginPath();
+    ctx.ellipse(4, -10, 5.2, 5.8, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Head
+    ctx.fillStyle = '#855f4a';
+    ctx.beginPath();
+    ctx.arc(6.5, -19, 6.2, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#e8d0b8';
+    ctx.beginPath();
+    ctx.ellipse(9.5, -17.5, 3.5, 2.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+    // Tiny ears & nose
+    ctx.fillStyle = '#614232';
+    ctx.beginPath();
+    ctx.arc(3.5, -24.5, 2.1, 0, Math.PI * 2);
+    ctx.arc(12.2, -18.5, 1.6, 0, Math.PI * 2);
+    ctx.fill();
+    if (helped) {
+      ctx.fillStyle = '#1b1414';
+      ctx.beginPath();
+      ctx.arc(8.4, -20.5, 1.3, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.strokeStyle = '#241816';
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.moveTo(7, -20.8);
+      ctx.lineTo(9.8, -20);
+      ctx.stroke();
+    }
+  }
+
+  // Little bandage patch when sick
+  if (!helped) {
+    ctx.fillStyle = '#fff5ea';
+    ctx.strokeStyle = '#f28ca6';
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.roundRect(-4, -13, 6.5, 3.2, 1);
+    ctx.fill();
+    ctx.stroke();
+  }
+
+  ctx.restore();
+
+  // Floating Interactive Prompt above animal ("Click to Help" when sick, happy heart when helped)
+  const bob = Math.sin(time * 3.8 + a.phase) * 2.5;
+  if (!helped) {
+    const tagY = a.y - 44 + bob;
+    const label = `Help ${a.name}`;
+    ctx.font = '600 11px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    const textW = ctx.measureText(label).width;
+    const boxW = textW + 24;
+
+    ctx.fillStyle = 'rgba(7, 25, 36, 0.88)';
+    ctx.strokeStyle = '#ff9ec7';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.roundRect(a.x - boxW * 0.5, tagY - 11, boxW, 22, 11);
+    ctx.fill();
+    ctx.stroke();
+
+    // Small coral heart/plus medical mark inside pill
+    const iconX = a.x - boxW * 0.5 + 11;
+    ctx.fillStyle = '#ff85b3';
+    ctx.beginPath();
+    ctx.arc(iconX, tagY, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.moveTo(iconX - 2.3, tagY);
+    ctx.lineTo(iconX + 2.3, tagY);
+    ctx.moveTo(iconX, tagY - 2.3);
+    ctx.lineTo(iconX, tagY + 2.3);
+    ctx.stroke();
+
+    ctx.fillStyle = '#fff2f8';
+    ctx.fillText(label, a.x + 6, tagY + 0.5);
+  } else {
+    // Happy glowing golden heart above healed animal
+    const hy = a.y - 40 - happyHop + bob * 0.5;
+    ctx.fillStyle = '#ffe28a';
+    ctx.beginPath();
+    ctx.arc(a.x - 2.2, hy - 1, 2.6, 0, Math.PI * 2);
+    ctx.arc(a.x + 2.2, hy - 1, 2.6, 0, Math.PI * 2);
+    ctx.moveTo(a.x - 4.7, hy);
+    ctx.lineTo(a.x, hy + 5.2);
+    ctx.lineTo(a.x + 4.7, hy);
+    ctx.fill();
+  }
 
   ctx.restore();
 }

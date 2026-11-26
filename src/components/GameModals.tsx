@@ -212,8 +212,8 @@ export const GameModals: React.FC<GameModalsProps> = ({
 
         <p className="text-xs tracking-wide text-[#b9dfd9]/90 pt-2">
           {isTouchDevice
-            ? 'Slide Left/Right to Move · Tap Jump (Hold to Glide) · Tap Pulse to Illuminate'
-            : 'A D Move · Space Jump & Glide · E Spirit Pulse · Esc Pause'}
+            ? 'Move & Jump · Tap Sick Animals to Help (5s Safe Shield!) · Pick Up Trash'
+            : 'A D Move · Space Jump · E Pulse · Click Sick Animals to Help (5s Safe!) · Pick Up Trash'}
         </p>
       </div>
     );
@@ -370,7 +370,7 @@ export const GameModals: React.FC<GameModalsProps> = ({
                 : 'You mastered the slippery ice ridges of Frozen Pine Peaks and awakened the Aurora Summit Sanctuary!'}
         </p>
 
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 border-y border-[#7cfce7]/15 py-3 sm:py-4 mb-5 sm:mb-7">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 border-y border-[#7cfce7]/15 py-3 sm:py-4 mb-5 sm:mb-7">
           <div>
             <div className="text-base sm:text-lg font-semibold text-[#7cfce7] tabular-nums">
               {hud.orbsCollected}/{hud.orbsTotal}
@@ -395,11 +395,29 @@ export const GameModals: React.FC<GameModalsProps> = ({
             </div>
             <div className="text-[11px] sm:text-xs text-[#9ac7c1]">Star Seeds</div>
           </div>
-          <div className="col-span-2 sm:col-span-1">
-            <div className="text-base sm:text-lg font-semibold text-[#e9fbf8] tabular-nums">
-              {hud.lanternsLit}/{hud.lanternsTotal} · {formatTime(hud.elapsedSeconds)}
+          <div>
+            <div className="text-base sm:text-lg font-semibold text-[#ff9ec7] tabular-nums">
+              {hud.animalsHelped}/{hud.animalsTotal}
             </div>
-            <div className="text-[11px] sm:text-xs text-[#9ac7c1]">Lanterns · Time</div>
+            <div className="text-[11px] sm:text-xs text-[#9ac7c1]">Animals Helped</div>
+          </div>
+          <div>
+            <div className="text-base sm:text-lg font-semibold text-[#8cf8e8] tabular-nums">
+              {hud.trashCollected}/{hud.trashTotal}
+            </div>
+            <div className="text-[11px] sm:text-xs text-[#9ac7c1]">Trash Cleaned</div>
+          </div>
+          <div>
+            <div className="text-base sm:text-lg font-semibold text-[#ffe194] tabular-nums">
+              {hud.lanternsLit}/{hud.lanternsTotal}
+            </div>
+            <div className="text-[11px] sm:text-xs text-[#9ac7c1]">Lanterns</div>
+          </div>
+          <div>
+            <div className="text-base sm:text-lg font-semibold text-[#e9fbf8] tabular-nums">
+              {formatTime(hud.elapsedSeconds)}
+            </div>
+            <div className="text-[11px] sm:text-xs text-[#9ac7c1]">Time</div>
           </div>
         </div>
 
