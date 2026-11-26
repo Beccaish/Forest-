@@ -719,7 +719,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
       {/* Bottom Flat Control Hint Line (Desktop PC only) */}
       <div className="flex justify-center">
         <p className="text-xs tracking-wide text-[#cbeae5]/80 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
-          A D Move · Space Jump &amp; Glide · E Pulse · F Fly · M Mute · Esc Pause
+          A D Move · Space Jump &amp; Glide · E Pulse · H Help Animal · F Fly · M Mute · Esc Pause
         </p>
       </div>
     </div>

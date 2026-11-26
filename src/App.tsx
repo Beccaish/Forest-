@@ -163,6 +163,10 @@ function ForestGameView() {
   }, [settingsOpen]);
 
   useEffect(() => {
+    engineRef.current?.setIsTouchDevice(isTouchDevice);
+  }, [isTouchDevice]);
+
+  useEffect(() => {
     return () => {
       if (saveFeedbackTimerRef.current !== null) {
         window.clearTimeout(saveFeedbackTimerRef.current);
@@ -440,6 +444,9 @@ function ForestGameView() {
       if (e.code === 'KeyF' && !e.repeat) {
         engine.activateFlyingFlower();
       }
+      if (e.code === 'KeyH' && !e.repeat) {
+        engine.helpNearbyAnimal();
+      }
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
@@ -542,12 +549,13 @@ function ForestGameView() {
         style={{ touchAction: 'none' }}
         onPointerDown={(e) => {
           audioEngine.unlock();
-          engineRef.current?.handleCanvasPointerDown(e.clientX, e.clientY);
+          if (e.pointerType !== 'mouse') {
+            engineRef.current?.handleCanvasPointerDown(e.clientX, e.clientY);
+          }
         }}
         onPointerMove={(e) => {
-          if (e.pointerType === 'mouse' && engineRef.current) {
-            const hovering = engineRef.current.isInteractivePointAt(e.clientX, e.clientY);
-            setCanvasCursorPointer((prev) => (prev === hovering ? prev : hovering));
+          if (canvasCursorPointer && e.pointerType === 'mouse') {
+            setCanvasCursorPointer(false);
           }
         }}
         onContextMenu={(e) => e.preventDefault()}

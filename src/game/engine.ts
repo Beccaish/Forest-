@@ -83,6 +83,10 @@ export class ForestGameEngine {
   private shieldCooldown = 0;
   private onIcePlatform = false;
   private onSnowGround = false;
+  private isTouchDevice =
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    Boolean(window.matchMedia('(pointer: coarse)')?.matches);
 
   public input: InputState = {
     left: false,
@@ -505,18 +509,68 @@ export class ForestGameEngine {
     return Boolean(this.findClickableAnimalAt(wx, wy) || this.findClickableTrashAt(wx, wy));
   }
 
+  setIsTouchDevice(isTouch: boolean): void {
+    this.isTouchDevice = isTouch;
+  }
+
+  helpNearbyAnimal(): boolean {
+    if (this.phase !== 'PLAYING') return false;
+    let bestAnimal: SickAnimal | null = null;
+    let bestAnimalDist = Infinity;
+    for (const a of this.world.sickAnimals) {
+      if (a.helped) continue;
+      const dist = Math.hypot(this.player.x - a.x, this.player.y - a.y);
+      if (dist <= 220 && dist < bestAnimalDist) {
+        bestAnimalDist = dist;
+        bestAnimal = a;
+      }
+    }
+    if (bestAnimal) {
+      audioEngine.unlock();
+      this.helpSickAnimal(bestAnimal);
+      return true;
+    }
+
+    let bestTrash: TrashItem | null = null;
+    let bestTrashDist = Infinity;
+    for (const t of this.world.trashItems) {
+      if (t.collected) continue;
+      const dist = Math.hypot(this.player.x - t.x, this.player.y - t.y);
+      if (dist <= 140 && dist < bestTrashDist) {
+        bestTrashDist = dist;
+        bestTrash = t;
+      }
+    }
+    if (bestTrash) {
+      audioEngine.unlock();
+      this.collectTrashItem(bestTrash);
+      return true;
+    }
+
+    this.floatingPopups.push({
+      x: this.player.x,
+      y: this.player.y - 46,
+      vy: -28,
+      text: 'Walk near an animal & press H',
+      color: '#ffd2e6',
+      life: 1.25,
+      maxLife: 1.25,
+    });
+    return false;
+  }
+
   handleCanvasPointerDown(clientX: number, clientY: number): boolean {
     if (this.phase !== 'PLAYING') return false;
     const { wx, wy } = this.screenToWorld(clientX, clientY);
     const animal = this.findClickableAnimalAt(wx, wy);
     if (animal) {
-      audioEngine.init();
+      audioEngine.unlock();
       this.helpSickAnimal(animal);
       return true;
     }
     const trash = this.findClickableTrashAt(wx, wy);
     if (trash) {
-      audioEngine.init();
+      audioEngine.unlock();
       this.collectTrashItem(trash);
       return true;
     }
@@ -1557,6 +1611,7 @@ export class ForestGameEngine {
       time: this.time,
       sanctuaryAwakened: this.sanctuaryAwakened,
       equipped: this.shopProgress.equipped,
+      isTouchDevice: this.isTouchDevice,
     });
   }
 

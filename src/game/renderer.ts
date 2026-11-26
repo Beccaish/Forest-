@@ -72,6 +72,7 @@ export interface RenderContextState {
   time: number;
   sanctuaryAwakened: boolean;
   equipped: PlayerLoadout;
+  isTouchDevice?: boolean;
 }
 
 export function renderForestScene(
@@ -324,7 +325,7 @@ export function renderForestScene(
 
   for (const animal of world.sickAnimals) {
     if (animal.x + 90 < cameraX || animal.x - 90 > cameraX + virtualW) continue;
-    drawSickAnimal(ctx, animal, time);
+    drawSickAnimal(ctx, animal, time, player.x, player.y, Boolean(state.isTouchDevice));
   }
 
   for (const c of world.creatures) {
@@ -2798,7 +2799,14 @@ function drawTrashItem(ctx: CanvasRenderingContext2D, t: TrashItem, time: number
   ctx.restore();
 }
 
-function drawSickAnimal(ctx: CanvasRenderingContext2D, a: SickAnimal, time: number): void {
+function drawSickAnimal(
+  ctx: CanvasRenderingContext2D,
+  a: SickAnimal,
+  time: number,
+  playerX: number,
+  playerY: number,
+  isTouchDevice: boolean
+): void {
   ctx.save();
   const helped = a.helped;
   const shiver = helped ? 0 : Math.sin(time * 22 + a.phase) * 1.1;
@@ -3088,42 +3096,95 @@ function drawSickAnimal(ctx: CanvasRenderingContext2D, a: SickAnimal, time: numb
 
   ctx.restore();
 
-  // Floating Interactive Prompt above animal ("Click to Help" when sick, happy heart when helped)
+  // Floating Interactive Prompt above animal
+  // Mobile: unchanged "Help <Name>" tap badge; Desktop: clear [H] keycap badge + range highlight
   const bob = Math.sin(time * 3.8 + a.phase) * 2.5;
   if (!helped) {
     const tagY = a.y - 44 + bob;
-    const label = `Help ${a.name}`;
-    ctx.font = '600 11px "Plus Jakarta Sans", sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const textW = ctx.measureText(label).width;
-    const boxW = textW + 24;
+    if (isTouchDevice) {
+      const label = `Help ${a.name}`;
+      ctx.font = '600 11px "Plus Jakarta Sans", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      const textW = ctx.measureText(label).width;
+      const boxW = textW + 24;
 
-    ctx.fillStyle = 'rgba(7, 25, 36, 0.88)';
-    ctx.strokeStyle = '#ff9ec7';
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    ctx.roundRect(a.x - boxW * 0.5, tagY - 11, boxW, 22, 11);
-    ctx.fill();
-    ctx.stroke();
+      ctx.fillStyle = 'rgba(7, 25, 36, 0.88)';
+      ctx.strokeStyle = '#ff9ec7';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.roundRect(a.x - boxW * 0.5, tagY - 11, boxW, 22, 11);
+      ctx.fill();
+      ctx.stroke();
 
-    // Small coral heart/plus medical mark inside pill
-    const iconX = a.x - boxW * 0.5 + 11;
-    ctx.fillStyle = '#ff85b3';
-    ctx.beginPath();
-    ctx.arc(iconX, tagY, 4.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    ctx.moveTo(iconX - 2.3, tagY);
-    ctx.lineTo(iconX + 2.3, tagY);
-    ctx.moveTo(iconX, tagY - 2.3);
-    ctx.lineTo(iconX, tagY + 2.3);
-    ctx.stroke();
+      // Small coral heart/plus medical mark inside pill
+      const iconX = a.x - boxW * 0.5 + 11;
+      ctx.fillStyle = '#ff85b3';
+      ctx.beginPath();
+      ctx.arc(iconX, tagY, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(iconX - 2.3, tagY);
+      ctx.lineTo(iconX + 2.3, tagY);
+      ctx.moveTo(iconX, tagY - 2.3);
+      ctx.lineTo(iconX, tagY + 2.3);
+      ctx.stroke();
 
-    ctx.fillStyle = '#fff2f8';
-    ctx.fillText(label, a.x + 6, tagY + 0.5);
+      ctx.fillStyle = '#fff2f8';
+      ctx.fillText(label, a.x + 6, tagY + 0.5);
+    } else {
+      const inRange = Math.hypot(playerX - a.x, playerY - a.y) <= 220;
+      const label = inRange ? `Press H · Help ${a.name}` : `Help ${a.name}`;
+      ctx.font = '600 11px "Plus Jakarta Sans", sans-serif';
+      ctx.textBaseline = 'middle';
+      const textW = ctx.measureText(label).width;
+      const keyW = 18;
+      const padX = 8;
+      const gap = 6;
+      const boxW = padX * 2 + keyW + gap + textW;
+      const leftX = a.x - boxW * 0.5;
+
+      if (inRange) {
+        ctx.save();
+        ctx.shadowColor = 'rgba(255, 226, 138, 0.55)';
+        ctx.shadowBlur = 10;
+        ctx.fillStyle = 'rgba(11, 34, 46, 0.94)';
+        ctx.strokeStyle = '#ffe28a';
+        ctx.lineWidth = 1.7;
+        ctx.beginPath();
+        ctx.roundRect(leftX, tagY - 12, boxW, 24, 7);
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      } else {
+        ctx.fillStyle = 'rgba(7, 25, 36, 0.88)';
+        ctx.strokeStyle = '#ff9ec7';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.roundRect(leftX, tagY - 12, boxW, 24, 7);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      // Crisp keyboard [H] keycap badge on the left
+      const keyX = leftX + padX;
+      ctx.fillStyle = inRange ? '#ffe28a' : '#ffd2e6';
+      ctx.beginPath();
+      ctx.roundRect(keyX, tagY - 8.5, keyW, 17, 4);
+      ctx.fill();
+
+      ctx.fillStyle = '#071924';
+      ctx.font = '700 10.5px "Plus Jakarta Sans", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('H', keyX + keyW * 0.5, tagY + 0.5);
+
+      ctx.fillStyle = inRange ? '#fff9e2' : '#fff2f8';
+      ctx.font = '600 11px "Plus Jakarta Sans", sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(label, keyX + keyW + gap, tagY + 0.5);
+    }
   } else {
     // Happy glowing golden heart above healed animal
     const hy = a.y - 40 - happyHop + bob * 0.5;

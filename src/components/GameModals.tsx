@@ -213,7 +213,7 @@ export const GameModals: React.FC<GameModalsProps> = ({
         <p className="text-xs tracking-wide text-[#b9dfd9]/90 pt-2">
           {isTouchDevice
             ? 'Move & Jump · Tap Sick Animals to Help (5s Safe Shield!) · Pick Up Trash'
-            : 'A D Move · Space Jump · E Pulse · Click Sick Animals to Help (5s Safe!) · Pick Up Trash'}
+            : 'A D Move · Space Jump · E Pulse · H Help Sick Animals (5s Safe!) · Walk Over Trash'}
         </p>
       </div>
     );
