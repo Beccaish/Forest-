@@ -1,15 +1,18 @@
-import { Component, type ErrorInfo, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
+import { Component, Suspense, lazy, type ErrorInfo, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { GameHUD } from './components/GameHUD';
 import { GameModals } from './components/GameModals';
 import { PortraitPrompt } from './components/PortraitPrompt';
 import { SettingsModal } from './components/SettingsModal';
-import { ShopModal } from './components/ShopModal';
 import { type MobileControlStyle, TouchControls } from './components/TouchControls';
 import { audioEngine } from './game/audio';
 import { ForestGameEngine } from './game/engine';
 import { getSavedGameSummary } from './game/save';
 import { loadShopProgress, type SavedShopProgress, type ShopItemId } from './game/shop';
 import type { HudSnapshot } from './game/types';
+
+const LazyShopModal = lazy(() =>
+  import('./components/ShopModal').then((mod) => ({ default: mod.ShopModal }))
+);
 
 class GameErrorBoundary extends Component<
   { children: ReactNode },
@@ -28,7 +31,7 @@ class GameErrorBoundary extends Component<
   render() {
     if (this.state.errorMessage) {
       return (
-        <main className="flex h-dvh w-screen flex-col items-center justify-center bg-[#050d14] px-6 text-center text-[#eafbf8]">
+        <main className="flex h-full w-full flex-col items-center justify-center bg-[#050d14] px-6 text-center text-[#eafbf8]">
           <h1 className="font-display text-2xl font-semibold mb-2">Whispering Grove</h1>
           <p className="max-w-md text-sm text-[#b6ddd7] mb-5">{this.state.errorMessage}</p>
           <button
@@ -78,7 +81,7 @@ const INITIAL_HUD: HudSnapshot = {
 
 function detectCoarsePointer(): boolean {
   if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
-  return window.matchMedia('(pointer: coarse)').matches;
+  return Boolean(window.matchMedia('(pointer: coarse)')?.matches);
 }
 
 function detectPortraitViewport(): boolean {
@@ -124,6 +127,7 @@ function ForestGameView() {
   const [isTouchDevice, setIsTouchDevice] = useState<boolean>(detectCoarsePointer);
   const [isPortrait, setIsPortrait] = useState<boolean>(detectPortraitViewport);
   const [portraitDismissed, setPortraitDismissed] = useState(false);
+  const [engineError, setEngineError] = useState<string | null>(null);
 
   const showPortraitPrompt = isTouchDevice && isPortrait && !portraitDismissed;
 
@@ -298,11 +302,17 @@ function ForestGameView() {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const engine = new ForestGameEngine(canvas, (snapshot) => {
-      setHud(snapshot);
-    });
-    engineRef.current = engine;
-    engine.start();
+    let engine: ForestGameEngine;
+    try {
+      engine = new ForestGameEngine(canvas, (snapshot) => {
+        setHud(snapshot);
+      });
+      engineRef.current = engine;
+      engine.start();
+    } catch (err) {
+      setEngineError(err instanceof Error ? err.message : 'Unable to start forest canvas');
+      return;
+    }
 
     const pointerQuery =
       typeof window.matchMedia === 'function' ? window.matchMedia('(pointer: coarse)') : null;
@@ -473,8 +483,24 @@ function ForestGameView() {
     };
   }, []);
 
+  if (engineError) {
+    return (
+      <main className="flex h-full w-full flex-col items-center justify-center bg-[#050d14] px-6 text-center text-[#eafbf8]">
+        <h1 className="font-display text-2xl font-semibold mb-2">Whispering Grove</h1>
+        <p className="max-w-md text-sm text-[#b6ddd7] mb-5">{engineError}</p>
+        <button
+          type="button"
+          onClick={() => window.location.reload()}
+          className="min-h-[44px] rounded-md bg-[#56e3cc] px-6 py-2.5 text-sm font-semibold text-[#041b1f]"
+        >
+          Reload Game
+        </button>
+      </main>
+    );
+  }
+
   return (
-    <main className="relative h-dvh w-screen overflow-hidden bg-[#050d14]" style={{ touchAction: 'none' }}>
+    <main className="relative h-full w-full overflow-hidden bg-[#050d14]" style={{ touchAction: 'none' }}>
       <canvas
         ref={canvasRef}
         className="block h-full w-full"
@@ -525,13 +551,23 @@ function ForestGameView() {
         onOpenSettings={handleOpenSettings}
       />
 
-      <ShopModal
-        visible={shopOpen}
-        progress={shopProgress}
-        onBuy={handleBuyItem}
-        onToggleEquip={handleToggleEquipItem}
-        onClose={handleCloseShop}
-      />
+      {shopOpen && (
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-30 flex items-center justify-center bg-[#0f2b21]/60 text-sm font-semibold text-[#eafbf8]">
+              Opening Grove Shop...
+            </div>
+          }
+        >
+          <LazyShopModal
+            visible={shopOpen}
+            progress={shopProgress}
+            onBuy={handleBuyItem}
+            onToggleEquip={handleToggleEquipItem}
+            onClose={handleCloseShop}
+          />
+        </Suspense>
+      )}
 
       <SettingsModal
         visible={settingsOpen}

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { Component, Suspense, lazy, type ReactNode, useEffect, useMemo, useState } from 'react';
 import meadowBackdropImg from '../assets/images/shop_meadow_backdrop_1795684177280.jpg';
 import {
   SHOP_ITEMS,
@@ -8,7 +8,32 @@ import {
   type ShopItem,
   type ShopItemId,
 } from '../game/shop';
-import { ShopSpirit3DPreview } from './ShopSpirit3DPreview';
+
+const LazyShopSpirit3DPreview = lazy(() =>
+  import('./ShopSpirit3DPreview').then((mod) => ({ default: mod.ShopSpirit3DPreview }))
+);
+
+class PreviewErrorBoundary extends Component<
+  { children: ReactNode },
+  { hasError: boolean }
+> {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex h-[260px] sm:h-[300px] w-full items-center justify-center rounded-xl border-2 border-[#9cd3b2] bg-[#e8f6ec] p-4 text-center text-sm font-medium text-[#11352a]">
+          3D preview unavailable on this device — you can still try on, buy, and equip all items.
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
 
 interface ShopModalProps {
   visible: boolean;
@@ -485,7 +510,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({
       aria-modal="true"
       aria-labelledby="grove-shop-title"
     >
-      <div className="relative w-full max-w-6xl max-h-[93dvh] flex flex-col rounded-2xl border-2 border-[#8ec8a7] bg-[#f4fbf5] shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-6xl max-h-[93vh] max-h-[93dvh] flex flex-col rounded-2xl border-2 border-[#8ec8a7] bg-[#f4fbf5] shadow-2xl overflow-hidden">
         {/* Bright sunlit enchanted meadow wash */}
         <img
           src={meadowBackdropImg}
@@ -529,13 +554,23 @@ export const ShopModal: React.FC<ShopModalProps> = ({
           <div className="grid grid-cols-1 lg:grid-cols-[400px_1fr] gap-5 sm:gap-6 items-start">
             {/* Left Column: 3D Forest Turntable & Try-On Status */}
             <div className="rounded-xl border border-[#b6dec4] bg-white/90 p-4 shadow-sm flex flex-col gap-4">
-              <ShopSpirit3DPreview
-                loadout={displayedLoadout}
-                flyingActive={flyingActive}
-                demoNonce={demoNonce}
-                onToggleFly={() => setFlyingActive((v) => !v)}
-                onTriggerDemo={() => setDemoNonce((n) => n + 1)}
-              />
+              <PreviewErrorBoundary>
+                <Suspense
+                  fallback={
+                    <div className="flex h-[260px] sm:h-[300px] w-full items-center justify-center rounded-xl border-2 border-[#9cd3b2] bg-[#e2f4e8] text-sm font-semibold text-[#11352a]">
+                      Loading 3D forest stage...
+                    </div>
+                  }
+                >
+                  <LazyShopSpirit3DPreview
+                    loadout={displayedLoadout}
+                    flyingActive={flyingActive}
+                    demoNonce={demoNonce}
+                    onToggleFly={() => setFlyingActive((v) => !v)}
+                    onTriggerDemo={() => setDemoNonce((n) => n + 1)}
+                  />
+                </Suspense>
+              </PreviewErrorBoundary>
 
               {/* Clean Active / Trying Loadout Summary */}
               <div className="border-t border-[#d6ecde] pt-3 space-y-2.5 text-sm">

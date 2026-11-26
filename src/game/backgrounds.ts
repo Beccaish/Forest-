@@ -22,16 +22,20 @@ const BACKDROP_PATHS: Record<LevelId, [string, string, string]> = {
 class BackdropCache {
   private images = new Map<string, HTMLImageElement>();
 
+  preloadLevel(levelId: LevelId): void {
+    BACKDROP_PATHS[levelId].forEach((src) => {
+      if (!this.images.has(src)) {
+        const img = new Image();
+        img.referrerPolicy = 'no-referrer';
+        img.src = src;
+        this.images.set(src, img);
+      }
+    });
+  }
+
   preloadAll(): void {
     ([1, 2, 3, 4] as LevelId[]).forEach((lvl) => {
-      BACKDROP_PATHS[lvl].forEach((src) => {
-        if (!this.images.has(src)) {
-          const img = new Image();
-          img.referrerPolicy = 'no-referrer';
-          img.src = src;
-          this.images.set(src, img);
-        }
-      });
+      this.preloadLevel(lvl);
     });
   }
 
