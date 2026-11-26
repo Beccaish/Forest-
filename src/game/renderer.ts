@@ -274,10 +274,25 @@ export function renderForestScene(
   drawMidTrees(ctx, world, levelId, midCol, rimCol, cameraX, viewW, viewH, time);
   ctx.restore();
 
-  // 7. Near-Ground Trees (0.72x parallax)
+  // 7. Near-Ground Trees (0.72x parallax) & Deep Background Silhouette Trunks (0.84x parallax, behind playable path)
   ctx.save();
   ctx.globalAlpha = imgA ? 0.72 : 1;
   drawNearTrees(ctx, world, levelId, b, cameraX, viewW, viewH);
+  ctx.restore();
+
+  ctx.save();
+  ctx.fillStyle = 'rgba(4, 10, 16, 0.36)';
+  for (const fg of world.fgSilhouettes) {
+    const fx = fg.x - cameraX * 0.84;
+    if (fx + 140 < 0 || fx - 140 > viewW) continue;
+    ctx.beginPath();
+    ctx.moveTo(fx - fg.w * 0.6, viewH + 20);
+    ctx.lineTo(fx - fg.w * 0.32 + fg.lean, -20);
+    ctx.lineTo(fx + fg.w * 0.32 + fg.lean, -20);
+    ctx.lineTo(fx + fg.w * 0.6, viewH + 20);
+    ctx.closePath();
+    ctx.fill();
+  }
   ctx.restore();
 
   // ============================================================
@@ -469,19 +484,6 @@ export function renderForestScene(
   ctx.globalAlpha = 1;
 
   weather.render(ctx, time, b, levelId);
-
-  ctx.fillStyle = 'rgba(4, 10, 16, 0.7)';
-  for (const fg of world.fgSilhouettes) {
-    const fx = fg.x - cameraX * 1.28;
-    if (fx + 140 < 0 || fx - 140 > viewW) continue;
-    ctx.beginPath();
-    ctx.moveTo(fx - fg.w * 0.6, viewH + 20);
-    ctx.lineTo(fx - fg.w * 0.32 + fg.lean, -20);
-    ctx.lineTo(fx + fg.w * 0.32 + fg.lean, -20);
-    ctx.lineTo(fx + fg.w * 0.6, viewH + 20);
-    ctx.closePath();
-    ctx.fill();
-  }
 
   return b;
 }
