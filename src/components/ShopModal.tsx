@@ -704,16 +704,16 @@ export const ShopModal: React.FC<ShopModalProps> = ({
 
           {/* Workspace: Mobile scrolls together; Desktop (lg+) pins Left Try-On & Tabs while ONLY Item Cards scroll */}
           <div
-            className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden lg:flex lg:flex-col pt-3.5 sm:pt-4 pr-0.5 lg:pr-0"
+            className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:overflow-hidden lg:flex lg:flex-col pt-3 sm:pt-3.5"
             style={{ touchAction: 'pan-y' }}
           >
             <div className="grid grid-cols-1 lg:grid-cols-[410px_1fr] xl:grid-cols-[435px_1fr] gap-4 sm:gap-6 items-start lg:items-stretch lg:flex-1 lg:min-h-0 pb-2 lg:pb-0">
-              {/* Left Column: 3D Stage + Wearing Now Bronze Panel (Pinned on Desktop) */}
-              <div className="flex flex-col gap-3 lg:max-h-full lg:overflow-y-auto lg:pr-0.5">
+              {/* Left Column: 3D Stage + Wearing Now Bronze Panel (Pinned on Desktop, no grey scrollbars) */}
+              <div className="flex flex-col gap-2.5 lg:max-h-full lg:overflow-y-auto lg:overflow-x-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:px-1.5 lg:py-1">
                 <PreviewErrorBoundary>
                   <Suspense
                     fallback={
-                      <div className="flex h-[265px] sm:h-[300px] w-full items-center justify-center rounded-xl border border-[#b59272]/80 bg-[#0d2420] text-sm font-medium text-[#e9f5f1]">
+                      <div className="flex h-[240px] sm:h-[260px] w-full items-center justify-center rounded-xl border border-[#b59272]/80 bg-[#0d2420] text-sm font-medium text-[#e9f5f1]">
                         Loading 3D forest glade...
                       </div>
                     }
@@ -729,7 +729,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({
                 </PreviewErrorBoundary>
 
                 {/* Wearing Now Warm Walnut & Brushed Gold-Bronze Plaque Panel */}
-                <div className="rounded-xl border border-[#dfc080]/90 bg-gradient-to-b from-[#3a2a1e]/96 to-[#221710]/98 p-3.5 sm:p-4 shadow-[0_12px_28px_rgba(0,0,0,0.58),inset_0_0_0_2px_rgba(24,15,9,0.75),inset_0_0_0_3px_rgba(223,192,128,0.28)] flex flex-col gap-2.5">
+                <div className="rounded-xl border border-[#dfc080]/90 bg-gradient-to-b from-[#3a2a1e]/96 to-[#221710]/98 p-3 sm:p-3.5 shadow-[0_12px_28px_rgba(0,0,0,0.58),inset_0_0_0_2px_rgba(24,15,9,0.75),inset_0_0_0_3px_rgba(223,192,128,0.28)] flex flex-col gap-2">
                   <div className="flex items-center justify-between gap-2">
                     <span className="text-sm sm:text-[15px] font-medium text-[#f5ecda]">
                       {isPreviewDirty ? 'Trying On Preview' : 'Wearing Now'}
@@ -749,7 +749,7 @@ export const ShopModal: React.FC<ShopModalProps> = ({
                   </div>
 
                   {/* Brushed Champagne-Bronze Metallic Loadout Slots */}
-                  <div className="grid grid-cols-2 gap-2.5">
+                  <div className="grid grid-cols-2 gap-2">
                     <div
                       style={{
                         background:

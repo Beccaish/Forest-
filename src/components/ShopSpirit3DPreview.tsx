@@ -1725,7 +1725,7 @@ export const ShopSpirit3DPreview: React.FC<ShopSpirit3DPreviewProps> = ({
         </svg>
 
         {/* Stage Viewport */}
-        <div className="relative h-[255px] sm:h-[290px] w-full overflow-hidden rounded-[7px] bg-[#162921] shadow-[inset_0_0_16px_rgba(0,0,0,0.5)]">
+        <div className="relative h-[235px] sm:h-[260px] xl:h-[280px] w-full overflow-hidden rounded-[7px] bg-[#162921] shadow-[inset_0_0_16px_rgba(0,0,0,0.5)]">
           <img
             src={stageForestImg}
             alt="Sunlit enchanted forest clearing behind the character"
