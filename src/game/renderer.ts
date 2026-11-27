@@ -26,6 +26,7 @@ import type { BiomeBlend, WorldData } from './world';
 import {
   BASE_GROUND_Y,
   SANCTUARY_X,
+  applySeasonalCycle,
   clamp,
   getBiomeBlend,
   getTerrainY,
@@ -92,6 +93,7 @@ export interface RenderContextState {
   sanctuaryAwakened: boolean;
   equipped: PlayerLoadout;
   isTouchDevice?: boolean;
+  elapsedSeconds?: number;
 }
 
 export function renderForestScene(
@@ -115,13 +117,15 @@ export function renderForestScene(
     time,
     sanctuaryAwakened,
     equipped,
+    elapsedSeconds = 0,
   } = state;
 
   const virtualW = viewW / worldScale;
   const virtualH = viewH / worldScale;
   const levelId = world.levelId;
   const centerWorldX = cameraX + virtualW * 0.5;
-  const b = getBiomeBlend(centerWorldX, levelId);
+  const baseBlend = getBiomeBlend(centerWorldX, levelId);
+  const { blend: b } = applySeasonalCycle(baseBlend, elapsedSeconds, levelId, elapsedSeconds > 0);
 
   const skyTop = lerpColor(b.a.skyTop, b.b.skyTop, b.mix);
   const skyMid = lerpColor(b.a.skyMid, b.b.skyMid, b.mix);
@@ -486,6 +490,30 @@ export function renderForestScene(
     ctx.fill();
   }
   ctx.globalAlpha = 1;
+
+  const sunnyWeight = b.weights.sunny ?? 0;
+  if (sunnyWeight > 0.03) {
+    ctx.save();
+    ctx.globalAlpha = sunnyWeight * (levelId === 4 ? 0.14 : 0.17);
+    const beamCol = levelId === 4 ? '#fff8df' : '#ffea9f';
+    const beamFade = levelId === 4 ? 'rgba(255, 248, 223, 0)' : 'rgba(255, 234, 159, 0)';
+    for (let i = 0; i < 4; i++) {
+      const sway = Math.sin(time * 0.35 + i * 1.4) * 24;
+      const bx = ((i * 340 + 160 + sway - cameraX * 0.07) % (viewW + 420)) - 140;
+      const grad = ctx.createLinearGradient(bx, 0, bx + 190, viewH * 0.86);
+      grad.addColorStop(0, beamCol);
+      grad.addColorStop(1, beamFade);
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(bx, 0);
+      ctx.lineTo(bx + 85, 0);
+      ctx.lineTo(bx + 300, viewH);
+      ctx.lineTo(bx + 100, viewH);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+  }
 
   weather.render(ctx, time, b, levelId);
 

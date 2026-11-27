@@ -332,6 +332,7 @@ export interface WeatherWeights {
   flurry: number;
   snow: number;
   underwater: number;
+  sunny?: number;
 }
 
 export interface BiomeBlend {
@@ -397,6 +398,7 @@ export function getBiomeBlend(x: number, levelId: LevelId = 1): BiomeBlend {
     flurry: 0,
     snow: 0,
     underwater: 0,
+    sunny: levelId === 1 && idxA === 0 ? 0.55 * (1 - mix) : 0,
   };
 
   if (idxA === idxB) {
@@ -414,6 +416,100 @@ export function getBiomeBlend(x: number, levelId: LevelId = 1): BiomeBlend {
     mix,
     mainIndex: mix > 0.5 ? idxB : idxA,
     weights,
+  };
+}
+
+interface SeasonPhaseSpec {
+  label: string;
+  weights: WeatherWeights;
+}
+
+function getSeasonSpec(idx: number, levelId: LevelId): SeasonPhaseSpec {
+  const s = ((idx % 4) + 4) % 4;
+  if (s === 0) {
+    return {
+      label: levelId === 2 ? 'Amethyst Mist Rain' : 'Soft Forest Rain',
+      weights: { leaves: 0, rain: 0.92, flurry: 0, snow: 0, underwater: 0, sunny: 0 },
+    };
+  }
+  if (s === 1) {
+    return {
+      label: levelId === 4 ? 'Crisp Alpine Sun' : 'Warm Sunbeams',
+      weights: {
+        leaves: levelId <= 2 ? 0.14 : 0,
+        rain: 0,
+        flurry: 0,
+        snow: levelId === 4 ? 0.14 : 0,
+        underwater: 0,
+        sunny: 1,
+      },
+    };
+  }
+  if (s === 2) {
+    return {
+      label: levelId === 4 ? 'Steady Snowfall' : 'Gentle Snowfall',
+      weights: { leaves: 0, rain: 0, flurry: 0, snow: 0.9, underwater: 0, sunny: 0 },
+    };
+  }
+  if (levelId >= 3) {
+    return {
+      label: levelId === 4 ? 'Aurora Flurry' : 'Starlight Flurry',
+      weights: { leaves: 0, rain: 0, flurry: 0.85, snow: 0.15, underwater: 0, sunny: 0 },
+    };
+  }
+  return {
+    label: levelId === 2 ? 'Crimson Maple Drift' : 'Drifting Leaves',
+    weights: { leaves: 0.88, rain: 0, flurry: 0, snow: 0, underwater: 0, sunny: 0.25 },
+  };
+}
+
+export function applySeasonalCycle(
+  blend: BiomeBlend,
+  elapsedSeconds: number,
+  levelId: LevelId,
+  activePlaying: boolean
+): { blend: BiomeBlend; seasonLabel: string } {
+  const baseLabel = LEVEL_BIOMES[levelId][blend.mainIndex].weatherLabel;
+  if (!activePlaying || elapsedSeconds < 14 || blend.weights.underwater > 0.55) {
+    return { blend, seasonLabel: baseLabel };
+  }
+
+  const seasonDuration = 24;
+  const fadeDuration = 4.5;
+  const t = elapsedSeconds - 14;
+  const rampIn = smoothstep(t / fadeDuration);
+  const seasonFloat = t / seasonDuration;
+  const idx = Math.floor(seasonFloat) % 4;
+  const nextIdx = (idx + 1) % 4;
+  const phaseT = seasonFloat - Math.floor(seasonFloat);
+  const crossStart = 1 - fadeDuration / seasonDuration;
+  const crossMix = phaseT > crossStart ? smoothstep((phaseT - crossStart) / (1 - crossStart)) : 0;
+
+  const curSpec = getSeasonSpec(idx, levelId);
+  const nextSpec = getSeasonSpec(nextIdx, levelId);
+  const seasonLabel = crossMix > 0.5 ? nextSpec.label : curSpec.label;
+
+  const uwSuppress = clamp(1 - blend.weights.underwater * 1.4, 0, 1);
+  const overrideFactor = rampIn * 0.9 * uwSuppress;
+
+  const targetLeaves = lerp(curSpec.weights.leaves, nextSpec.weights.leaves, crossMix);
+  const targetRain = lerp(curSpec.weights.rain, nextSpec.weights.rain, crossMix);
+  const targetFlurry = lerp(curSpec.weights.flurry, nextSpec.weights.flurry, crossMix);
+  const targetSnow = lerp(curSpec.weights.snow, nextSpec.weights.snow, crossMix);
+  const targetSunny = lerp(curSpec.weights.sunny ?? 0, nextSpec.weights.sunny ?? 0, crossMix);
+
+  const weights: WeatherWeights = {
+    leaves: lerp(blend.weights.leaves, targetLeaves, overrideFactor),
+    rain: lerp(blend.weights.rain, targetRain, overrideFactor),
+    flurry: lerp(blend.weights.flurry, targetFlurry, overrideFactor),
+    snow: lerp(blend.weights.snow, targetSnow, overrideFactor),
+    underwater: blend.weights.underwater,
+    sunny: lerp(blend.weights.sunny ?? 0, targetSunny, overrideFactor),
+  };
+
+  return {
+    blend: { ...blend, weights },
+    seasonLabel: overrideFactor > 0.35 ? seasonLabel : baseLabel,
   };
 }
 

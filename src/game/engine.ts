@@ -29,6 +29,7 @@ import {
   LEVEL_NAMES,
   SANCTUARY_X,
   WORLD_WIDTH,
+  applySeasonalCycle,
   clamp,
   generateWorld,
   getBiomeBlend,
@@ -837,7 +838,12 @@ export class ForestGameEngine {
 
     const virtualW = this.viewW / this.worldScale;
     const virtualH = this.viewH / this.worldScale;
-    const blend = getBiomeBlend(this.cameraX + virtualW * 0.5, this.levelId);
+    const { blend } = applySeasonalCycle(
+      getBiomeBlend(this.cameraX + virtualW * 0.5, this.levelId),
+      this.elapsedSeconds,
+      this.levelId,
+      this.phase === 'PLAYING'
+    );
     audioEngine.updateWeatherAudio(blend.weights);
 
     for (const s of this.world.floatingSpores) {
@@ -1651,6 +1657,7 @@ export class ForestGameEngine {
       sanctuaryAwakened: this.sanctuaryAwakened,
       equipped: this.shopProgress.equipped,
       isTouchDevice: this.isTouchDevice,
+      elapsedSeconds: this.phase === 'PLAYING' ? this.elapsedSeconds : 0,
     });
   }
 
@@ -1695,7 +1702,12 @@ export class ForestGameEngine {
   }
 
   private emitHudSnapshot(): void {
-    const blend = getBiomeBlend(this.player.x, this.levelId);
+    const { blend, seasonLabel } = applySeasonalCycle(
+      getBiomeBlend(this.player.x, this.levelId),
+      this.elapsedSeconds,
+      this.levelId,
+      this.phase === 'PLAYING'
+    );
     const biome = LEVEL_BIOMES[this.levelId][blend.mainIndex];
     const lanternsLit = this.world.lanterns.filter((l) => l.lit).length;
     const orbsTotal = this.world.collectibles.filter((c) => c.kind === 'orb').length;
@@ -1732,7 +1744,7 @@ export class ForestGameEngine {
       petals: this.player.petals,
       maxPetals: this.player.maxPetals,
       biomeName: biome.name,
-      weatherLabel: biome.weatherLabel,
+      weatherLabel: seasonLabel,
       elapsedSeconds: Math.floor(this.elapsedSeconds),
       progressPct,
       crystalBoostActive: this.player.crystalBoostTimer > 0,
