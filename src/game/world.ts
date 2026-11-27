@@ -1141,7 +1141,7 @@ export function generateWorld(levelId: LevelId = 1): WorldData {
   }
 
   const floatingSpores: FloatingSpore[] = [];
-  for (let i = 0; i < 85; i++) {
+  for (let i = 0; i < 30; i++) {
     floatingSpores.push({
       x: rng() * 1600,
       y: rng() * 900,

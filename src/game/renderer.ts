@@ -479,7 +479,7 @@ export function renderForestScene(
   for (const s of world.floatingSpores) {
     const sx = (((s.x - cameraX * 0.15 * s.depth) % viewW) + viewW) % viewW;
     const pulse = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(time * 2.4 + s.phase));
-    ctx.globalAlpha = pulse * 0.68;
+    ctx.globalAlpha = pulse * 0.44;
     ctx.fillStyle = sporeColor;
     ctx.beginPath();
     ctx.arc(sx, s.y, s.r, 0, Math.PI * 2);

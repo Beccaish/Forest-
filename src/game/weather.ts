@@ -89,28 +89,28 @@ export class DynamicWeatherSystem {
   }
 
   private initPools(): void {
-    this.leaves = Array.from({ length: 50 }, (_, i) => ({
+    this.leaves = Array.from({ length: 18 }, (_, i) => ({
       x: Math.random() * 1800,
       y: Math.random() * 900,
-      vx: 14 + Math.random() * 24,
-      vy: 28 + Math.random() * 34,
-      size: 4.5 + Math.random() * 4.5,
+      vx: 14 + Math.random() * 22,
+      vy: 24 + Math.random() * 28,
+      size: 3.5 + Math.random() * 3.2,
       rot: Math.random() * Math.PI * 2,
-      rotSpeed: (Math.random() - 0.5) * 3.2,
+      rotSpeed: (Math.random() - 0.5) * 2.6,
       swayPhase: Math.random() * Math.PI * 2,
-      swayFreq: 1.4 + Math.random() * 1.4,
+      swayFreq: 1.3 + Math.random() * 1.2,
       colorIndex: i % 5,
     }));
 
-    this.raindrops = Array.from({ length: 130 }, () => ({
+    this.raindrops = Array.from({ length: 48 }, () => ({
       x: Math.random() * 1800,
       y: Math.random() * 900,
-      len: 12 + Math.random() * 16,
-      speed: 520 + Math.random() * 240,
-      alpha: 0.16 + Math.random() * 0.28,
+      len: 10 + Math.random() * 14,
+      speed: 500 + Math.random() * 220,
+      alpha: 0.1 + Math.random() * 0.18,
     }));
 
-    this.splashes = Array.from({ length: 28 }, () => ({
+    this.splashes = Array.from({ length: 12 }, () => ({
       active: false,
       x: 0,
       y: 0,
@@ -118,33 +118,33 @@ export class DynamicWeatherSystem {
       alpha: 0,
     }));
 
-    this.flakes = Array.from({ length: 78 }, (_, i) => ({
+    this.flakes = Array.from({ length: 26 }, (_, i) => ({
       x: Math.random() * 1800,
       y: Math.random() * 900,
-      r: 1.4 + Math.random() * 2.5,
-      vy: 22 + Math.random() * 28,
+      r: 1.2 + Math.random() * 2,
+      vy: 20 + Math.random() * 24,
       swayPhase: Math.random() * Math.PI * 2,
       twinklePhase: Math.random() * Math.PI * 2,
       colorIndex: i % 4,
     }));
 
-    this.snow = Array.from({ length: 140 }, () => ({
+    this.snow = Array.from({ length: 42 }, () => ({
       x: Math.random() * 1800,
       y: Math.random() * 900,
-      r: 1.8 + Math.random() * 3.5,
-      vy: 36 + Math.random() * 42,
+      r: 1.4 + Math.random() * 2.2,
+      vy: 30 + Math.random() * 34,
       swayPhase: Math.random() * Math.PI * 2,
-      swayAmp: 16 + Math.random() * 26,
-      alpha: 0.48 + Math.random() * 0.46,
+      swayAmp: 14 + Math.random() * 20,
+      alpha: 0.32 + Math.random() * 0.34,
     }));
 
-    this.bubbles = Array.from({ length: 68 }, () => ({
+    this.bubbles = Array.from({ length: 24 }, () => ({
       x: Math.random() * 1800,
       y: Math.random() * 900,
-      r: 2.2 + Math.random() * 5.2,
-      vy: 32 + Math.random() * 44,
+      r: 2 + Math.random() * 4,
+      vy: 28 + Math.random() * 36,
       swayPhase: Math.random() * Math.PI * 2,
-      alpha: 0.28 + Math.random() * 0.46,
+      alpha: 0.2 + Math.random() * 0.3,
     }));
   }
 
@@ -291,7 +291,7 @@ export class DynamicWeatherSystem {
         ctx.translate(l.x, l.y);
         ctx.rotate(l.rot);
         ctx.scale(1, flip);
-        ctx.globalAlpha = 0.82 * leafW;
+        ctx.globalAlpha = 0.56 * leafW;
         ctx.fillStyle = leafPalette[l.colorIndex];
         ctx.beginPath();
         ctx.moveTo(-l.size, 0);
@@ -342,7 +342,7 @@ export class DynamicWeatherSystem {
       for (let i = 0; i < count; i++) {
         const f = this.flakes[i];
         const twinkle = 0.45 + 0.55 * Math.sin(time * 2.8 + f.twinklePhase);
-        ctx.globalAlpha = twinkle * 0.85 * flurryW;
+        ctx.globalAlpha = twinkle * 0.55 * flurryW;
         ctx.fillStyle = flurryPalette[f.colorIndex];
         ctx.beginPath();
         ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
@@ -361,8 +361,8 @@ export class DynamicWeatherSystem {
         ctx.beginPath();
         ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
         ctx.fill();
-        if (s.r > 3.6) {
-          ctx.strokeStyle = `rgba(215, 248, 255, ${0.55 * snowW})`;
+        if (s.r > 3.1) {
+          ctx.strokeStyle = `rgba(215, 248, 255, ${0.38 * snowW})`;
           ctx.lineWidth = 1;
           ctx.beginPath();
           ctx.moveTo(s.x - s.r - 1.5, s.y);
