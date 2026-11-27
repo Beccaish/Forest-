@@ -238,13 +238,14 @@ export class ForestGameEngine {
   resize(): void {
     this.viewW = Math.max(1, window.innerWidth || 1280);
     this.viewH = Math.max(1, window.innerHeight || 720);
-    if (this.isTouchDevice) {
+    const isMobileViewport = this.isTouchDevice || this.viewW < 920 || this.viewH < 520;
+    if (isMobileViewport) {
       if (this.viewW >= this.viewH) {
-        // Mobile landscape: keep world elements bigger and easy to see
-        this.worldScale = clamp(this.viewH / 300, 1.20, 1.48);
+        // Mobile landscape: zoom out for a wider platforming sightline while keeping details crisp
+        this.worldScale = clamp(this.viewH / 435, 0.86, 1.14);
       } else {
-        // Mobile portrait: keep elements comfortably large without cramping horizontal sightline
-        this.worldScale = clamp(this.viewW / 330, 1.15, 1.38);
+        // Mobile portrait: zoom out so horizontal sightlines and jump arcs are easy to read
+        this.worldScale = clamp(this.viewW / 490, 0.78, 1.05);
       }
     } else {
       // Desktop: scale up elements so they are noticeably bigger and clearer
