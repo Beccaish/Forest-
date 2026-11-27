@@ -1640,100 +1640,280 @@ export const ShopSpirit3DPreview: React.FC<ShopSpirit3DPreviewProps> = ({
 
   return (
     <div className="flex flex-col gap-2.5">
-      {/* Living Carved Wood & Moss Frame Viewport */}
-      <div className="relative h-[250px] sm:h-[285px] w-full rounded-2xl border-[6px] sm:border-[8px] border-[#533017] bg-[#1a2d1f] shadow-[0_8px_20px_rgba(15,8,4,0.4),inset_0_2px_4px_rgba(255,235,190,0.25)] overflow-hidden select-none">
-        <img
-          src={stageForestImg}
-          alt="Sunlit enchanted forest clearing behind the character"
-          referrerPolicy="no-referrer"
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover"
-        />
-        <div
+      {/* Ornate Sculpted Bronze & Luminous Turquoise Gem Frame around 3D Clearing */}
+      <div className="relative p-[10px] sm:p-[12px] select-none">
+        {/* Continuous Sculpted Bronze Border & Organic Scrollwork Frame */}
+        <svg
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#123d2d]/25 via-transparent to-[#ffffff]/10"
-        />
-
-        {/* Decorative corner moss & chanterelle mushrooms overlay */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-15">
-          {/* Top-left corner moss & leaves */}
-          <div className="absolute top-0 left-0">
-            <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
-              <path d="M0 0C18 0 32 10 32 28C22 28 14 20 0 16V0Z" fill="#588b2b" />
-              <path d="M0 0C14 0 24 8 26 20C18 19 10 14 0 10V0Z" fill="#7db33f" />
-              <circle cx="28" cy="22" r="3" fill="#a4e25a" />
-              <circle cx="16" cy="18" r="2.5" fill="#fde047" />
-            </svg>
-          </div>
-          {/* Top-right corner foliage */}
-          <div className="absolute top-0 right-0">
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-              <path d="M36 0C22 0 10 8 10 22C18 22 24 16 36 12V0Z" fill="#588b2b" />
-              <circle cx="12" cy="18" r="2.5" fill="#86efac" />
-            </svg>
-          </div>
-          {/* Bottom-left chanterelle mushroom cluster */}
-          <div className="absolute bottom-1 left-2 flex items-end gap-1">
-            <div className="w-2.5 h-3.5 bg-[#fef3c7] rounded-t-sm relative">
-              <div className="absolute -top-1.5 -left-1.5 w-5 h-2.5 bg-[#f59e0b] rounded-t-full shadow-sm" />
-            </div>
-            <div className="w-2 h-2.5 bg-[#fef3c7] rounded-t-sm relative">
-              <div className="absolute -top-1 -left-1 w-4 h-2 bg-[#d97706] rounded-t-full shadow-sm" />
-            </div>
-            <div className="w-1.5 h-2 bg-[#a3e635] rounded-full" />
-          </div>
-          {/* Bottom-right chanterelle mushrooms */}
-          <div className="absolute bottom-1 right-2 flex items-end gap-1">
-            <div className="w-1.5 h-2 bg-[#a3e635] rounded-full" />
-            <div className="w-2 h-3 bg-[#fef3c7] rounded-t-sm relative">
-              <div className="absolute -top-1.5 -left-1 w-4 h-2.5 bg-[#f59e0b] rounded-t-full shadow-sm" />
-            </div>
-          </div>
-        </div>
-
-        {webglUnavailable ? (
-          <div className="relative z-10 flex h-full w-full flex-col items-center justify-center p-4 text-center">
-            <div className="rounded-xl bg-[#2a170a]/90 border border-[#8f5a2e] px-4 py-3 text-sm font-medium text-[#fff2d9] shadow">
-              3D preview paused — try rotating or reopening the shop.
-            </div>
-          </div>
-        ) : (
-          <div ref={mountRef} className="relative z-10 h-full w-full cursor-grab active:cursor-grabbing" />
-        )}
-
-        {/* Top-left guide pill */}
-        <div className="pointer-events-none absolute top-2 left-2 z-20 rounded-full bg-[#1b2f22]/80 backdrop-blur-sm border border-[#a2cb88]/60 px-2.5 py-0.5 text-[11px] sm:text-xs font-semibold text-[#f2ffea] shadow">
-          Drag to turn 360°
-        </div>
-
-        {/* Top-right Front button */}
-        <button
-          type="button"
-          onClick={handleResetView}
-          className="absolute top-2 right-2 z-20 min-h-[26px] rounded-full bg-[#1b2f22]/80 hover:bg-[#284431] backdrop-blur-sm border border-[#a2cb88]/60 px-3 py-0.5 text-[11px] sm:text-xs font-semibold text-[#f2ffea] shadow transition-colors focus-visible:outline-2 focus-visible:outline-[#86efac]"
+          viewBox="0 0 420 320"
+          preserveAspectRatio="none"
+          className="pointer-events-none absolute inset-0 h-full w-full z-20 drop-shadow-[0_10px_22px_rgba(0,0,0,0.65)]"
         >
-          Front
-        </button>
+          <defs>
+            <linearGradient id="bronzeFrameGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#8b6956" />
+              <stop offset="28%" stopColor="#5c4033" />
+              <stop offset="72%" stopColor="#462f25" />
+              <stop offset="100%" stopColor="#6c4d3e" />
+            </linearGradient>
+            <linearGradient id="bronzeTrimHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#d3b28c" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#947157" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#d9ba93" stopOpacity="0.9" />
+            </linearGradient>
+          </defs>
+
+          {/* Sculpted Outer Bronze Frame Perimeter (hollow center via evenodd) */}
+          <path
+            fillRule="evenodd"
+            d="M 18 8
+               C 55 4, 130 6, 178 7
+               C 192 7, 200 2, 210 2
+               C 220 2, 228 7, 242 7
+               C 290 6, 365 4, 402 8
+               C 410 9, 413 13, 414 22
+               C 417 78, 415 130, 413 160
+               C 415 190, 417 242, 414 298
+               C 413 307, 410 311, 402 312
+               C 365 316, 290 314, 242 313
+               C 228 313, 220 318, 210 318
+               C 200 318, 192 313, 178 313
+               C 130 314, 55 316, 18 312
+               C 10 311, 7 307, 6 298
+               C 3 242, 5 190, 7 160
+               C 5 130, 3 78, 6 22
+               C 7 13, 10 9, 18 8 Z
+               M 16 16
+               L 404 16
+               L 404 304
+               L 16 304 Z"
+            fill="url(#bronzeFrameGrad)"
+            stroke="url(#bronzeTrimHighlight)"
+            strokeWidth="1.6"
+          />
+
+          {/* Inner Recessed Bronze Rim */}
+          <rect
+            x="15.5"
+            y="15.5"
+            width="389"
+            height="289"
+            rx="6"
+            fill="none"
+            stroke="#241610"
+            strokeWidth="2"
+          />
+          <rect
+            x="13.5"
+            y="13.5"
+            width="393"
+            height="293"
+            rx="7"
+            fill="none"
+            stroke="#b59272"
+            strokeOpacity="0.45"
+            strokeWidth="1"
+          />
+
+          {/* Decorative Organic Scroll Ribs Along Top, Bottom, Left, Right */}
+          <path d="M 38 10 C 75 6, 115 11, 155 9" fill="none" stroke="#c8a582" strokeOpacity="0.45" strokeWidth="1.2" />
+          <path d="M 265 9 C 305 11, 345 6, 382 10" fill="none" stroke="#c8a582" strokeOpacity="0.45" strokeWidth="1.2" />
+          <path d="M 38 310 C 75 314, 115 309, 155 311" fill="none" stroke="#c8a582" strokeOpacity="0.45" strokeWidth="1.2" />
+          <path d="M 265 311 C 305 309, 345 314, 382 310" fill="none" stroke="#c8a582" strokeOpacity="0.45" strokeWidth="1.2" />
+          <path d="M 10 55 C 6 105, 11 135, 9 160 C 11 185, 6 215, 10 265" fill="none" stroke="#c8a582" strokeOpacity="0.4" strokeWidth="1.2" />
+          <path d="M 410 55 C 414 105, 409 135, 411 160 C 409 185, 414 215, 410 265" fill="none" stroke="#c8a582" strokeOpacity="0.4" strokeWidth="1.2" />
+        </svg>
+
+        {/* Stage Viewport */}
+        <div className="relative h-[255px] sm:h-[290px] w-full overflow-hidden rounded-[7px] bg-[#162921] shadow-[inset_0_0_16px_rgba(0,0,0,0.5)]">
+          <img
+            src={stageForestImg}
+            alt="Sunlit enchanted forest clearing behind the character"
+            referrerPolicy="no-referrer"
+            className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+          />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#0d271e]/15 via-transparent to-[#ffffff]/8"
+          />
+
+          {webglUnavailable ? (
+            <div className="relative z-10 flex h-full w-full flex-col items-center justify-center p-4 text-center">
+              <div className="rounded-lg bg-[#0c231f]/90 border border-[#72b5a4]/50 px-4 py-3 text-sm font-medium text-[#e9f5f1] shadow">
+                3D preview paused — try rotating or reopening the shop.
+              </div>
+            </div>
+          ) : (
+            <div ref={mountRef} className="relative z-10 h-full w-full cursor-grab active:cursor-grabbing" />
+          )}
+
+          {/* Top-left clean light guide tag */}
+          <div className="pointer-events-none absolute top-3 left-3 z-20 rounded-md bg-white/94 px-2.5 py-1 text-xs font-medium text-[#1b2c27] shadow-[0_2px_6px_rgba(0,0,0,0.2)]">
+            Drag to turn 360°
+          </div>
+
+          {/* Top-right Front Reset button */}
+          <button
+            type="button"
+            onClick={handleResetView}
+            className="absolute top-3 right-3 z-20 min-h-[30px] rounded-md bg-white/95 hover:bg-white px-3 py-1 text-xs font-medium text-[#1b2c27] shadow-[0_2px_6px_rgba(0,0,0,0.2)] transition-colors focus-visible:outline-2 focus-visible:outline-[#5eead4]"
+          >
+            Front
+          </button>
+        </div>
+
+        {/* Crisp Non-Stretched Turquoise Teardrop Gem Medallions */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-30">
+          {/* Top-Center Turquoise Teardrop Crest */}
+          <svg
+            width="84"
+            height="34"
+            viewBox="0 0 84 34"
+            fill="none"
+            className="absolute -top-2 left-1/2 -translate-x-1/2 drop-shadow-[0_3px_8px_rgba(45,212,191,0.45)]"
+          >
+            <path
+              d="M4 17C16 17 25 7 34 6C38 2 46 2 50 6C59 7 68 17 80 17C67 20 56 26 42 30C28 26 17 20 4 17Z"
+              fill="#553b30"
+              stroke="#cca984"
+              strokeWidth="1.4"
+            />
+            <path d="M14 16C22 14 27 10 32 10" stroke="#e4c5a3" strokeWidth="1.1" strokeOpacity="0.7" />
+            <path d="M70 16C62 14 57 10 52 10" stroke="#e4c5a3" strokeWidth="1.1" strokeOpacity="0.7" />
+            <path
+              d="M42 6.5C46.5 12.8 49 17 49 20.5C49 24.4 45.9 27.5 42 27.5C38.1 27.5 35 24.4 35 20.5C35 17 37.5 12.8 42 6.5Z"
+              fill="url(#gemCyanTop)"
+              stroke="#134e4a"
+              strokeWidth="1.2"
+            />
+            <ellipse cx="39.8" cy="17.8" rx="2.1" ry="3.8" fill="#ffffff" fillOpacity="0.75" />
+            <defs>
+              <linearGradient id="gemCyanTop" x1="35" y1="7" x2="49" y2="27" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#a7f3d0" />
+                <stop offset="45%" stopColor="#4fe3cc" />
+                <stop offset="100%" stopColor="#0f766e" />
+              </linearGradient>
+            </defs>
+          </svg>
+
+          {/* Bottom-Center Turquoise Teardrop Crest */}
+          <svg
+            width="84"
+            height="34"
+            viewBox="0 0 84 34"
+            fill="none"
+            className="absolute -bottom-2 left-1/2 -translate-x-1/2 drop-shadow-[0_3px_8px_rgba(45,212,191,0.45)]"
+          >
+            <path
+              d="M4 17C16 17 25 27 34 28C38 32 46 32 50 28C59 27 68 17 80 17C67 14 56 8 42 4C28 8 17 14 4 17Z"
+              fill="#553b30"
+              stroke="#cca984"
+              strokeWidth="1.4"
+            />
+            <path
+              d="M42 6.5C46 11.5 48.2 15.2 48.2 18.6C48.2 22.3 45.4 25.2 42 25.2C38.6 25.2 35.8 22.3 35.8 18.6C35.8 15.2 38 11.5 42 6.5Z"
+              fill="url(#gemCyanBot)"
+              stroke="#134e4a"
+              strokeWidth="1.2"
+            />
+            <ellipse cx="40" cy="16.5" rx="1.9" ry="3.4" fill="#ffffff" fillOpacity="0.75" />
+            <defs>
+              <linearGradient id="gemCyanBot" x1="36" y1="7" x2="48" y2="25" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#a7f3d0" />
+                <stop offset="45%" stopColor="#4fe3cc" />
+                <stop offset="100%" stopColor="#0f766e" />
+              </linearGradient>
+            </defs>
+          </svg>
+
+          {/* Top-Left Corner Bronze Scroll & Turquoise Gem */}
+          <svg width="42" height="42" viewBox="0 0 42 42" fill="none" className="absolute -top-1 -left-1">
+            <path d="M5 34C4 16 14 5 34 5" stroke="#553b30" strokeWidth="6" strokeLinecap="round" />
+            <path d="M5 34C4 16 14 5 34 5" stroke="#cca984" strokeWidth="1.6" strokeLinecap="round" />
+            <circle cx="13" cy="13" r="7" fill="#4f372c" stroke="#cca984" strokeWidth="1.4" />
+            <circle cx="13" cy="13" r="4.4" fill="#5eead4" stroke="#134e4a" strokeWidth="1" />
+            <circle cx="11.6" cy="11.5" r="1.4" fill="#ffffff" fillOpacity="0.8" />
+          </svg>
+
+          {/* Top-Right Corner Bronze Scroll & Turquoise Gem */}
+          <svg width="42" height="42" viewBox="0 0 42 42" fill="none" className="absolute -top-1 -right-1">
+            <path d="M37 34C38 16 28 5 8 5" stroke="#553b30" strokeWidth="6" strokeLinecap="round" />
+            <path d="M37 34C38 16 28 5 8 5" stroke="#cca984" strokeWidth="1.6" strokeLinecap="round" />
+            <circle cx="29" cy="13" r="7" fill="#4f372c" stroke="#cca984" strokeWidth="1.4" />
+            <circle cx="29" cy="13" r="4.4" fill="#5eead4" stroke="#134e4a" strokeWidth="1" />
+            <circle cx="27.6" cy="11.5" r="1.4" fill="#ffffff" fillOpacity="0.8" />
+          </svg>
+
+          {/* Bottom-Left Diagonal Turquoise Teardrop Gem Crest */}
+          <svg
+            width="44"
+            height="44"
+            viewBox="0 0 44 44"
+            fill="none"
+            className="absolute -bottom-1.5 -left-1.5 drop-shadow-[0_2px_6px_rgba(45,212,191,0.45)]"
+          >
+            <path d="M6 10C6 26 16 38 34 38" stroke="#553b30" strokeWidth="6" strokeLinecap="round" />
+            <path d="M6 10C6 26 16 38 34 38" stroke="#cca984" strokeWidth="1.5" strokeLinecap="round" />
+            <path
+              d="M8 36C7 26 14 19 23 19C25 27 18 35 8 36Z"
+              fill="#4f372c"
+              stroke="#cca984"
+              strokeWidth="1.4"
+            />
+            <path
+              d="M11 33C11 26.5 15.5 22 21 21.5C21 27.5 16.8 32.5 11 33Z"
+              fill="#5eead4"
+              stroke="#134e4a"
+              strokeWidth="1"
+            />
+            <circle cx="16.5" cy="25.5" r="1.5" fill="#ffffff" fillOpacity="0.75" />
+          </svg>
+
+          {/* Bottom-Right Diagonal Turquoise Teardrop Gem Crest */}
+          <svg
+            width="44"
+            height="44"
+            viewBox="0 0 44 44"
+            fill="none"
+            className="absolute -bottom-1.5 -right-1.5 drop-shadow-[0_2px_6px_rgba(45,212,191,0.45)]"
+          >
+            <path d="M38 10C38 26 28 38 10 38" stroke="#553b30" strokeWidth="6" strokeLinecap="round" />
+            <path d="M38 10C38 26 28 38 10 38" stroke="#cca984" strokeWidth="1.5" strokeLinecap="round" />
+            <path
+              d="M36 36C37 26 30 19 21 19C19 27 26 35 36 36Z"
+              fill="#4f372c"
+              stroke="#cca984"
+              strokeWidth="1.4"
+            />
+            <path
+              d="M33 33C33 26.5 28.5 22 23 21.5C23 27.5 27.2 32.5 33 33Z"
+              fill="#5eead4"
+              stroke="#134e4a"
+              strokeWidth="1"
+            />
+            <circle cx="27.5" cy="25.5" r="1.5" fill="#ffffff" fillOpacity="0.75" />
+          </svg>
+        </div>
       </div>
 
-      {/* Row 1: Rustic Carved Wooden Turn Buttons with Leaf Accents */}
-      <div className="grid grid-cols-4 gap-1.5">
+      {/* Row 1: Compact Left-Aligned Beveled Stone Turn / Spin Buttons (matches mockup placement) */}
+      <div className="flex flex-wrap items-center gap-2 pt-0.5">
         <button
           type="button"
           onClick={() => handleTurnStep(-Math.PI / 4)}
           aria-label="Turn character left"
-          className="relative min-h-[38px] flex items-center justify-center gap-1 rounded-xl border-2 border-[#825028] bg-gradient-to-b from-[#6b3c1b] via-[#593014] to-[#45220c] px-1.5 py-1 text-xs font-bold text-[#fff3db] shadow-[0_2px_0_#2b1305,0_3px_6px_rgba(0,0,0,0.3)] hover:brightness-110 active:translate-y-0.5 active:shadow-[0_1px_0_#2b1305] transition-all"
+          className="min-h-[38px] min-w-[82px] flex items-center justify-center gap-1.5 rounded-md border border-[#b0bab2]/80 bg-gradient-to-b from-[#606761] to-[#393f3b] px-3 py-1.5 text-xs sm:text-sm font-medium text-[#f5f2e8] shadow-[0_3px_8px_rgba(0,0,0,0.45),inset_0_0_0_2px_rgba(22,26,24,0.68),inset_0_0_0_3px_rgba(255,255,255,0.16)] hover:brightness-110 active:translate-y-px transition-all focus-visible:outline-2 focus-visible:outline-[#5eead4]"
         >
-          <span className="text-[10px] text-[#a3e635]">🍃</span>
           <span>↺ Turn</span>
         </button>
 
         <button
           type="button"
           onClick={handleToggleAutoSpin}
-          className={`relative min-h-[38px] flex items-center justify-center gap-1 rounded-xl border-2 px-1.5 py-1 text-xs font-bold shadow-[0_2px_0_#2b1305,0_3px_6px_rgba(0,0,0,0.3)] active:translate-y-0.5 active:shadow-[0_1px_0_#2b1305] transition-all ${
+          className={`min-h-[38px] min-w-[92px] flex items-center justify-center rounded-md border px-3.5 py-1.5 text-xs sm:text-sm font-medium shadow-[0_3px_8px_rgba(0,0,0,0.45),inset_0_0_0_2px_rgba(22,26,24,0.68),inset_0_0_0_3px_rgba(255,255,255,0.16)] hover:brightness-110 active:translate-y-px transition-all focus-visible:outline-2 focus-visible:outline-[#5eead4] ${
             autoSpin
-              ? 'border-[#a3e635] bg-gradient-to-b from-[#2e571c] to-[#1c380f] text-[#d9f99d]'
-              : 'border-[#825028] bg-gradient-to-b from-[#6b3c1b] via-[#593014] to-[#45220c] text-[#fff3db] hover:brightness-110'
+              ? 'border-[#cad5cc] bg-gradient-to-b from-[#656f67] to-[#414944] text-[#ffffff]'
+              : 'border-[#b0bab2]/80 bg-gradient-to-b from-[#606761] to-[#393f3b] text-[#f5f2e8]'
           }`}
         >
           <span>{autoSpin ? 'Spinning' : 'Spin'}</span>
@@ -1743,23 +1923,13 @@ export const ShopSpirit3DPreview: React.FC<ShopSpirit3DPreviewProps> = ({
           type="button"
           onClick={() => handleTurnStep(Math.PI / 4)}
           aria-label="Turn character right"
-          className="relative min-h-[38px] flex items-center justify-center gap-1 rounded-xl border-2 border-[#825028] bg-gradient-to-b from-[#6b3c1b] via-[#593014] to-[#45220c] px-1.5 py-1 text-xs font-bold text-[#fff3db] shadow-[0_2px_0_#2b1305,0_3px_6px_rgba(0,0,0,0.3)] hover:brightness-110 active:translate-y-0.5 active:shadow-[0_1px_0_#2b1305] transition-all"
+          className="min-h-[38px] min-w-[82px] flex items-center justify-center gap-1.5 rounded-md border border-[#b0bab2]/80 bg-gradient-to-b from-[#606761] to-[#393f3b] px-3 py-1.5 text-xs sm:text-sm font-medium text-[#f5f2e8] shadow-[0_3px_8px_rgba(0,0,0,0.45),inset_0_0_0_2px_rgba(22,26,24,0.68),inset_0_0_0_3px_rgba(255,255,255,0.16)] hover:brightness-110 active:translate-y-px transition-all focus-visible:outline-2 focus-visible:outline-[#5eead4]"
         >
           <span>Turn ↻</span>
-          <span className="text-[10px] text-[#a3e635]">🍃</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={handleResetView}
-          aria-label="Reset character view to front"
-          className="relative min-h-[38px] flex items-center justify-center gap-1 rounded-xl border-2 border-[#825028] bg-gradient-to-b from-[#6b3c1b] via-[#593014] to-[#45220c] px-1.5 py-1 text-xs font-bold text-[#fff3db] shadow-[0_2px_0_#2b1305,0_3px_6px_rgba(0,0,0,0.3)] hover:brightness-110 active:translate-y-0.5 active:shadow-[0_1px_0_#2b1305] transition-all"
-        >
-          <span>Front</span>
         </button>
       </div>
 
-      {/* Row 2: Carved Wooden Plank Banner for Power / Jump Action */}
+      {/* Row 2: Full-Width Beveled Action Bar ("Test Jump" / Power Demo) with Subtle Filigree End Caps */}
       <button
         type="button"
         onClick={() => {
@@ -1768,11 +1938,15 @@ export const ShopSpirit3DPreview: React.FC<ShopSpirit3DPreviewProps> = ({
           }
           onTriggerDemo?.();
         }}
-        className="relative w-full min-h-[40px] flex items-center justify-center gap-2 rounded-xl border-2 border-[#8d562b] bg-gradient-to-r from-[#4d2c14] via-[#653b1c] to-[#4d2c14] px-4 py-2 text-sm font-serif font-bold text-[#fff3cc] tracking-wide shadow-[0_3px_0_#291305,0_5px_10px_rgba(0,0,0,0.35)] hover:brightness-110 active:translate-y-0.5 active:shadow-[0_1px_0_#291305] transition-all focus-visible:outline-2 focus-visible:outline-[#86efac]"
+        className="relative w-full min-h-[40px] flex items-center justify-center rounded-md border border-[#b5beb5]/80 bg-gradient-to-b from-[#555d57] to-[#333935] px-8 py-1.5 text-sm font-medium text-[#f7f4eb] shadow-[0_3px_10px_rgba(0,0,0,0.48),inset_0_0_0_2px_rgba(20,24,22,0.7),inset_0_0_0_3px_rgba(255,255,255,0.16)] hover:brightness-110 active:translate-y-px transition-all focus-visible:outline-2 focus-visible:outline-[#5eead4]"
       >
-        <span className="text-[#facc15] text-xs">✨</span>
+        <span aria-hidden="true" className="pointer-events-none absolute left-2.5 text-[#c7cfbf]/60 text-xs">
+          ✦
+        </span>
         <span>{powerActionLabel}</span>
-        <span className="text-[#facc15] text-xs">✨</span>
+        <span aria-hidden="true" className="pointer-events-none absolute right-2.5 text-[#c7cfbf]/60 text-xs">
+          ✦
+        </span>
       </button>
     </div>
   );

@@ -1,4 +1,4 @@
-import l1EmeraldGlade from '../assets/images/l1_emerald_glade_1795615998066.jpg';
+import l1EmeraldGlade from '../assets/images/l1_emerald_glade_storybook_1795775337005.jpg';
 import l1MoonpetalWoods from '../assets/images/l1_moonpetal_woods_1795615998830.jpg';
 import l1StarlitSanctuary from '../assets/images/l1_starlit_sanctuary_1795615999076.jpg';
 import l2AmberDusk from '../assets/images/l2_amber_dusk_1795615999375.jpg';
@@ -7,9 +7,9 @@ import l2GoldenSummit from '../assets/images/l2_golden_summit_1795616001942.jpg'
 import l3SilverFrostwood from '../assets/images/l3_silver_frostwood_1795619149378.jpg';
 import l3FloatingIsles from '../assets/images/l3_floating_isles_1795619149741.jpg';
 import l3PrismHeartwood from '../assets/images/l3_prism_heartwood_1795619149796.jpg';
-import l4FrozenPines from '../assets/images/l4_frozen_pines_1795683611656.jpg';
-import l4IcyPeaks from '../assets/images/l4_icy_peaks_1795683612387.jpg';
-import l4FrostSanctuary from '../assets/images/l4_frost_sanctuary_1795683613317.jpg';
+import l4FrozenPines from '../assets/images/l4_frozen_pines_storybook_1795775339407.jpg';
+import l4IcyPeaks from '../assets/images/l4_icy_peaks_storybook_1795775340859.jpg';
+import l4FrostSanctuary from '../assets/images/l4_frost_sanctuary_storybook_1795775341076.jpg';
 import type { LevelId } from './types';
 
 const BACKDROP_PATHS: Record<LevelId, [string, string, string]> = {

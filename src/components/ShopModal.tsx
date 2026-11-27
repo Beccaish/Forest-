@@ -1,5 +1,10 @@
 import React, { Component, Suspense, lazy, type ReactNode, useEffect, useMemo, useState } from 'react';
-import shopStoneWallImg from '../assets/images/shop_stone_wall_1795702807514.jpg';
+import cardBgArchfeyImg from '../assets/images/card_bg_archfey_nebula_1795774783780.jpg';
+import cardBgCosmicImg from '../assets/images/card_bg_cosmic_nebula_1795774782497.jpg';
+import cardBgSapphireImg from '../assets/images/card_bg_sapphire_nebula_1795774785238.jpg';
+import cardBgSolarImg from '../assets/images/card_bg_solar_nebula_1795774782066.jpg';
+import cardBgTealImg from '../assets/images/card_bg_teal_nebula_1795774781657.jpg';
+import shopTwilightForestImg from '../assets/images/shop_twilight_forest_bg_1795774785244.jpg';
 import {
   SHOP_ITEMS,
   type PlayerLoadout,
@@ -26,7 +31,7 @@ class PreviewErrorBoundary extends Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex h-[250px] sm:h-[285px] w-full items-center justify-center rounded-2xl border-2 border-[#8a552b] bg-[#2a170b] p-4 text-center text-sm font-medium text-[#fff3dc]">
+        <div className="flex h-[250px] sm:h-[285px] w-full items-center justify-center rounded-xl border border-[#9a7c5e]/80 bg-[#0d2420] p-4 text-center text-sm font-medium text-[#e9f5f1]">
           3D preview unavailable on this device — you can still try on, buy, and equip all items.
         </div>
       );
@@ -64,47 +69,159 @@ const DewdropIcon: React.FC<{ size?: number }> = ({ size = 18 }) => (
   <svg width={size} height={size} viewBox="0 0 20 20" fill="none" aria-hidden="true">
     <path
       d="M10 2.2C13.4 6.3 15.8 9.6 15.8 12.6C15.8 15.8 13.2 18 10 18C6.8 18 4.2 15.8 4.2 12.6C4.2 9.6 6.6 6.3 10 2.2Z"
-      fill="#2dd4bf"
-      stroke="#134e4a"
-      strokeWidth="1.4"
+      fill="#3ee2c8"
+      stroke="#14584e"
+      strokeWidth="1.3"
     />
     <path
       d="M10 4.2C12.4 7.5 14.2 10.2 14.2 12.6C14.2 15 12.2 16.5 10 16.5C7.8 16.5 5.8 15 5.8 12.6C5.8 10.2 7.6 7.5 10 4.2Z"
-      fill="#5eead4"
-      fillOpacity="0.75"
+      fill="#7ff5e3"
+      fillOpacity="0.8"
     />
     <circle cx="8" cy="11.2" r="1.5" fill="#ffffff" />
   </svg>
 );
+
+interface CardAtmosphere {
+  bgImage: string;
+  bgClassName: string;
+  cardBg: string;
+  scrimBg: string;
+  iconBg: string;
+  iconBorder: string;
+  iconGlow: string;
+  isDarkTile: boolean;
+}
+
+function getCardAtmosphere(accentColor: string): CardAtmosphere {
+  switch (accentColor.toLowerCase()) {
+    case '#e59a1a':
+    case '#eab308':
+    case '#d97706':
+    case '#f97316':
+    case '#ea580c':
+      return {
+        bgImage: cardBgSolarImg,
+        bgClassName: 'object-cover object-top scale-115 opacity-90',
+        cardBg: 'linear-gradient(145deg, #5c380e 0%, #3d2409 52%, #241404 100%)',
+        scrimBg:
+          'linear-gradient(180deg, rgba(66,38,8,0.28) 0%, rgba(44,24,5,0.58) 55%, rgba(28,15,3,0.88) 100%)',
+        iconBg: 'linear-gradient(180deg, #fffaf0 0%, #fcedcf 100%)',
+        iconBorder: '#f6d594',
+        iconGlow: '0 0 20px rgba(251, 191, 36, 0.42), inset 0 1px 0 rgba(255,255,255,0.9)',
+        isDarkTile: false,
+      };
+    case '#d946ef':
+    case '#8b5cf6':
+    case '#6366f1':
+    case '#4f46e5':
+    case '#7c3aed':
+      return {
+        bgImage: cardBgCosmicImg,
+        bgClassName: 'object-cover object-center opacity-92',
+        cardBg: 'linear-gradient(145deg, #321d4f 0%, #1f1639 54%, #120d26 100%)',
+        scrimBg:
+          'linear-gradient(180deg, rgba(28,18,52,0.25) 0%, rgba(22,14,42,0.48) 58%, rgba(14,9,28,0.82) 100%)',
+        iconBg: 'linear-gradient(145deg, #43226b 0%, #261243 100%)',
+        iconBorder: 'rgba(192, 132, 252, 0.72)',
+        iconGlow: '0 0 18px rgba(192, 132, 252, 0.36), inset 0 1px 1px rgba(255,255,255,0.16)',
+        isDarkTile: true,
+      };
+    case '#ec4899':
+    case '#c026d3':
+    case '#dc2626':
+    case '#e11d48':
+      return {
+        bgImage: cardBgArchfeyImg,
+        bgClassName: 'object-cover object-top opacity-92',
+        cardBg: 'linear-gradient(145deg, #69254e 0%, #461936 52%, #290e20 100%)',
+        scrimBg:
+          'linear-gradient(180deg, rgba(84,25,62,0.22) 0%, rgba(56,16,42,0.48) 58%, rgba(34,10,25,0.82) 100%)',
+        iconBg: 'linear-gradient(180deg, #fff5fa 0%, #fbd7ea 100%)',
+        iconBorder: '#f9a8d4',
+        iconGlow: '0 0 20px rgba(244, 114, 182, 0.45), inset 0 1px 0 rgba(255,255,255,0.9)',
+        isDarkTile: false,
+      };
+    case '#0ea5e9':
+    case '#3b82f6':
+    case '#0284c7':
+    case '#2563eb':
+      return {
+        bgImage: cardBgSapphireImg,
+        bgClassName: 'object-cover object-top opacity-92',
+        cardBg: 'linear-gradient(145deg, #16405d 0%, #0e2b42 54%, #081a2a 100%)',
+        scrimBg:
+          'linear-gradient(180deg, rgba(16,46,74,0.24) 0%, rgba(11,32,54,0.5) 58%, rgba(7,20,34,0.84) 100%)',
+        iconBg: 'linear-gradient(180deg, #f3faff 0%, #dcf0fd 100%)',
+        iconBorder: '#93c5fd',
+        iconGlow: '0 0 20px rgba(56, 189, 248, 0.4), inset 0 1px 0 rgba(255,255,255,0.9)',
+        isDarkTile: false,
+      };
+    default:
+      return {
+        bgImage: cardBgTealImg,
+        bgClassName: 'object-cover object-center opacity-88',
+        cardBg: 'linear-gradient(145deg, #1a4b52 0%, #11353b 54%, #0a2227 100%)',
+        scrimBg:
+          'linear-gradient(180deg, rgba(19,60,66,0.28) 0%, rgba(12,42,47,0.52) 58%, rgba(7,26,30,0.84) 100%)',
+        iconBg: 'linear-gradient(180deg, #f3fbf9 0%, #dcf3ee 100%)',
+        iconBorder: '#99f6e4',
+        iconGlow: '0 0 20px rgba(45, 212, 191, 0.38), inset 0 1px 0 rgba(255,255,255,0.9)',
+        isDarkTile: false,
+      };
+  }
+}
 
 const ItemIcon: React.FC<{ id: ShopItemId; size?: number }> = ({ id, size = 48 }) => {
   switch (id) {
     case 'super_sky_leap':
       return (
         <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M16 4L23 14H18.5V23H13.5V14H9L16 4Z" fill="#0ea58a" stroke="#085f50" strokeWidth="1" />
-          <ellipse cx="16" cy="25.5" rx="10" ry="2.8" stroke="#d97706" strokeWidth="2" />
+          <path
+            d="M16 3.5L23.5 13.5H18.8V22.5H13.2V13.5H8.5L16 3.5Z"
+            fill="#0d9e83"
+            stroke="#064e40"
+            strokeWidth="1.2"
+            strokeLinejoin="round"
+          />
+          <ellipse cx="16" cy="25.5" rx="10.2" ry="2.7" stroke="#e07a18" strokeWidth="2.2" />
         </svg>
       );
     case 'super_nova_pulse':
       return (
         <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <circle cx="16" cy="16" r="10.5" stroke="#d97706" strokeWidth="2" strokeDasharray="3 3" />
+          <circle
+            cx="16"
+            cy="16"
+            r="11"
+            stroke="#d97706"
+            strokeWidth="2"
+            strokeDasharray="3.2 2.6"
+          />
           <path
-            d="M16 5L19 13L27 16L19 19L16 27L13 19L5 16L13 13L16 5Z"
+            d="M16 4.5L19.2 12.8L27.5 16L19.2 19.2L16 27.5L12.8 19.2L4.5 16L12.8 12.8L16 4.5Z"
             fill="#fbbf24"
             stroke="#92400e"
-            strokeWidth="1"
+            strokeWidth="1.3"
+            strokeLinejoin="round"
           />
         </svg>
       );
     case 'super_star_magnet':
       return (
         <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <circle cx="16" cy="16" r="10.5" stroke="#d946ef" strokeWidth="2" strokeDasharray="4 3" />
-          <circle cx="16" cy="16" r="5" fill="#ec4899" />
-          <circle cx="8.5" cy="9.5" r="2.2" fill="#f59e0b" />
-          <circle cx="24" cy="22" r="2.2" fill="#14b8a6" />
+          <circle
+            cx="16"
+            cy="16"
+            r="10.5"
+            stroke="#e879f9"
+            strokeWidth="3.1"
+            strokeDasharray="4.6 3.4"
+            strokeLinecap="round"
+          />
+          <circle cx="16" cy="16" r="5.2" fill="#ec4899" stroke="#f9a8d4" strokeWidth="0.9" />
+          <circle cx="7.5" cy="9" r="1.8" fill="#fde047" />
+          <circle cx="24.5" cy="22.5" r="1.8" fill="#5eead4" />
         </svg>
       );
     case 'super_phoenix_wings':
@@ -141,13 +258,14 @@ const ItemIcon: React.FC<{ id: ShopItemId; size?: number }> = ({ id, size = 48 }
       return (
         <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path
-            d="M16 4.5L18.5 12L26 14.5L18.5 17L16 24.5L13.5 17L6 14.5L13.5 12Z"
+            d="M16 4.2L19 12.5L27.3 15.5L19 18.5L16 26.8L13 18.5L4.7 15.5L13 12.5Z"
             fill="#ec4899"
-            stroke="#9d174d"
-            strokeWidth="1"
+            stroke="#831843"
+            strokeWidth="1.2"
+            strokeLinejoin="round"
           />
-          <circle cx="8.5" cy="8" r="2.2" fill="#f59e0b" />
-          <circle cx="24" cy="23.5" r="2.3" fill="#14b8a6" />
+          <path d="M8 6.5L9.1 8.8L11.4 9.9L9.1 11L8 13.3L6.9 11L4.6 9.9L6.9 8.8Z" fill="#14b8a6" />
+          <circle cx="24" cy="24" r="2.3" fill="#f59e0b" />
         </svg>
       );
     case 'moss_crown':
@@ -203,25 +321,25 @@ const ItemIcon: React.FC<{ id: ShopItemId; size?: number }> = ({ id, size = 48 }
         <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
           <path
             d="M11 24.5C9.5 18 7.5 14 5.5 7.5M9.5 16L5.5 14M10 12L12.5 8.5"
-            stroke="#4f46e5"
+            stroke="#bae6fd"
             strokeWidth="2.6"
             strokeLinecap="round"
           />
           <path
             d="M21 24.5C22.5 18 24.5 14 26.5 7.5M22.5 16L26.5 14M22 12L19.5 8.5"
-            stroke="#4f46e5"
+            stroke="#bae6fd"
             strokeWidth="2.6"
             strokeLinecap="round"
           />
-          <circle cx="16" cy="22" r="2.6" fill="#0ea5e9" />
+          <circle cx="16" cy="22" r="2.6" fill="#38bdf8" stroke="#e0f2fe" strokeWidth="0.9" />
         </svg>
       );
     case 'astral_wizard':
       return (
         <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <ellipse cx="16" cy="23.5" rx="11.5" ry="3.2" fill="#5b21b6" stroke="#c084fc" strokeWidth="1.5" />
-          <path d="M8.5 22.5L17 6.5L23.5 22.5Z" fill="#5b21b6" stroke="#c084fc" strokeWidth="1.5" />
-          <circle cx="17" cy="6.5" r="2.6" fill="#facc15" />
+          <ellipse cx="16" cy="23.5" rx="11.5" ry="3.2" fill="#7c3aed" stroke="#e9d5ff" strokeWidth="1.5" />
+          <path d="M8.5 22.5L17 6.5L23.5 22.5Z" fill="#7c3aed" stroke="#e9d5ff" strokeWidth="1.5" />
+          <circle cx="17" cy="6.5" r="2.6" fill="#fde047" />
         </svg>
       );
     case 'sunset_ember':
@@ -347,8 +465,8 @@ const ItemIcon: React.FC<{ id: ShopItemId; size?: number }> = ({ id, size = 48 }
     case 'fairy_sparkle_tiara':
       return (
         <svg width={size} height={size} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-          <path d="M5.5 21.5C8.5 14 23.5 14 26.5 21.5" stroke="#d946ef" strokeWidth="2.4" strokeLinecap="round" />
-          <circle cx="16" cy="11.5" r="3" fill="#facc15" stroke="#ca8a04" strokeWidth="0.9" />
+          <path d="M5.5 21.5C8.5 14 23.5 14 26.5 21.5" stroke="#f0abfc" strokeWidth="2.4" strokeLinecap="round" />
+          <circle cx="16" cy="11.5" r="3" fill="#fde047" stroke="#f59e0b" strokeWidth="0.9" />
           <circle cx="10" cy="15" r="2" fill="#f472b6" />
           <circle cx="22" cy="15" r="2" fill="#f472b6" />
         </svg>
@@ -509,299 +627,350 @@ export const ShopModal: React.FC<ShopModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center bg-[#07130d]/80 backdrop-blur-md p-1.5 pt-[max(0.5rem,env(safe-area-inset-top))] pb-[max(0.5rem,env(safe-area-inset-bottom))] pl-[max(0.5rem,env(safe-area-inset-left))] pr-[max(0.5rem,env(safe-area-inset-right))] sm:p-5 overflow-hidden"
+      className="fixed inset-0 z-50 flex items-stretch justify-center bg-[#041210] overflow-hidden"
       role="dialog"
       aria-modal="true"
       aria-labelledby="grove-shop-title"
     >
-      <div className="relative w-full max-w-6xl h-full sm:h-auto sm:max-h-[92vh] sm:max-h-[92dvh] flex flex-col rounded-2xl sm:rounded-3xl border-4 border-[#3b2716] bg-[#1a281e] shadow-[0_20px_50px_rgba(0,0,0,0.7),inset_0_2px_4px_rgba(255,230,180,0.15)] overflow-hidden">
-        {/* Ancient Temple Mossy Stone Wall Background */}
+      <div className="relative w-full h-full flex flex-col bg-[#08221e] overflow-hidden">
+        {/* Painterly Twilight Enchanted Forest Backdrop */}
         <img
-          src={shopStoneWallImg}
+          src={shopTwilightForestImg}
           alt=""
           aria-hidden="true"
           referrerPolicy="no-referrer"
-          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-65"
+          className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-85"
         />
-        {/* Ambient magical sunlight & vignette overlay */}
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 bg-gradient-to-b from-[#1b2f23]/80 via-[#132219]/75 to-[#0b1710]/90"
+          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_center,rgba(20,76,68,0.42)_0%,rgba(6,28,25,0.72)_62%,rgba(3,15,14,0.88)_100%)]"
         />
 
-        {/* Floating Golden Fireflies / Spore motes */}
-        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-1 overflow-hidden">
-          <div className="absolute top-8 left-12 w-2 h-2 rounded-full bg-[#fde047] opacity-60 shadow-[0_0_8px_#fde047]" />
-          <div className="absolute top-1/4 right-20 w-2.5 h-2.5 rounded-full bg-[#86efac] opacity-50 shadow-[0_0_10px_#86efac]" />
-          <div className="absolute bottom-16 left-1/3 w-2 h-2 rounded-full bg-[#facc15] opacity-55 shadow-[0_0_8px_#facc15]" />
-          <div className="absolute top-2/3 right-1/4 w-3 h-3 rounded-full bg-[#67e8f9] opacity-45 shadow-[0_0_10px_#67e8f9]" />
+        {/* Delicate Gold Filigree Corner & Perimeter Flourishes */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-1.5 sm:inset-2.5 z-20 rounded-xl border border-[#d6b879]/30">
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none" className="absolute -top-0.5 -left-0.5 opacity-80">
+            <path d="M2 44V12C2 6.5 6.5 2 12 2H44" stroke="#dfbe7b" strokeWidth="1.4" />
+            <path d="M7 24C7 13 13 7 24 7" stroke="#dfbe7b" strokeWidth="1.1" strokeOpacity="0.7" />
+            <circle cx="11" cy="11" r="2" fill="#dfbe7b" />
+          </svg>
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none" className="absolute -top-0.5 -right-0.5 opacity-80">
+            <path d="M54 44V12C54 6.5 49.5 2 44 2H12" stroke="#dfbe7b" strokeWidth="1.4" />
+            <path d="M49 24C49 13 43 7 32 7" stroke="#dfbe7b" strokeWidth="1.1" strokeOpacity="0.7" />
+            <circle cx="45" cy="11" r="2" fill="#dfbe7b" />
+          </svg>
+          <svg width="56" height="56" viewBox="0 0 56 56" fill="none" className="absolute -bottom-0.5 -right-0.5 opacity-80">
+            <path d="M54 12V44C54 49.5 49.5 54 44 54H12" stroke="#dfbe7b" strokeWidth="1.4" />
+            <path d="M49 32C49 43 43 49 32 49" stroke="#dfbe7b" strokeWidth="1.1" strokeOpacity="0.7" />
+            <circle cx="45" cy="45" r="2" fill="#dfbe7b" />
+          </svg>
         </div>
 
-        {/* Top Parchment Scroll Header Bar */}
-        <div className="relative z-10 flex items-center justify-between gap-3 px-3 py-2 sm:px-6 sm:py-3 shrink-0">
-          {/* Parchment Scroll Plaque */}
-          <div className="relative flex-1 max-w-2xl flex items-center justify-between gap-3 rounded-xl border-y-2 border-[#b88c52] bg-gradient-to-b from-[#fbf4e4] via-[#f5ebcf] to-[#ece0be] px-4 py-2 sm:px-6 sm:py-2.5 shadow-[0_4px_12px_rgba(0,0,0,0.35),inset_0_1px_2px_rgba(255,255,255,0.7)]">
-            {/* Left scroll curl edge */}
-            <div aria-hidden="true" className="absolute -left-2 top-0 bottom-0 w-3 rounded-l-md bg-gradient-to-r from-[#cf9d56] to-[#ebcb8d] border-l-2 border-y-2 border-[#8f5a2b] shadow" />
-            {/* Right scroll curl edge */}
-            <div aria-hidden="true" className="absolute -right-2 top-0 bottom-0 w-3 rounded-r-md bg-gradient-to-l from-[#cf9d56] to-[#ebcb8d] border-r-2 border-y-2 border-[#8f5a2b] shadow" />
+        {/* Ambient Stardust Motes */}
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 z-1 overflow-hidden">
+          <div className="absolute top-14 left-1/3 w-1.5 h-1.5 rounded-full bg-[#fde68a] opacity-55" />
+          <div className="absolute top-1/4 right-16 w-1.5 h-1.5 rounded-full bg-[#99f6e4] opacity-50" />
+          <div className="absolute top-20 left-1/2 w-1 h-1 rounded-full bg-[#fef08a] opacity-60" />
+          <div className="absolute bottom-24 left-1/2 w-1.5 h-1.5 rounded-full bg-[#fef08a] opacity-45" />
+        </div>
 
-            <div className="flex items-center gap-3 sm:gap-6">
+        {/* Centered Responsive Container inside Full-Screen Canvas */}
+        <div className="relative z-10 flex-1 min-h-0 w-full max-w-[1380px] mx-auto flex flex-col px-3 sm:px-7 pt-3 sm:pt-4 pb-2 sm:pb-4">
+          {/* Open Seamless Header Row with Subtle Horizon Rule */}
+          <div className="flex items-center justify-between gap-3 border-b border-[#70b8a4]/25 pb-3 sm:pb-3.5 shrink-0">
+            <div className="flex flex-wrap items-center gap-3.5 sm:gap-5">
               <h2
                 id="grove-shop-title"
-                className="font-serif text-xl sm:text-2xl md:text-3xl font-black text-[#361e0b] tracking-wide drop-shadow-sm flex items-center gap-2"
+                className="font-display text-2xl sm:text-[30px] font-medium text-[#f5eedc] tracking-tight"
               >
-                <span>Grove Shop</span>
+                Grove Shop
               </h2>
 
-              {/* Dewdrops Plaque */}
-              <div className="flex items-center gap-1.5 rounded-xl border border-[#d6af74] bg-[#fbf5e5] px-2.5 py-1 sm:px-3 sm:py-1 shadow-[inset_0_1px_3px_rgba(160,110,40,0.15)] text-sm sm:text-base font-bold text-[#3f2711]">
-                <DewdropIcon size={18} />
-                <span className="tabular-nums font-black text-[#2e1909]">{progress.dewdrops}</span>
-                <span className="text-xs sm:text-sm font-semibold text-[#5a3a1d]">Dewdrops</span>
+              {/* Brushed Warm Gold Dewdrops Plaque */}
+              <div className="flex items-center gap-2 rounded-md border border-[#e5c782] bg-gradient-to-b from-[#f9edd0] via-[#ecd69e] to-[#dab970] px-3.5 py-1.5 shadow-[0_3px_10px_rgba(0,0,0,0.4),inset_0_0_0_2px_rgba(92,68,26,0.2),inset_0_1px_0_rgba(255,255,255,0.75)] text-sm sm:text-base font-semibold text-[#2d1e0a]">
+                <DewdropIcon size={17} />
+                <span className="tabular-nums font-bold">{progress.dewdrops}</span>
+                <span className="font-medium">Dewdrops</span>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#cbb789]/85 bg-gradient-to-b from-[#395d58] to-[#233d3a] px-5 py-1.5 text-sm font-medium text-[#eef4f1] shadow-[0_3px_10px_rgba(0,0,0,0.45),inset_0_0_0_2px_rgba(12,28,26,0.72),inset_0_0_0_3px_rgba(220,205,165,0.28)] hover:brightness-110 transition-all focus-visible:outline-2 focus-visible:outline-[#5eead4]"
+            >
+              Close
+            </button>
           </div>
 
-          {/* Carved Wood Leaf / Pebble Close Button */}
-          <button
-            type="button"
-            onClick={onClose}
-            className="min-h-[40px] sm:min-h-[44px] whitespace-nowrap shrink-0 rounded-2xl border-2 border-[#9b6339] bg-gradient-to-b from-[#7a441e] via-[#5c3115] to-[#42210d] px-5 sm:px-6 py-1.5 sm:py-2 text-sm sm:text-base font-serif font-bold text-[#fef5e1] shadow-[0_4px_10px_rgba(0,0,0,0.4),0_2px_0_#281206] hover:brightness-110 active:translate-y-0.5 active:shadow-[0_1px_0_#281206] transition-all focus-visible:outline-2 focus-visible:outline-[#86efac]"
+          {/* Workspace: Mobile scrolls together; Desktop (lg+) pins Left Try-On & Tabs while ONLY Item Cards scroll */}
+          <div
+            className="flex-1 min-h-0 overflow-y-auto lg:overflow-hidden lg:flex lg:flex-col pt-3.5 sm:pt-4 pr-0.5 lg:pr-0"
+            style={{ touchAction: 'pan-y' }}
           >
-            Close
-          </button>
-        </div>
+            <div className="grid grid-cols-1 lg:grid-cols-[410px_1fr] xl:grid-cols-[435px_1fr] gap-4 sm:gap-6 items-start lg:items-stretch lg:flex-1 lg:min-h-0 pb-2 lg:pb-0">
+              {/* Left Column: 3D Stage + Wearing Now Bronze Panel (Pinned on Desktop) */}
+              <div className="flex flex-col gap-3 lg:max-h-full lg:overflow-y-auto lg:pr-0.5">
+                <PreviewErrorBoundary>
+                  <Suspense
+                    fallback={
+                      <div className="flex h-[265px] sm:h-[300px] w-full items-center justify-center rounded-xl border border-[#b59272]/80 bg-[#0d2420] text-sm font-medium text-[#e9f5f1]">
+                        Loading 3D forest glade...
+                      </div>
+                    }
+                  >
+                    <LazyShopSpirit3DPreview
+                      loadout={displayedLoadout}
+                      flyingActive={flyingActive}
+                      demoNonce={demoNonce}
+                      onToggleFly={() => setFlyingActive((v) => !v)}
+                      onTriggerDemo={() => setDemoNonce((n) => n + 1)}
+                    />
+                  </Suspense>
+                </PreviewErrorBoundary>
 
-        {/* Scrollable Two-Column Workspace */}
-        <div className="relative z-10 flex-1 min-h-0 overflow-y-auto p-3 sm:p-5" style={{ touchAction: 'pan-y' }}>
-          <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] xl:grid-cols-[410px_1fr] gap-4 sm:gap-5 items-start">
-            {/* Left Column: 3D Forest Turntable & Wearing Now Drawer */}
-            <div className="flex flex-col gap-3">
-              <PreviewErrorBoundary>
-                <Suspense
-                  fallback={
-                    <div className="flex h-[250px] sm:h-[285px] w-full items-center justify-center rounded-2xl border-2 border-[#8a552b] bg-[#2a170b] text-sm font-semibold text-[#fff3dc]">
-                      Loading 3D forest glade...
-                    </div>
-                  }
-                >
-                  <LazyShopSpirit3DPreview
-                    loadout={displayedLoadout}
-                    flyingActive={flyingActive}
-                    demoNonce={demoNonce}
-                    onToggleFly={() => setFlyingActive((v) => !v)}
-                    onTriggerDemo={() => setDemoNonce((n) => n + 1)}
-                  />
-                </Suspense>
-              </PreviewErrorBoundary>
-
-              {/* "Wearing Now" Carved Wooden Drawer Panel */}
-              <div className="relative rounded-2xl border-2 border-[#683f1d] bg-gradient-to-b from-[#3a200e] via-[#2d180a] to-[#201007] p-3 sm:p-3.5 shadow-[0_6px_16px_rgba(0,0,0,0.4),inset_0_1px_2px_rgba(255,220,160,0.1)] flex flex-col gap-2.5">
-                {/* Brass Lock Plate Accent Centered */}
-                <div aria-hidden="true" className="absolute -top-2.5 left-1/2 -translate-x-1/2 flex items-center justify-center">
-                  <div className="w-6 h-3 rounded-t-sm bg-gradient-to-b from-[#f59e0b] to-[#b45309] border border-[#78350f] shadow flex items-center justify-center">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#451a03]" />
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between gap-2 pt-0.5">
-                  <span className="font-serif text-sm font-bold tracking-wide text-[#fdecd0]">
-                    {isPreviewDirty ? 'Trying On Preview' : 'Wearing Now'}
-                  </span>
-                  {isPreviewDirty && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPreviewLoadout(null);
-                        setFlyingActive(false);
-                      }}
-                      className="min-h-[28px] whitespace-nowrap shrink-0 rounded-lg border border-[#a3e635]/60 bg-[#1e3d16] px-2.5 py-0.5 text-xs font-bold text-[#d9f99d] hover:bg-[#27501c] transition-colors"
-                    >
-                      Reset Try-On
-                    </button>
-                  )}
-                </div>
-
-                {/* Recessed carved wood slot trays */}
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div className="rounded-xl border border-[#4d2a12] bg-[#160a04]/90 p-2 shadow-inner">
-                    <div className="text-[10px] uppercase font-bold tracking-wider text-[#a8825c]">Super Power</div>
-                    <div className={`font-bold truncate mt-0.5 ${powerInfo.differsFromEquipped ? 'text-[#facc15]' : 'text-[#f5ede2]'}`}>
-                      {powerInfo.name}
-                    </div>
+                {/* Wearing Now Warm Walnut & Brushed Gold-Bronze Plaque Panel */}
+                <div className="rounded-xl border border-[#dfc080]/90 bg-gradient-to-b from-[#3a2a1e]/96 to-[#221710]/98 p-3.5 sm:p-4 shadow-[0_12px_28px_rgba(0,0,0,0.58),inset_0_0_0_2px_rgba(24,15,9,0.75),inset_0_0_0_3px_rgba(223,192,128,0.28)] flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm sm:text-[15px] font-medium text-[#f5ecda]">
+                      {isPreviewDirty ? 'Trying On Preview' : 'Wearing Now'}
+                    </span>
+                    {isPreviewDirty && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPreviewLoadout(null);
+                          setFlyingActive(false);
+                        }}
+                        className="min-h-[28px] whitespace-nowrap shrink-0 rounded-md border border-[#72c9b4]/70 bg-[#17423a] px-2.5 py-0.5 text-xs font-medium text-[#d1fae5] hover:bg-[#1e544a] transition-colors"
+                      >
+                        Reset Try-On
+                      </button>
+                    )}
                   </div>
 
-                  <div className="rounded-xl border border-[#4d2a12] bg-[#160a04]/90 p-2 shadow-inner">
-                    <div className="text-[10px] uppercase font-bold tracking-wider text-[#a8825c]">Headwear</div>
-                    <div className={`font-bold truncate mt-0.5 ${hatInfo.differsFromEquipped ? 'text-[#facc15]' : 'text-[#f5ede2]'}`}>
-                      {hatInfo.name}
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-[#4d2a12] bg-[#160a04]/90 p-2 shadow-inner">
-                    <div className="text-[10px] uppercase font-bold tracking-wider text-[#a8825c]">Cloak</div>
-                    <div className={`font-bold truncate mt-0.5 ${cloakInfo.differsFromEquipped ? 'text-[#facc15]' : 'text-[#f5ede2]'}`}>
-                      {cloakInfo.name}
-                    </div>
-                  </div>
-
-                  <div className="rounded-xl border border-[#4d2a12] bg-[#160a04]/90 p-2 shadow-inner">
-                    <div className="text-[10px] uppercase font-bold tracking-wider text-[#a8825c]">Relic</div>
-                    <div className={`font-bold truncate mt-0.5 ${charmInfo.differsFromEquipped ? 'text-[#facc15]' : 'text-[#f5ede2]'}`}>
-                      {charmInfo.name}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Column: Category Shelf + Parchment Item Cards with Moss */}
-            <div className="flex flex-col gap-3 min-w-0">
-              {/* Category River Stone Tabs on Wooden Mossy Shelf */}
-              <div className="relative rounded-2xl border-2 border-[#683f1d] bg-gradient-to-r from-[#4d2c14] via-[#5c3519] to-[#4d2c14] p-1.5 sm:p-2 shadow-md flex items-center gap-1.5 sm:gap-2 overflow-x-auto">
-                {/* Top moss sprig trim */}
-                <div aria-hidden="true" className="pointer-events-none absolute -top-2 left-4 right-4 flex justify-between">
-                  <div className="w-8 h-2 bg-[#65a30d] rounded-t-full opacity-70" />
-                  <div className="w-12 h-2.5 bg-[#4d7c0f] rounded-t-full opacity-80" />
-                  <div className="w-10 h-2 bg-[#65a30d] rounded-t-full opacity-70" />
-                </div>
-
-                {CATEGORY_TABS.map((tab) => {
-                  const active = category === tab.id;
-                  return (
-                    <button
-                      key={tab.id}
-                      type="button"
-                      onClick={() => setCategory(tab.id)}
-                      className={`min-h-[38px] whitespace-nowrap shrink-0 rounded-xl px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-bold transition-all focus-visible:outline-2 focus-visible:outline-[#86efac] ${
-                        active
-                          ? 'bg-gradient-to-b from-[#a3e635] via-[#84cc16] to-[#65a30d] border-2 border-[#d9f99d] text-[#143807] font-black shadow-[0_3px_0_#365314,0_4px_10px_rgba(0,0,0,0.35)] scale-[1.02]'
-                          : 'bg-gradient-to-b from-[#4d6b53] to-[#364e3c] hover:from-[#5b7d62] hover:to-[#425e49] border-2 border-[#688a6f] text-[#f4faf2] shadow-[0_2px_0_#1f3024]'
-                      }`}
-                    >
-                      {tab.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* 2-Column Parchment Item Cards Grid with Moss Borders */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-3.5">
-                {filteredItems.map((item) => {
-                  const owned = ownedSet.has(item.id);
-                  const equipped = progress.equipped[item.category] === item.id;
-                  const tryingOn = displayedLoadout[item.category] === item.id;
-                  const affordable = progress.dewdrops >= item.price;
-                  const shortfall = Math.max(0, item.price - progress.dewdrops);
-
-                  return (
+                  {/* Brushed Champagne-Bronze Metallic Loadout Slots */}
+                  <div className="grid grid-cols-2 gap-2.5">
                     <div
-                      key={item.id}
-                      className={`relative rounded-2xl p-3.5 sm:p-4 flex flex-col justify-between gap-3 shadow-[0_6px_18px_rgba(15,8,3,0.35)] transition-all ${
-                        tryingOn
-                          ? 'border-[3px] border-[#a3e635] ring-2 ring-[#a3e635]/50 bg-gradient-to-b from-[#fefcee] via-[#f7f5dc] to-[#edf0cf]'
-                          : 'border-[3px] border-[#689334] bg-gradient-to-b from-[#fbf5e7] via-[#f6eed9] to-[#efe3c8]'
-                      }`}
+                      style={{
+                        background:
+                          'linear-gradient(125deg, #625033 0%, #9b8153 48%, #b99b66 72%, #725c39 100%)',
+                      }}
+                      className="rounded-md border border-[#e0c489]/75 px-3 py-2 shadow-[0_2px_6px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,248,225,0.28)]"
                     >
-                      {/* Corner Moss Decals */}
-                      <div aria-hidden="true" className="pointer-events-none absolute -top-1 -left-1">
-                        <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                          <path d="M0 0C8 0 16 4 16 14C11 14 7 10 0 8V0Z" fill="#588b2b" />
-                          <circle cx="14" cy="12" r="1.5" fill="#a3e635" />
-                        </svg>
+                      <div className="text-[11px] font-medium text-[#f2e4c7]">Super Power</div>
+                      <div
+                        className={`text-xs sm:text-sm font-semibold truncate mt-0.5 ${
+                          powerInfo.differsFromEquipped ? 'text-[#fef08a]' : 'text-white'
+                        }`}
+                      >
+                        {powerInfo.name}
                       </div>
-                      <div aria-hidden="true" className="pointer-events-none absolute -bottom-1 -right-1">
-                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                          <path d="M20 20C12 20 4 16 4 6C9 6 13 10 20 12V20Z" fill="#588b2b" />
-                          <circle cx="6" cy="8" r="1.5" fill="#a3e635" />
-                        </svg>
-                      </div>
+                    </div>
 
-                      {/* Top Section: Icon + Title + Price + Perk */}
-                      <div className="flex items-start gap-3">
-                        {/* Icon frame */}
+                    <div
+                      style={{
+                        background:
+                          'linear-gradient(125deg, #625033 0%, #9b8153 48%, #b99b66 72%, #725c39 100%)',
+                      }}
+                      className="rounded-md border border-[#e0c489]/75 px-3 py-2 shadow-[0_2px_6px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,248,225,0.28)]"
+                    >
+                      <div className="text-[11px] font-medium text-[#f2e4c7]">Headwear</div>
+                      <div
+                        className={`text-xs sm:text-sm font-semibold truncate mt-0.5 ${
+                          hatInfo.differsFromEquipped ? 'text-[#fef08a]' : 'text-white'
+                        }`}
+                      >
+                        {hatInfo.name}
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        background:
+                          'linear-gradient(125deg, #625033 0%, #9b8153 48%, #b99b66 72%, #725c39 100%)',
+                      }}
+                      className="rounded-md border border-[#e0c489]/75 px-3 py-2 shadow-[0_2px_6px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,248,225,0.28)]"
+                    >
+                      <div className="text-[11px] font-medium text-[#f2e4c7]">Cloak</div>
+                      <div
+                        className={`text-xs sm:text-sm font-semibold truncate mt-0.5 ${
+                          cloakInfo.differsFromEquipped ? 'text-[#fef08a]' : 'text-white'
+                        }`}
+                      >
+                        {cloakInfo.name}
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        background:
+                          'linear-gradient(125deg, #625033 0%, #9b8153 48%, #b99b66 72%, #725c39 100%)',
+                      }}
+                      className="rounded-md border border-[#e0c489]/75 px-3 py-2 shadow-[0_2px_6px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,248,225,0.28)]"
+                    >
+                      <div className="text-[11px] font-medium text-[#f2e4c7]">Relic</div>
+                      <div
+                        className={`text-xs sm:text-sm font-semibold truncate mt-0.5 ${
+                          charmInfo.differsFromEquipped ? 'text-[#fef08a]' : 'text-white'
+                        }`}
+                      >
+                        {charmInfo.name}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Category Tabs (Pinned on Desktop) & Independently Scrollable Item Cards */}
+              <div className="flex flex-col gap-4 min-w-0 lg:h-full lg:min-h-0">
+                {/* Beveled Stone-Emerald Category Tabs */}
+                <div className="flex flex-wrap items-center gap-2.5 pb-2.5 border-b border-[#5fa38f]/20 shrink-0">
+                  {CATEGORY_TABS.map((tab) => {
+                    const active = category === tab.id;
+                    return (
+                      <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setCategory(tab.id)}
+                        className={`min-h-[40px] whitespace-nowrap shrink-0 rounded-md px-4 sm:px-5 py-1.5 text-xs sm:text-sm transition-all focus-visible:outline-2 focus-visible:outline-[#5eead4] ${
+                          active
+                            ? 'border border-[#8de2c7] bg-gradient-to-b from-[#1f705d] to-[#114539] text-white font-semibold shadow-[0_3px_12px_rgba(18,125,98,0.4),inset_0_0_0_2px_rgba(10,36,30,0.6),inset_0_0_0_3px_rgba(165,243,225,0.3)]'
+                            : 'border border-[#82a39b]/75 bg-gradient-to-b from-[#456461] to-[#2b4240] text-[#e4f0ec] font-medium shadow-[0_2px_6px_rgba(0,0,0,0.35),inset_0_0_0_2px_rgba(15,29,27,0.62),inset_0_0_0_3px_rgba(220,240,235,0.18)] hover:brightness-110'
+                        }`}
+                      >
+                        {tab.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* 2-Column Atmospheric Gold-Framed Cards */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 lg:flex-1 lg:min-h-0 lg:overflow-y-auto lg:pr-2 lg:pb-4 lg:content-start">
+                  {filteredItems.map((item) => {
+                    const owned = ownedSet.has(item.id);
+                    const equipped = progress.equipped[item.category] === item.id;
+                    const tryingOn = displayedLoadout[item.category] === item.id;
+                    const affordable = progress.dewdrops >= item.price;
+                    const shortfall = Math.max(0, item.price - progress.dewdrops);
+                    const atmosphere = getCardAtmosphere(item.accentColor);
+
+                    return (
+                      <div
+                        key={item.id}
+                        style={{
+                          background: atmosphere.cardBg,
+                        }}
+                        className={`relative overflow-hidden rounded-xl p-4 sm:p-5 min-h-[172px] flex flex-col justify-between gap-4 transition-all ${
+                          tryingOn
+                            ? 'border border-[#82e6ca] ring-2 ring-[#5eead4]/45 shadow-[0_12px_28px_rgba(0,0,0,0.52),inset_0_0_0_3px_rgba(10,20,18,0.52),inset_0_0_0_4px_rgba(130,230,202,0.4)]'
+                            : equipped
+                              ? 'border border-[#86efac]/85 shadow-[0_10px_24px_rgba(0,0,0,0.48),inset_0_0_0_3px_rgba(10,20,18,0.52),inset_0_0_0_4px_rgba(134,239,172,0.3)]'
+                              : 'border border-[#d4b679]/85 shadow-[0_10px_24px_rgba(0,0,0,0.48),inset_0_0_0_3px_rgba(8,14,14,0.55),inset_0_0_0_4px_rgba(225,195,132,0.32)]'
+                        }`}
+                      >
+                        {/* Painterly Nebula Texture + Legibility Contrast Scrim */}
+                        <img
+                          src={atmosphere.bgImage}
+                          alt=""
+                          aria-hidden="true"
+                          referrerPolicy="no-referrer"
+                          className={`pointer-events-none absolute inset-0 h-full w-full ${atmosphere.bgClassName}`}
+                        />
                         <div
-                          style={{
-                            borderColor: `${item.accentColor}99`,
-                          }}
-                          className="flex h-[66px] w-[66px] sm:h-[74px] sm:w-[74px] shrink-0 items-center justify-center rounded-2xl border-2 border-[#668b36] bg-[#f0f9ed] p-1.5 shadow-[inset_0_2px_4px_rgba(0,0,0,0.06)]"
-                        >
-                          <ItemIcon id={item.id} size={46} />
-                        </div>
+                          aria-hidden="true"
+                          style={{ background: atmosphere.scrimBg }}
+                          className="pointer-events-none absolute inset-0"
+                        />
 
-                        {/* Title + Price + Description */}
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-start justify-between gap-1.5">
-                            <h3 className="font-serif text-base sm:text-lg font-bold text-[#2a1708] leading-tight line-clamp-1">
-                              {item.name}
-                            </h3>
-                            <span className="flex items-center gap-1 text-sm sm:text-base font-black text-[#2b5120] shrink-0 tabular-nums">
-                              <DewdropIcon size={16} />
-                              {item.price}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-xs sm:text-sm font-medium text-[#5a422d] leading-snug line-clamp-2">
-                            {item.shortPerk}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Bottom Bar: Category Tag + Buttons */}
-                      <div className="flex items-center justify-between gap-2 border-t border-[#d8be97] pt-2.5">
-                        <span className="text-xs font-bold text-[#71543b]">
-                          {CATEGORY_LABELS[item.category]}
-                        </span>
-
-                        <div className="flex items-center gap-1.5">
-                          {/* Try On Button */}
-                          <button
-                            type="button"
-                            onClick={() => handleTryOn(item)}
-                            className={`min-h-[36px] whitespace-nowrap shrink-0 rounded-xl px-3 py-1 text-xs sm:text-sm font-bold shadow-[0_2px_0_#2b1305,0_3px_6px_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-[0_1px_0_#2b1305] transition-all focus-visible:outline-2 focus-visible:outline-[#86efac] ${
-                              tryingOn
-                                ? 'border-2 border-[#a3e635] bg-[#3a200e] text-[#bef264]'
-                                : 'border-2 border-[#7c4820] bg-gradient-to-b from-[#6b3a16] to-[#4e260c] text-[#fdf2d9] hover:brightness-110'
-                            }`}
+                        {/* Top Section: Luminous Icon Tile + Title + Price + Short Perk */}
+                        <div className="relative z-10 flex items-start gap-3.5">
+                          <div
+                            style={{
+                              background: atmosphere.iconBg,
+                              borderColor: atmosphere.iconBorder,
+                              boxShadow: atmosphere.iconGlow,
+                            }}
+                            className="relative flex h-[70px] w-[70px] sm:h-[74px] sm:w-[74px] shrink-0 items-center justify-center rounded-xl border overflow-hidden"
                           >
-                            {tryingOn ? 'Trying' : 'Try On'}
-                          </button>
+                            {atmosphere.isDarkTile && (
+                              <span
+                                aria-hidden="true"
+                                className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_30%_25%,rgba(232,121,249,0.22),transparent_65%)]"
+                              />
+                            )}
+                            <ItemIcon id={item.id} size={46} />
+                          </div>
 
-                          {/* Buy / Equip / Equipped Button */}
-                          {owned ? (
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <h3 className="text-base sm:text-[17px] font-semibold text-white leading-snug">
+                                {item.name}
+                              </h3>
+                              <span className="flex items-center gap-1 text-sm sm:text-base font-semibold text-[#f5eed8] shrink-0 tabular-nums">
+                                <DewdropIcon size={15} />
+                                {item.price}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs sm:text-sm text-[#e4efeb]/92 leading-snug">
+                              {item.shortPerk}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Bottom Bar: Quiet Category Label + Beveled Double-Bordered Gold-Trimmed Action Buttons */}
+                        <div className="relative z-10 flex items-center justify-between gap-2 pt-1">
+                          <span className="text-xs sm:text-sm font-normal text-[#d4e2dd]">
+                            {CATEGORY_LABELS[item.category]}
+                          </span>
+
+                          <div className="flex items-center gap-2">
                             <button
                               type="button"
-                              onClick={() => handleEquipClick(item)}
-                              className={`min-h-[36px] whitespace-nowrap shrink-0 rounded-xl px-3.5 py-1 text-xs sm:text-sm font-bold shadow-[0_2px_0_#1c380f,0_3px_6px_rgba(0,0,0,0.2)] active:translate-y-0.5 active:shadow-[0_1px_0_#1c380f] transition-all focus-visible:outline-2 focus-visible:outline-[#86efac] ${
-                                equipped
-                                  ? 'border-2 border-[#a3e635] bg-[#294c1a] text-[#d9f99d]'
-                                  : 'border-2 border-[#548a33] bg-gradient-to-b from-[#46782a] to-[#32581c] text-[#f5ffec] hover:brightness-110'
+                              onClick={() => handleTryOn(item)}
+                              className={`min-h-[38px] whitespace-nowrap shrink-0 rounded-md px-3.5 py-1.5 text-xs sm:text-sm font-semibold shadow-[0_3px_8px_rgba(0,0,0,0.42),inset_0_0_0_2px_rgba(10,20,18,0.6),inset_0_0_0_3px_rgba(255,240,200,0.2)] hover:brightness-110 active:translate-y-px transition-all focus-visible:outline-2 focus-visible:outline-[#5eead4] ${
+                                tryingOn
+                                  ? 'border border-[#7ee2c6] bg-gradient-to-b from-[#25695b] to-[#17463c] text-[#ffffff]'
+                                  : 'border border-[#cbb07a] bg-gradient-to-b from-[#495f56] to-[#2c3b35] text-[#f6f0e2]'
                               }`}
                             >
-                              {equipped ? 'Equipped ✓' : 'Equip'}
+                              {tryingOn ? 'Trying' : 'Try On'}
                             </button>
-                          ) : affordable ? (
-                            <button
-                              type="button"
-                              onClick={() => handleBuyClick(item)}
-                              className="min-h-[36px] whitespace-nowrap shrink-0 rounded-xl border-2 border-[#8c5222] bg-gradient-to-b from-[#7c431a] to-[#592b0c] px-4 py-1 text-xs sm:text-sm font-bold text-[#fff6e0] shadow-[0_2px_0_#2b1305,0_3px_6px_rgba(0,0,0,0.25)] hover:brightness-110 active:translate-y-0.5 active:shadow-[0_1px_0_#2b1305] transition-all focus-visible:outline-2 focus-visible:outline-[#86efac]"
-                            >
-                              Buy
-                            </button>
-                          ) : (
-                            <button
-                              type="button"
-                              disabled
-                              className="min-h-[36px] whitespace-nowrap shrink-0 rounded-xl border-2 border-[#6d5138] bg-[#423020] px-3 py-1 text-xs font-semibold text-[#c9b49f] cursor-not-allowed tabular-nums"
-                            >
-                              Need {shortfall} 💧
-                            </button>
-                          )}
+
+                            {owned ? (
+                              <button
+                                type="button"
+                                onClick={() => handleEquipClick(item)}
+                                className={`min-h-[38px] whitespace-nowrap shrink-0 rounded-md px-4 py-1.5 text-xs sm:text-sm font-semibold shadow-[0_3px_8px_rgba(0,0,0,0.42),inset_0_0_0_2px_rgba(8,28,24,0.6),inset_0_0_0_3px_rgba(255,240,200,0.24)] hover:brightness-110 active:translate-y-px transition-all focus-visible:outline-2 focus-visible:outline-[#5eead4] ${
+                                  equipped
+                                    ? 'border border-[#7ee2c6] bg-gradient-to-b from-[#2c8c76] to-[#185c4d] text-[#ffffff]'
+                                    : 'border border-[#d6ba7d] bg-gradient-to-b from-[#1f7563] to-[#124b40] text-[#fff9eb]'
+                                }`}
+                              >
+                                {equipped ? 'Equipped' : 'Equip'}
+                              </button>
+                            ) : affordable ? (
+                              <button
+                                type="button"
+                                onClick={() => handleBuyClick(item)}
+                                className="min-h-[38px] whitespace-nowrap shrink-0 rounded-md border border-[#d6ba7d] bg-gradient-to-b from-[#1f7563] to-[#124b40] px-4 py-1.5 text-xs sm:text-sm font-semibold text-[#fff9eb] shadow-[0_3px_8px_rgba(0,0,0,0.42),inset_0_0_0_2px_rgba(8,28,24,0.6),inset_0_0_0_3px_rgba(255,240,200,0.24)] hover:brightness-110 active:translate-y-px transition-all focus-visible:outline-2 focus-visible:outline-[#5eead4]"
+                              >
+                                Buy
+                              </button>
+                            ) : (
+                              <button
+                                type="button"
+                                disabled
+                                className="min-h-[38px] whitespace-nowrap shrink-0 rounded-md border border-[#72857f]/65 bg-[#1a2b28]/90 px-3 py-1.5 text-xs font-medium text-[#a3b7b1] cursor-not-allowed tabular-nums shadow-[inset_0_0_0_2px_rgba(10,20,18,0.55)]"
+                              >
+                                Need {shortfall}
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>

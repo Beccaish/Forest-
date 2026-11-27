@@ -302,6 +302,10 @@ export function renderForestScene(
   ctx.scale(worldScale, worldScale);
   ctx.translate(-cameraX + shakeX, -cameraY + shakeY);
 
+  if (cameraX < 420) {
+    drawSpiritHollow(ctx, levelId, time);
+  }
+
   for (const a of world.stoneArches) {
     if (a.x + 180 < cameraX || a.x - 180 > cameraX + virtualW) continue;
     drawStoneArch(ctx, a, levelId);
@@ -897,6 +901,29 @@ function drawMidTrees(
     ctx.closePath();
     ctx.fill();
 
+    // Gnarled spreading storybook buttress roots
+    ctx.fillStyle = midCol;
+    ctx.beginPath();
+    ctx.moveTo(tx - t.w * 0.85, base);
+    ctx.quadraticCurveTo(tx - t.w * 0.42, base - 26, tx - t.w * 0.24, base - t.h * 0.35);
+    ctx.lineTo(tx - t.w * 0.2 + t.lean, base - t.h);
+    ctx.lineTo(tx + t.w * 0.2 + t.lean, base - t.h);
+    ctx.lineTo(tx + t.w * 0.24, base - t.h * 0.35);
+    ctx.quadraticCurveTo(tx + t.w * 0.42, base - 26, tx + t.w * 0.85, base);
+    ctx.closePath();
+    ctx.fill();
+
+    // Organic curving storybook limbs
+    ctx.strokeStyle = midCol;
+    ctx.lineWidth = Math.max(5, t.w * 0.22);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(tx + t.lean * 0.45, base - t.h * 0.65);
+    ctx.quadraticCurveTo(tx + t.lean * 0.65 - t.canopyR * 0.55, base - t.h * 0.78, tx + t.lean - t.canopyR * 0.72, base - t.h * 0.92);
+    ctx.moveTo(tx + t.lean * 0.45, base - t.h * 0.6);
+    ctx.quadraticCurveTo(tx + t.lean * 0.65 + t.canopyR * 0.52, base - t.h * 0.74, tx + t.lean + t.canopyR * 0.68, base - t.h * 0.88);
+    ctx.stroke();
+
     ctx.beginPath();
     ctx.arc(tx + t.lean, base - t.h, t.canopyR, 0, Math.PI * 2);
     ctx.arc(tx + t.lean - t.canopyR * 0.6, base - t.h + 25, t.canopyR * 0.72, 0, Math.PI * 2);
@@ -910,10 +937,10 @@ function drawMidTrees(
       const sway = Math.sin(time * 1.4 + t.vineSeed + v) * 8;
       ctx.strokeStyle =
         levelId === 1
-          ? 'rgba(90, 210, 185, 0.28)'
+          ? 'rgba(90, 210, 185, 0.34)'
           : levelId === 2
-            ? 'rgba(230, 165, 130, 0.28)'
-            : 'rgba(155, 232, 255, 0.3)';
+            ? 'rgba(230, 165, 130, 0.34)'
+            : 'rgba(155, 232, 255, 0.34)';
       ctx.lineWidth = 1.6;
       ctx.beginPath();
       ctx.moveTo(vx, vy);
@@ -921,7 +948,7 @@ function drawMidTrees(
       ctx.stroke();
 
       ctx.fillStyle = rimCol;
-      ctx.globalAlpha = 0.65;
+      ctx.globalAlpha = 0.7;
       ctx.beginPath();
       ctx.arc(vx + sway, vy + vLen, 2.3, 0, Math.PI * 2);
       ctx.fill();
@@ -941,77 +968,260 @@ function drawNearTrees(
 ): void {
   const trunkCol =
     levelId === 1
-      ? lerpColor('#07171a', '#06081a', b.mix > 0 ? 0.5 : 0)
+      ? lerpColor('#0c1f1a', '#070c1b', b.mix > 0 ? 0.5 : 0)
       : levelId === 2
-        ? lerpColor('#170b0f', '#0d071c', b.mix > 0 ? 0.5 : 0)
+        ? lerpColor('#1d0f0d', '#0f081c', b.mix > 0 ? 0.5 : 0)
         : lerpColor('#0e1c2e', '#0a1026', b.mix > 0 ? 0.5 : 0);
+  const mossStrip =
+    levelId === 1
+      ? 'rgba(78, 168, 118, 0.28)'
+      : levelId === 2
+        ? 'rgba(218, 134, 72, 0.25)'
+        : levelId === 3
+          ? 'rgba(122, 214, 240, 0.25)'
+          : 'rgba(220, 246, 255, 0.28)';
+
   for (const t of world.nearTrees) {
     const tx = t.x - cameraX * 0.72;
-    if (tx + 120 < 0 || tx - 120 > viewW) continue;
+    if (tx + 140 < 0 || tx - 140 > viewW) continue;
     const base = viewH + 20;
 
     ctx.fillStyle = trunkCol;
     ctx.beginPath();
-    ctx.moveTo(tx - t.w * 0.7, base);
-    ctx.quadraticCurveTo(tx - t.w * 0.25, base - t.h * 0.5, tx - t.w * 0.28 + t.lean, base - t.h);
+    ctx.moveTo(tx - t.w * 0.96, base);
+    ctx.quadraticCurveTo(tx - t.w * 0.35, base - t.h * 0.28, tx - t.w * 0.28 + t.lean, base - t.h);
     ctx.lineTo(tx + t.w * 0.28 + t.lean, base - t.h);
-    ctx.quadraticCurveTo(tx + t.w * 0.25, base - t.h * 0.5, tx + t.w * 0.7, base);
+    ctx.quadraticCurveTo(tx + t.w * 0.35, base - t.h * 0.28, tx + t.w * 0.96, base);
     ctx.closePath();
     ctx.fill();
+
+    // Subtle bark & moss rib contour along tree side
+    ctx.strokeStyle = mossStrip;
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(tx - t.w * 0.62, base - 16);
+    ctx.quadraticCurveTo(tx - t.w * 0.22, base - t.h * 0.45, tx - t.w * 0.15 + t.lean * 0.6, base - t.h * 0.88);
+    ctx.stroke();
 
     if (t.hasHollow) {
       const hx = tx + t.lean * 0.35;
       const hy = base - t.hollowY;
-      const hGlow = ctx.createRadialGradient(hx, hy, 2, hx, hy, 22);
+      const hGlow = ctx.createRadialGradient(hx, hy, 2, hx, hy, 24);
       hGlow.addColorStop(
         0,
         levelId === 1
-          ? 'rgba(130, 255, 225, 0.85)'
+          ? 'rgba(130, 255, 225, 0.88)'
           : levelId === 2
-            ? 'rgba(255, 200, 130, 0.85)'
+            ? 'rgba(255, 200, 130, 0.88)'
             : 'rgba(160, 240, 255, 0.88)'
       );
       hGlow.addColorStop(1, 'rgba(130, 255, 225, 0)');
       ctx.fillStyle = hGlow;
       ctx.beginPath();
-      ctx.arc(hx, hy, 22, 0, Math.PI * 2);
+      ctx.arc(hx, hy, 24, 0, Math.PI * 2);
       ctx.fill();
     }
   }
 }
 
-function drawStoneArch(ctx: CanvasRenderingContext2D, a: StoneArch, levelId: LevelId): void {
+function drawSpiritHollow(ctx: CanvasRenderingContext2D, levelId: LevelId, time: number): void {
+  const hx = 142;
+  const hy = getTerrainY(hx, levelId);
   ctx.save();
-  ctx.fillStyle = levelId === 1 ? '#182b36' : levelId === 2 ? '#2b1c2e' : '#1b2b44';
-  ctx.strokeStyle =
+
+  const barkDark =
+    levelId === 1 ? '#261a11' : levelId === 2 ? '#341c17' : levelId === 3 ? '#1e2b3e' : '#1d2d40';
+  const barkMid =
+    levelId === 1 ? '#4a3322' : levelId === 2 ? '#613426' : levelId === 3 ? '#344c6b' : '#324d69';
+  const barkHi =
+    levelId === 1 ? '#78583c' : levelId === 2 ? '#8f523a' : levelId === 3 ? '#597ca6' : '#658eb8';
+  const mossCol =
+    levelId === 1 ? '#4eb56c' : levelId === 2 ? '#d68945' : levelId === 3 ? '#6ecfe8' : '#d6f4ff';
+  const glowCol =
     levelId === 1
-      ? `rgba(120, 245, 225, ${0.25 + a.glow * 0.6})`
+      ? 'rgba(116, 252, 232, 0.5)'
       : levelId === 2
-        ? `rgba(255, 195, 125, ${0.25 + a.glow * 0.6})`
-        : `rgba(155, 232, 255, ${0.25 + a.glow * 0.6})`;
-  ctx.lineWidth = 2;
+        ? 'rgba(255, 198, 122, 0.5)'
+        : 'rgba(150, 236, 255, 0.52)';
+  const capA =
+    levelId === 1 ? '#ffe49e' : levelId === 2 ? '#ffc878' : levelId === 3 ? '#9ef5ff' : '#d8f6ff';
+  const capB =
+    levelId === 1 ? '#64f5e4' : levelId === 2 ? '#ff937a' : levelId === 3 ? '#c8b4ff' : '#7ae8ff';
 
-  ctx.fillRect(a.x - a.w * 0.5, a.y - a.h + 25, 24, a.h - 15);
-  ctx.fillRect(a.x + a.w * 0.5 - 24, a.y - a.h + 25, 24, a.h - 15);
-
+  // Soft enchanted sanctuary aura behind spawn alcove
+  const aura = ctx.createRadialGradient(hx, hy - 56, 8, hx, hy - 56, 98);
+  aura.addColorStop(0, glowCol);
+  aura.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = aura;
   ctx.beginPath();
-  ctx.arc(a.x, a.y - a.h + 32, a.w * 0.5, Math.PI, 0);
-  ctx.lineTo(a.x + a.w * 0.5 - 22, a.y - a.h + 32);
-  ctx.arc(a.x, a.y - a.h + 32, a.w * 0.5 - 22, 0, Math.PI, true);
+  ctx.arc(hx, hy - 56, 98, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Wide sweeping carved left & right roots blending into ground path
+  ctx.fillStyle = barkDark;
+  ctx.beginPath();
+  ctx.moveTo(hx - 118, hy + 28);
+  ctx.quadraticCurveTo(hx - 78, hy - 22, hx - 58, hy - 96);
+  ctx.quadraticCurveTo(hx - 34, hy - 148, hx, hy - 154);
+  ctx.quadraticCurveTo(hx + 36, hy - 144, hx + 58, hy - 86);
+  ctx.quadraticCurveTo(hx + 76, hy - 18, hx + 114, hy + 26);
+  ctx.lineTo(hx - 118, hy + 28);
   ctx.closePath();
   ctx.fill();
+
+  // Mid-tone bark sculptural ridges
+  ctx.fillStyle = barkMid;
+  ctx.beginPath();
+  ctx.moveTo(hx - 90, hy + 20);
+  ctx.quadraticCurveTo(hx - 58, hy - 48, hx - 32, hy - 122);
+  ctx.quadraticCurveTo(hx, hy - 142, hx + 30, hy - 120);
+  ctx.quadraticCurveTo(hx + 56, hy - 46, hx + 84, hy + 20);
+  ctx.closePath();
+  ctx.fill();
+
+  // Luminous arched inner sanctuary recess
+  const innerGrad = ctx.createLinearGradient(hx, hy - 116, hx, hy + 2);
+  innerGrad.addColorStop(0, levelId === 2 ? '#4d2b33' : '#306a70');
+  innerGrad.addColorStop(0.55, levelId === 2 ? '#2c1722' : '#163d45');
+  innerGrad.addColorStop(1, levelId === 2 ? '#180c12' : '#081b1e');
+  ctx.fillStyle = innerGrad;
+  ctx.beginPath();
+  ctx.moveTo(hx - 36, hy + 4);
+  ctx.quadraticCurveTo(hx - 34, hy - 80, hx - 2, hy - 112);
+  ctx.quadraticCurveTo(hx + 34, hy - 78, hx + 36, hy + 4);
+  ctx.closePath();
+  ctx.fill();
+
+  // Subtle rim highlight inside archway
+  ctx.strokeStyle = glowCol;
+  ctx.lineWidth = 2;
   ctx.stroke();
 
-  ctx.fillStyle =
+  // Carved storybook spiral whorls & root ribs
+  ctx.strokeStyle = barkHi;
+  ctx.lineWidth = 2.2;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(hx - 62, hy - 2);
+  ctx.quadraticCurveTo(hx - 48, hy - 68, hx - 16, hy - 120);
+  ctx.moveTo(hx + 58, hy - 2);
+  ctx.quadraticCurveTo(hx + 46, hy - 66, hx + 18, hy - 116);
+  ctx.moveTo(hx - 96, hy + 18);
+  ctx.quadraticCurveTo(hx - 68, hy + 4, hx - 48, hy + 16);
+  ctx.stroke();
+
+  // Carved bark swirl spiral on left root base
+  ctx.beginPath();
+  ctx.arc(hx - 54, hy + 4, 8, 0, Math.PI * 1.75);
+  ctx.arc(hx - 54, hy + 4, 4, 0.4, Math.PI * 1.9);
+  ctx.stroke();
+
+  // Plush moss crest along crown and shoulders
+  ctx.fillStyle = mossCol;
+  ctx.beginPath();
+  ctx.ellipse(hx - 24, hy - 122, 20, 7, -0.32, 0, Math.PI * 2);
+  ctx.ellipse(hx + 22, hy - 118, 18, 6.5, 0.3, 0, Math.PI * 2);
+  ctx.ellipse(hx - 54, hy - 54, 14, 5.5, -0.6, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Stacked glowing shelf mushrooms climbing the left & upper-right side of the hollow
+  const pulse = 0.78 + 0.22 * Math.sin(time * 2.4);
+  const shelves: Array<[number, number, number, number, string]> = [
+    [-46, -118, 22, 9, capA],
+    [-62, -96, 17, 7, capA],
+    [-50, -76, 15, 6.5, capB],
+    [42, -104, 16, 6.5, capB],
+    [52, -82, 13, 5.5, capA],
+    [46, -54, 11, 4.8, capB],
+  ];
+  for (const [dx, dy, rx, ry, col] of shelves) {
+    ctx.save();
+    ctx.globalAlpha = pulse;
+    ctx.shadowColor = col;
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = col;
+    ctx.beginPath();
+    ctx.ellipse(hx + dx, hy + dy, rx, ry, dx < 0 ? -0.14 : 0.14, Math.PI, 0);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.6)';
+    ctx.beginPath();
+    ctx.ellipse(hx + dx, hy + dy + 1, rx * 0.85, ry * 0.25, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // Glowing turquoise root crystal / lantern bud in lower root fold
+  ctx.shadowColor = capB;
+  ctx.shadowBlur = 14;
+  ctx.fillStyle = capB;
+  ctx.beginPath();
+  ctx.ellipse(hx - 28, hy + 10, 5.5, 7.5, -0.25, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawStoneArch(ctx: CanvasRenderingContext2D, a: StoneArch, levelId: LevelId): void {
+  ctx.save();
+  const baseCol = levelId === 1 ? '#36271b' : levelId === 2 ? '#422620' : levelId === 3 ? '#253852' : '#22364f';
+  const hiCol = levelId === 1 ? '#5c432d' : levelId === 2 ? '#6e4032' : levelId === 3 ? '#436187' : '#4a6e96';
+  const trimCol = levelId === 1 ? '#52b86d' : levelId === 2 ? '#d48244' : levelId === 3 ? '#6ecfe8' : '#b8efff';
+  const runeCol =
     levelId === 1
-      ? `rgba(130, 255, 232, ${0.3 + a.glow * 0.7})`
+      ? `rgba(128, 255, 232, ${0.42 + a.glow * 0.58})`
       : levelId === 2
-        ? `rgba(255, 210, 140, ${0.3 + a.glow * 0.7})`
-        : `rgba(180, 242, 255, ${0.3 + a.glow * 0.7})`;
+        ? `rgba(255, 202, 128, ${0.42 + a.glow * 0.58})`
+        : `rgba(165, 240, 255, ${0.42 + a.glow * 0.58})`;
+
+  // Gnarled intertwined wood-and-stone archway legs with flared mossy roots
+  ctx.fillStyle = baseCol;
+  ctx.beginPath();
+  ctx.moveTo(a.x - a.w * 0.5 - 12, a.y + 10);
+  ctx.quadraticCurveTo(a.x - a.w * 0.5 - 2, a.y - a.h * 0.45, a.x - a.w * 0.5 + 2, a.y - a.h + 32);
+  ctx.lineTo(a.x - a.w * 0.5 + 24, a.y - a.h + 32);
+  ctx.quadraticCurveTo(a.x - a.w * 0.5 + 20, a.y - a.h * 0.3, a.x - a.w * 0.5 + 30, a.y + 10);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(a.x + a.w * 0.5 + 12, a.y + 10);
+  ctx.quadraticCurveTo(a.x + a.w * 0.5 + 2, a.y - a.h * 0.45, a.x + a.w * 0.5 - 2, a.y - a.h + 32);
+  ctx.lineTo(a.x + a.w * 0.5 - 24, a.y - a.h + 32);
+  ctx.quadraticCurveTo(a.x + a.w * 0.5 - 20, a.y - a.h * 0.3, a.x + a.w * 0.5 - 30, a.y + 10);
+  ctx.closePath();
+  ctx.fill();
+
+  // Arch curve
+  ctx.beginPath();
+  ctx.arc(a.x, a.y - a.h + 34, a.w * 0.5, Math.PI, 0);
+  ctx.lineTo(a.x + a.w * 0.5 - 22, a.y - a.h + 34);
+  ctx.arc(a.x, a.y - a.h + 34, a.w * 0.5 - 22, 0, Math.PI, true);
+  ctx.closePath();
+  ctx.fill();
+
+  // Bark grain contour along arch curve
+  ctx.strokeStyle = hiCol;
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.arc(a.x, a.y - a.h + 34, a.w * 0.5 - 7, Math.PI * 1.08, Math.PI * 1.92);
+  ctx.stroke();
+
+  // Moss cushions & blossom clusters across arch crest & pillar bases
+  ctx.fillStyle = trimCol;
+  ctx.beginPath();
+  ctx.ellipse(a.x - 18, a.y - a.h + 12, 16, 6, -0.22, 0, Math.PI * 2);
+  ctx.ellipse(a.x + 15, a.y - a.h + 11, 17, 6, 0.22, 0, Math.PI * 2);
+  ctx.ellipse(a.x - a.w * 0.5 + 10, a.y + 2, 14, 5, 0.1, 0, Math.PI * 2);
+  ctx.ellipse(a.x + a.w * 0.5 - 10, a.y + 2, 14, 5, -0.1, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Glowing spore/rune lights embedded along arch
+  ctx.fillStyle = runeCol;
   for (let r = 0; r < 3; r++) {
     ctx.beginPath();
-    ctx.arc(a.x - a.w * 0.5 + 12, a.y - 40 - r * 32, 3, 0, Math.PI * 2);
-    ctx.arc(a.x + a.w * 0.5 - 12, a.y - 40 - r * 32, 3, 0, Math.PI * 2);
+    ctx.arc(a.x - a.w * 0.5 + 13, a.y - 34 - r * 30, 3.2, 0, Math.PI * 2);
+    ctx.arc(a.x + a.w * 0.5 - 13, a.y - 34 - r * 30, 3.2, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -1096,29 +1306,98 @@ function drawPlatform(ctx: CanvasRenderingContext2D, p: Platform, levelId: Level
     ctx.roundRect(p.x, p.y, p.w, 16, 6);
     ctx.stroke();
   } else if (p.type === 'branch') {
-    ctx.fillStyle =
-      levelId === 1 ? '#183333' : levelId === 2 ? '#36211e' : levelId === 3 ? '#1c324a' : '#182e45';
+    const barkDark =
+      levelId === 1 ? '#291d14' : levelId === 2 ? '#3d2219' : levelId === 3 ? '#1e3045' : '#1b2c40';
+    const barkMid =
+      levelId === 1 ? '#4a3524' : levelId === 2 ? '#613829' : levelId === 3 ? '#314b68' : '#2e4963';
+    const mossDeep =
+      levelId === 1 ? '#2c7e5d' : levelId === 2 ? '#b86832' : levelId === 3 ? '#469fc2' : '#96d8ee';
+    const mossBright =
+      levelId === 1 ? '#64cc7b' : levelId === 2 ? '#eb9b4e' : levelId === 3 ? '#8be8ff' : '#e4fbff';
+
+    // Subtle gnarled curved underside root/bough body
+    const barkGrad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + 22);
+    barkGrad.addColorStop(0, barkMid);
+    barkGrad.addColorStop(1, barkDark);
+    ctx.fillStyle = barkGrad;
     ctx.beginPath();
-    ctx.roundRect(p.x, p.y, p.w, 16, 8);
+    ctx.moveTo(p.x - 4, p.y + 4);
+    ctx.quadraticCurveTo(p.x + p.w * 0.14, p.y + 22, p.x + p.w * 0.34, p.y + 18);
+    ctx.quadraticCurveTo(p.x + p.w * 0.56, p.y + 24, p.x + p.w * 0.74, p.y + 17);
+    ctx.quadraticCurveTo(p.x + p.w * 0.9, p.y + 20, p.x + p.w + 4, p.y + 4);
+    ctx.lineTo(p.x + p.w - 2, p.y + 1);
+    ctx.lineTo(p.x + 2, p.y + 1);
+    ctx.closePath();
     ctx.fill();
-    ctx.fillStyle =
-      levelId === 1 ? '#38a68a' : levelId === 2 ? '#d98448' : levelId === 3 ? '#7ad6ef' : '#dff8ff';
+
+    // Upturned gnarled storybook twig tips at both ends
+    ctx.strokeStyle = barkMid;
+    ctx.lineWidth = 3.2;
+    ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.roundRect(p.x + 4, p.y, p.w - 8, 5, 3);
+    ctx.moveTo(p.x + 4, p.y + 8);
+    ctx.quadraticCurveTo(p.x - 8, p.y + 2, p.x - 10, p.y - 6);
+    ctx.moveTo(p.x + p.w - 4, p.y + 8);
+    ctx.quadraticCurveTo(p.x + p.w + 8, p.y + 2, p.x + p.w + 10, p.y - 6);
+    ctx.stroke();
+
+    // Bark grain highlights along wood body
+    ctx.strokeStyle = 'rgba(255, 228, 185, 0.16)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(p.x + 14, p.y + 11);
+    ctx.quadraticCurveTo(p.x + p.w * 0.45, p.y + 14, p.x + p.w - 16, p.y + 10);
+    ctx.stroke();
+
+    // Plush overhanging mossy cushion along walkable top surface
+    ctx.fillStyle = mossDeep;
+    ctx.beginPath();
+    ctx.roundRect(p.x + 1, p.y, p.w - 2, 7.5, 4);
     ctx.fill();
+
+    ctx.fillStyle = mossBright;
+    ctx.beginPath();
+    ctx.roundRect(p.x + 3, p.y, p.w - 6, 4, 2.5);
+    ctx.fill();
+
+    // Scalloped moss overhangs & subtle blossom dots
+    const tuftStep = 22;
+    for (let tx = p.x + 10; tx < p.x + p.w - 10; tx += tuftStep) {
+      ctx.fillStyle = mossBright;
+      ctx.beginPath();
+      ctx.arc(tx, p.y + 5.5, 4.2, 0, Math.PI * 2);
+      ctx.fill();
+      if (((tx * 7) | 0) % 3 === 0) {
+        ctx.fillStyle = levelId === 1 ? '#ffe694' : levelId === 2 ? '#ffd98a' : '#d6f9ff';
+        ctx.beginPath();
+        ctx.arc(tx + 4, p.y + 1.5, 1.8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
   } else if (p.type === 'stone') {
-    ctx.fillStyle =
-      levelId === 1 ? '#243c4a' : levelId === 2 ? '#34244a' : levelId === 3 ? '#25395c' : '#263e5e';
+    const stoneGrad = ctx.createLinearGradient(p.x, p.y, p.x, p.y + 20);
+    stoneGrad.addColorStop(0, levelId === 1 ? '#2e4a52' : levelId === 2 ? '#443059' : '#2f496e');
+    stoneGrad.addColorStop(1, levelId === 1 ? '#18282e' : levelId === 2 ? '#231730' : '#192942');
+    ctx.fillStyle = stoneGrad;
     ctx.beginPath();
-    ctx.roundRect(p.x, p.y, p.w, 18, 6);
+    ctx.roundRect(p.x, p.y, p.w, 19, 6);
     ctx.fill();
+
+    // Carved moss/frost overhang on stone top
+    ctx.fillStyle = levelId === 1 ? '#4db88d' : levelId === 2 ? '#d9884a' : '#85dcf7';
+    ctx.beginPath();
+    ctx.roundRect(p.x + 4, p.y, p.w - 8, 4, 2.5);
+    ctx.fill();
+
     ctx.strokeStyle =
       levelId === 1
-        ? 'rgba(130, 245, 225, 0.45)'
+        ? 'rgba(130, 245, 225, 0.5)'
         : levelId === 2
-          ? 'rgba(220, 175, 255, 0.45)'
-          : 'rgba(185, 244, 255, 0.55)';
-    ctx.lineWidth = 1.5;
+          ? 'rgba(235, 185, 255, 0.48)'
+          : 'rgba(185, 244, 255, 0.58)';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.roundRect(p.x, p.y, p.w, 19, 6);
     ctx.stroke();
   } else {
     ctx.fillStyle =
@@ -1153,7 +1432,7 @@ function drawMovingPlatform(
   ctx.save();
   const pulse = 0.72 + 0.28 * Math.sin(time * 2.8 + mp.phase);
 
-  // Soft floating cloud / frost puffs beneath the moving ledge
+  // Soft floating cloud / moss puffs beneath the moving ledge
   ctx.fillStyle =
     levelId >= 3
       ? `rgba(215, 246, 255, ${0.34 * pulse})`
@@ -1177,18 +1456,19 @@ function drawMovingPlatform(
     }
   }
 
-  // Luminous skywood / glacier platform deck
+  // Luminous skywood / glacier gnarled platform deck
   ctx.shadowColor = levelId >= 3 ? '#94ecff' : '#ffd58c';
   ctx.shadowBlur = 14;
-  ctx.fillStyle = levelId === 4 ? '#35749e' : levelId === 3 ? '#26446b' : '#3d2a42';
+  ctx.fillStyle = levelId === 4 ? '#35749e' : levelId === 3 ? '#26446b' : levelId === 2 ? '#4d2b24' : '#3d2a1d';
   ctx.beginPath();
-  ctx.roundRect(mp.x, mp.y, mp.w, 15, 7);
+  ctx.roundRect(mp.x, mp.y, mp.w, 16, 7);
   ctx.fill();
 
   // Frost-moss / snow-crest top rim
-  ctx.fillStyle = levelId === 4 ? '#eefcff' : levelId === 3 ? '#aef4ff' : '#ffdba6';
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = levelId === 4 ? '#eefcff' : levelId === 3 ? '#aef4ff' : levelId === 2 ? '#ffb86c' : '#6be09a';
   ctx.beginPath();
-  ctx.roundRect(mp.x + 5, mp.y + 1, mp.w - 10, 4.5, 3);
+  ctx.roundRect(mp.x + 4, mp.y + 1, mp.w - 8, 5, 3);
   ctx.fill();
 
   ctx.restore();
@@ -1247,29 +1527,50 @@ function drawMushroom(ctx: CanvasRenderingContext2D, m: GlowMushroom): void {
   ctx.translate(m.x, m.y);
   ctx.scale(stretchX, squashY);
 
-  ctx.fillStyle = '#d7ecea';
+  // Soft bioluminescent ground aura under mushroom
+  const baseGlow = ctx.createRadialGradient(0, -m.h * 0.65, 2, 0, -m.h * 0.65, m.r * 1.9);
+  baseGlow.addColorStop(0, `${m.hue}55`);
+  baseGlow.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = baseGlow;
   ctx.beginPath();
-  ctx.moveTo(-7, 0);
-  ctx.quadraticCurveTo(-5, -m.h * 0.6, -6, -m.h + 6);
-  ctx.lineTo(6, -m.h + 6);
-  ctx.quadraticCurveTo(5, -m.h * 0.6, 7, 0);
+  ctx.arc(0, -m.h * 0.65, m.r * 1.9, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Tapered storybook ivory stem with subtle under-cap shadow
+  const stemGrad = ctx.createLinearGradient(0, -m.h, 0, 0);
+  stemGrad.addColorStop(0, '#bfe0da');
+  stemGrad.addColorStop(0.55, '#eef8f6');
+  stemGrad.addColorStop(1, '#c8dcd6');
+  ctx.fillStyle = stemGrad;
+  ctx.beginPath();
+  ctx.moveTo(-7.5, 1);
+  ctx.quadraticCurveTo(-4.8, -m.h * 0.55, -5.8, -m.h + 5);
+  ctx.lineTo(5.8, -m.h + 5);
+  ctx.quadraticCurveTo(4.8, -m.h * 0.55, 7.5, 1);
   ctx.closePath();
   ctx.fill();
 
+  // Glowing striated gills rim underneath cap
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.55)';
+  ctx.beginPath();
+  ctx.ellipse(0, -m.h + 4.5, m.r * 0.94, m.r * 0.2, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // Luminous domed storybook cap
   ctx.shadowColor = m.hue;
-  ctx.shadowBlur = 18;
+  ctx.shadowBlur = 22;
   ctx.fillStyle = m.hue;
   ctx.beginPath();
-  ctx.ellipse(0, -m.h + 4, m.r, m.r * 0.55, 0, Math.PI, 0);
+  ctx.ellipse(0, -m.h + 4, m.r, m.r * 0.62, 0, Math.PI, 0);
   ctx.closePath();
   ctx.fill();
 
   ctx.shadowBlur = 0;
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.72)';
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
   ctx.beginPath();
-  ctx.arc(-m.r * 0.38, -m.h - 2, 3.2, 0, Math.PI * 2);
-  ctx.arc(m.r * 0.25, -m.h - 5, 4, 0, Math.PI * 2);
-  ctx.arc(m.r * 0.52, -m.h + 1, 2.3, 0, Math.PI * 2);
+  ctx.arc(-m.r * 0.4, -m.h - 2.5, 3.2, 0, Math.PI * 2);
+  ctx.arc(m.r * 0.24, -m.h - 5.5, 4, 0, Math.PI * 2);
+  ctx.arc(m.r * 0.54, -m.h + 0.5, 2.4, 0, Math.PI * 2);
   ctx.fill();
   ctx.restore();
 }
@@ -1337,12 +1638,19 @@ function drawSanctuaryTree(
 
   ctx.fillStyle = levelId === 1 ? '#d7f3f0' : levelId === 2 ? '#f7dfd4' : '#e6f6ff';
   ctx.beginPath();
-  ctx.moveTo(tx - 38, ty + 8);
-  ctx.quadraticCurveTo(tx - 16, ty - 90, tx - 18, ty - 190);
+  ctx.moveTo(tx - 54, ty + 10);
+  ctx.quadraticCurveTo(tx - 20, ty - 75, tx - 18, ty - 190);
   ctx.lineTo(tx + 18, ty - 190);
-  ctx.quadraticCurveTo(tx + 16, ty - 90, tx + 38, ty + 8);
+  ctx.quadraticCurveTo(tx + 20, ty - 75, tx + 54, ty + 10);
   ctx.closePath();
   ctx.fill();
+
+  // Carved glowing heartwood spiral rune on Sanctuary trunk
+  ctx.strokeStyle = sanctuaryAwakened ? 'rgba(255, 232, 148, 0.85)' : 'rgba(130, 245, 225, 0.55)';
+  ctx.lineWidth = 2.2;
+  ctx.beginPath();
+  ctx.arc(tx, ty - 95, 11, 0.2, Math.PI * 1.85);
+  ctx.stroke();
 
   const blossoms: Array<[number, number, number]> = [
     [0, -215, 92],
@@ -1395,15 +1703,31 @@ function drawTerrain(
   viewW: number,
   viewH: number
 ): void {
-  const startX = Math.floor((cameraX - 40) / 24) * 24;
-  const endX = cameraX + viewW + 60;
-  const bottomY = cameraY + viewH + 120;
+  const startX = Math.floor((cameraX - 48) / 24) * 24;
+  const endX = cameraX + viewW + 72;
+  const bottomY = cameraY + viewH + 130;
 
-  const gGrad = ctx.createLinearGradient(0, BASE_GROUND_Y - 70, 0, bottomY);
+  const barkDeep =
+    levelId === 1 ? '#16110c' : levelId === 2 ? '#1e100d' : levelId === 3 ? '#0f1927' : '#0e1b29';
+  const barkRoot =
+    levelId === 1 ? '#362619' : levelId === 2 ? '#47251b' : levelId === 3 ? '#20344d' : '#1f3650';
+  const barkHighlight =
+    levelId === 1 ? '#61452d' : levelId === 2 ? '#784531' : levelId === 3 ? '#43658a' : '#4e769e';
+  const mossTop =
+    levelId === 1 ? '#45a860' : levelId === 2 ? '#cf7d3e' : levelId === 3 ? '#62c2e3' : '#d2f3ff';
+  const floraA =
+    levelId === 1 ? '#57fae3' : levelId === 2 ? '#ffbe6e' : levelId === 3 ? '#8ef3ff' : '#85f3ff';
+  const floraB =
+    levelId === 1 ? '#ff72dc' : levelId === 2 ? '#ff82b8' : levelId === 3 ? '#c8adff' : '#d8f8ff';
+
+  // Softly blended forest earth & root bank so painted backdrop flora subtly harmonizes underneath
+  const gGrad = ctx.createLinearGradient(0, BASE_GROUND_Y - 60, 0, bottomY);
   gGrad.addColorStop(0, groundTop);
-  gGrad.addColorStop(0.28, groundBot);
-  gGrad.addColorStop(1, '#03080d');
+  gGrad.addColorStop(0.22, barkDeep);
+  gGrad.addColorStop(0.75, groundBot);
+  gGrad.addColorStop(1, '#04090d');
 
+  ctx.save();
   ctx.fillStyle = gGrad;
   ctx.beginPath();
   ctx.moveTo(startX, bottomY);
@@ -1414,8 +1738,126 @@ function drawTerrain(
   ctx.closePath();
   ctx.fill();
 
+  // Lush mossy crust hugging the walkable terrain rim
+  ctx.fillStyle = mossTop;
+  ctx.globalAlpha = 0.62;
+  ctx.beginPath();
+  ctx.moveTo(startX, bottomY);
+  for (let x = startX; x <= endX; x += 24) {
+    ctx.lineTo(x, getTerrainY(x, levelId));
+  }
+  for (let x = endX; x >= startX; x -= 24) {
+    const wave = 6 + Math.sin(x * 0.045) * 2.5;
+    ctx.lineTo(x, getTerrainY(x, levelId) + wave);
+  }
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // Delicate sweeping gnarled root contours, tucked glowing mushrooms & ferns below the ground line
+  ctx.save();
+  const rootStep = 168;
+  const firstBucket = Math.floor((startX - 120) / rootStep) * rootStep;
+  for (let rx = firstBucket; rx <= endX + 120; rx += rootStep) {
+    const ry = getTerrainY(rx, levelId);
+    const seed = Math.abs(Math.sin(rx * 0.0173)) * 1000;
+    const tilt = (seed % 24) - 12;
+
+    // Tapered sweeping root rib
+    ctx.strokeStyle = barkRoot;
+    ctx.lineWidth = 7 + (seed % 4);
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(rx - 18, ry + 11);
+    ctx.bezierCurveTo(rx + 22, ry + 5 + tilt * 0.3, rx + 58, ry + 34, rx + 116, ry + 62);
+    ctx.stroke();
+
+    // Fine carved wood highlight along upper root ridge
+    ctx.strokeStyle = barkHighlight;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(rx - 14, ry + 7);
+    ctx.bezierCurveTo(rx + 22, ry + 2 + tilt * 0.3, rx + 58, ry + 29, rx + 112, ry + 56);
+    ctx.stroke();
+
+    // Secondary cross-root
+    ctx.strokeStyle = barkRoot;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(rx + 36, ry + 58);
+    ctx.quadraticCurveTo(rx + 84, ry + 24, rx + 144, ry + 38);
+    ctx.stroke();
+
+    // Small glowing botanical mushroom buds tucked neatly beneath root edge
+    const mx = rx + 52;
+    const my = ry + 48;
+    const mCol = Math.floor(seed) % 3 === 0 ? floraB : floraA;
+
+    const glow = ctx.createRadialGradient(mx, my - 6, 1, mx, my - 6, 18);
+    glow.addColorStop(0, `${mCol}45`);
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(mx, my - 6, 18, 0, Math.PI * 2);
+    ctx.fill();
+
+    const buds: Array<[number, number, number, number]> = [
+      [0, 0, 7.5, 11],
+      [-8, 2, 5.2, 7.5],
+      [7, 3, 4.4, 6],
+    ];
+    for (const [ox, oy, capR, stemH] of buds) {
+      ctx.strokeStyle = '#d7efe9';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(mx + ox, my + oy);
+      ctx.quadraticCurveTo(mx + ox - 0.8, my + oy - stemH * 0.5, mx + ox, my + oy - stemH + 1);
+      ctx.stroke();
+
+      ctx.fillStyle = mCol;
+      ctx.beginPath();
+      ctx.ellipse(mx + ox, my + oy - stemH + 1.5, capR, capR * 0.56, 0, Math.PI, 0);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // Fine glowing bioluminescent fern fronds & spore motes
+    const fx = rx + 114;
+    const fy = ry + 56;
+    ctx.strokeStyle = floraA;
+    ctx.globalAlpha = 0.55;
+    ctx.lineWidth = 1.3;
+    for (let f = -1; f <= 1; f++) {
+      ctx.beginPath();
+      ctx.moveTo(fx, fy);
+      ctx.quadraticCurveTo(fx + f * 7, fy - 10, fx + f * 12, fy - 16 + Math.abs(f) * 3);
+      ctx.stroke();
+      ctx.fillStyle = floraA;
+      ctx.beginPath();
+      ctx.arc(fx + f * 12, fy - 16 + Math.abs(f) * 3, 1.7, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    if (levelId === 4) {
+      ctx.fillStyle = 'rgba(185, 244, 255, 0.6)';
+      for (let ic = 0; ic < 2; ic++) {
+        const ix = rx + 28 + ic * 28;
+        const iy = ry + 20 + ic * 6;
+        ctx.beginPath();
+        ctx.moveTo(ix - 2.4, iy);
+        ctx.lineTo(ix + 2.4, iy);
+        ctx.lineTo(ix, iy + 8 + ic * 3);
+        ctx.closePath();
+        ctx.fill();
+      }
+    }
+  }
+  ctx.restore();
+
+  // Crisp luminous ground rim highlight
   ctx.strokeStyle = rimCol;
-  ctx.lineWidth = levelId === 4 ? 3.2 : 2.4;
+  ctx.lineWidth = levelId === 4 ? 3.2 : 2.5;
   ctx.beginPath();
   for (let x = startX; x <= endX; x += 24) {
     const y = getTerrainY(x, levelId);
@@ -1433,22 +1875,32 @@ function drawGrassAndFlowers(
   viewW: number
 ): void {
   const bladeColor =
-    levelId === 1 ? '#3dc79f' : levelId === 2 ? '#c9794b' : levelId === 3 ? '#6cc8e8' : '#94e4ff';
+    levelId === 1 ? '#4cd19b' : levelId === 2 ? '#d6854d' : levelId === 3 ? '#74d2ee' : '#9eeaff';
   for (const g of world.grassTufts) {
-    if (g.x < cameraX - 20 || g.x > cameraX + viewW + 20) continue;
+    if (g.x < cameraX - 24 || g.x > cameraX + viewW + 24) continue;
     const tipX = g.x + g.bend * g.h;
     const tipY = g.y - g.h;
     ctx.strokeStyle = bladeColor;
-    ctx.lineWidth = 1.6;
+    ctx.lineWidth = 1.8;
     ctx.beginPath();
-    ctx.moveTo(g.x, g.y + 2);
+    ctx.moveTo(g.x, g.y + 3);
     ctx.quadraticCurveTo(g.x + g.bend * 5, g.y - g.h * 0.5, tipX, tipY);
+    ctx.stroke();
+
+    // Side frond blade for fuller mossy undergrowth
+    ctx.beginPath();
+    ctx.moveTo(g.x + 2, g.y + 3);
+    ctx.quadraticCurveTo(g.x + 4 - g.bend * 3, g.y - g.h * 0.4, g.x + 4 - g.bend * g.h * 0.7, g.y - g.h * 0.72);
     ctx.stroke();
 
     if (g.hasFlower) {
       ctx.fillStyle = g.flowerHue;
       ctx.beginPath();
-      ctx.arc(tipX, tipY, 2.6, 0, Math.PI * 2);
+      ctx.arc(tipX, tipY, 3, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#fff9d6';
+      ctx.beginPath();
+      ctx.arc(tipX, tipY, 1.1, 0, Math.PI * 2);
       ctx.fill();
     }
   }

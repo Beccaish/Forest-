@@ -23,6 +23,32 @@ interface GameHUDProps {
   onMobileNavOpenChange?: (open: boolean) => void;
 }
 
+const ButtonFiligree: React.FC = () => (
+  <>
+    <svg
+      aria-hidden="true"
+      width="32"
+      height="6"
+      viewBox="0 0 32 6"
+      fill="none"
+      className="pointer-events-none absolute -top-[4px] left-1/2 -translate-x-1/2"
+    >
+      <path d="M2 5C7 1.5 11 1.5 16 4.5C21 1.5 25 1.5 30 5" stroke="#dfb973" strokeWidth="1.4" strokeLinecap="round" />
+      <circle cx="16" cy="2.2" r="1.4" fill="#f3d893" />
+    </svg>
+    <svg
+      aria-hidden="true"
+      width="28"
+      height="6"
+      viewBox="0 0 28 6"
+      fill="none"
+      className="pointer-events-none absolute -bottom-[4px] left-1/2 -translate-x-1/2"
+    >
+      <path d="M2 1C7 4.5 11 4.5 14 2C17 4.5 21 4.5 26 1" stroke="#dfb973" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
+  </>
+);
+
 export const GameHUD: React.FC<GameHUDProps> = ({
   hud,
   muted,
@@ -113,7 +139,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
               }}
               aria-expanded={pointsExpanded}
               aria-label={pointsExpanded ? 'Collapse score details' : 'Expand score details'}
-              className="w-full text-left rounded-xl border border-[#8cf8e8]/25 bg-[#061822]/48 px-2.5 py-1.5 text-[#eefcf9] shadow-md backdrop-blur-md transition-colors hover:border-[#8cf8e8]/45 focus-visible:outline-2 focus-visible:outline-[#7cfce7]"
+              className="w-full text-left rounded-xl border-[2px] border-[#c4a16a] bg-[#071a18]/78 px-2.5 py-1.5 text-[#eefcf9] shadow-[0_8px_20px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(24,14,7,0.78),inset_0_0_0_3px_rgba(232,202,140,0.26)] backdrop-blur-md transition-all hover:border-[#e0c082] focus-visible:outline-2 focus-visible:outline-[#7cfce7]"
             >
               <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs">
                 {/* Petals */}
@@ -206,7 +232,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
             {pointsExpanded && (
               <div
                 onClick={() => setPointsExpanded(false)}
-                className="absolute left-0 top-full mt-1.5 z-40 w-[245px] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-xl border border-[#8cf8e8]/28 bg-[#071923]/90 p-3 text-[#eafbf9] shadow-2xl backdrop-blur-md"
+                className="absolute left-0 top-full mt-1.5 z-40 w-[245px] max-h-[calc(100dvh-5rem)] overflow-y-auto rounded-xl border-[2px] border-[#c4a16a] bg-[#081c19]/92 p-3 text-[#eafbf9] shadow-[0_14px_30px_rgba(0,0,0,0.68),inset_0_0_0_2px_rgba(24,14,7,0.82),inset_0_0_0_3px_rgba(232,202,140,0.25)] backdrop-blur-md"
               >
                 <div className="flex items-center justify-between gap-2 text-xs">
                   <span className="font-semibold text-[#c5ede6]">
@@ -275,15 +301,15 @@ export const GameHUD: React.FC<GameHUDProps> = ({
             )}
           </div>
 
-          {/* Mobile Top-Right Prominent Save & Pause + Hidden Nav Bar Toggle */}
+          {/* Mobile Top-Right Carved Wood Save & Pause + Hidden Nav Bar Toggle */}
           <div ref={mobileNavRef} className="pointer-events-auto relative flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={onSaveGame}
-              className={`min-h-[40px] whitespace-nowrap shrink-0 rounded-lg border px-3 py-2 text-xs font-semibold shadow-md transition-colors focus-visible:outline-2 focus-visible:outline-[#7cfce7] ${
+              className={`min-h-[40px] whitespace-nowrap shrink-0 rounded-lg border px-3 py-2 text-xs font-semibold shadow-[0_4px_10px_rgba(0,0,0,0.5),inset_0_0_0_2px_rgba(20,12,6,0.72)] transition-all focus-visible:outline-2 focus-visible:outline-[#7cfce7] ${
                 justSaved
-                  ? 'border-[#56e3cc] bg-[#56e3cc]/30 text-[#b4fff1]'
-                  : 'border-[#7cfce7]/40 bg-[#061822]/78 text-[#e6fffb] hover:bg-[#0c2635]'
+                  ? 'border-[#8de2c7] bg-gradient-to-b from-[#237a66] to-[#134c3f] text-[#b4fff1]'
+                  : 'border-[#c9a66b]/90 bg-gradient-to-b from-[#5b412c] to-[#342316] text-[#f7eed7] hover:brightness-110'
               }`}
             >
               {justSaved ? 'Saved!' : 'Save'}
@@ -296,7 +322,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
                 setPointsExpanded(false);
                 onPause();
               }}
-              className="min-h-[40px] whitespace-nowrap shrink-0 rounded-lg border border-[#8cf8e8]/35 bg-[#061822]/78 px-3 py-2 text-xs font-semibold text-[#eefcf9] shadow-md transition-colors hover:bg-[#0c2635] focus-visible:outline-2 focus-visible:outline-[#7cfce7]"
+              className="min-h-[40px] whitespace-nowrap shrink-0 rounded-lg border border-[#c9a66b]/90 bg-gradient-to-b from-[#5b412c] to-[#342316] px-3 py-2 text-xs font-semibold text-[#f7eed7] shadow-[0_4px_10px_rgba(0,0,0,0.5),inset_0_0_0_2px_rgba(20,12,6,0.72)] transition-all hover:brightness-110 focus-visible:outline-2 focus-visible:outline-[#7cfce7]"
             >
               Pause
             </button>
@@ -309,10 +335,10 @@ export const GameHUD: React.FC<GameHUDProps> = ({
               }}
               aria-expanded={mobileNavOpen}
               aria-label={mobileNavOpen ? 'Close navigation bar' : 'Open navigation bar'}
-              className={`min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg border px-2.5 py-2 text-xs font-semibold shadow-md transition-colors focus-visible:outline-2 focus-visible:outline-[#7cfce7] ${
+              className={`min-h-[40px] min-w-[40px] flex items-center justify-center rounded-lg border px-2.5 py-2 text-xs font-semibold shadow-[0_4px_10px_rgba(0,0,0,0.5),inset_0_0_0_2px_rgba(20,12,6,0.72)] transition-all focus-visible:outline-2 focus-visible:outline-[#7cfce7] ${
                 mobileNavOpen
-                  ? 'border-[#56e3cc] bg-[#0e2d3b]/90 text-[#b4fff1]'
-                  : 'border-[#8cf8e8]/30 bg-[#061822]/78 text-[#dcf7f3] hover:bg-[#0c2635]'
+                  ? 'border-[#e6c888] bg-gradient-to-b from-[#664933] to-[#422c1d] text-[#fff8e6]'
+                  : 'border-[#c9a66b]/90 bg-gradient-to-b from-[#5b412c] to-[#342316] text-[#f7eed7] hover:brightness-110'
               }`}
             >
               {mobileNavOpen ? <X className="h-4 w-4" aria-hidden="true" /> : <Menu className="h-4 w-4" aria-hidden="true" />}
@@ -322,7 +348,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
             {mobileNavOpen && (
               <div
                 onPointerDown={(e) => e.stopPropagation()}
-                className="absolute right-0 top-full mt-2 z-40 w-64 max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-xl border border-[#8cf8e8]/28 bg-[#071923]/94 p-3 text-[#eafbf8] shadow-2xl backdrop-blur-md"
+                className="absolute right-0 top-full mt-2 z-40 w-64 max-h-[calc(100dvh-4.5rem)] overflow-y-auto rounded-xl border-[2px] border-[#c4a16a] bg-[#081c19]/95 p-3 text-[#eafbf8] shadow-[0_14px_32px_rgba(0,0,0,0.68),inset_0_0_0_2px_rgba(24,14,7,0.82),inset_0_0_0_3px_rgba(232,202,140,0.25)] backdrop-blur-md"
                 role="region"
                 aria-label="Mobile menu"
               >
@@ -444,10 +470,68 @@ export const GameHUD: React.FC<GameHUDProps> = ({
   }
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-10 flex flex-col justify-between pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] pl-[max(0.75rem,env(safe-area-inset-left))] pr-[max(0.75rem,env(safe-area-inset-right))] sm:p-5">
+    <div className="pointer-events-none fixed inset-0 z-10 flex flex-col justify-between pt-[max(0.65rem,env(safe-area-inset-top))] pb-[max(0.45rem,env(safe-area-inset-bottom))] pl-[max(0.65rem,env(safe-area-inset-left))] pr-[max(0.65rem,env(safe-area-inset-right))] sm:px-3.5 sm:pt-3 sm:pb-2">
       <div className="flex items-start justify-between gap-3">
-        {/* Compact Vertical 2-Column Glassy Left Stats Card (Desktop) */}
-        <div className="w-[224px] sm:w-[252px] rounded-xl border border-[#8cf8e8]/22 bg-[#061822]/46 px-3 py-2.5 text-[#eefcf9] shadow-lg backdrop-blur-md">
+        {/* Ornate Storybook Carved-Bronze & Gem Crest Left Stats Plaque (Desktop) */}
+        <div className="relative mt-1.5 mb-5 w-[238px] sm:w-[264px] rounded-xl border-[2px] border-[#d3ae6a] bg-[#161b18]/78 px-3.5 pt-3.5 pb-3 text-[#eefcf9] shadow-[0_14px_30px_rgba(0,0,0,0.62),inset_0_0_0_2px_rgba(24,14,7,0.84),inset_0_0_0_3px_rgba(232,202,140,0.3)] backdrop-blur-md">
+          {/* Top Centered Turquoise Teardrop Crest */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -top-3 left-1/2 -translate-x-1/2 flex items-center justify-center"
+          >
+            <svg width="36" height="22" viewBox="0 0 36 22" fill="none">
+              <path
+                d="M2 15C8 15 12 8 18 2C24 8 28 15 34 15"
+                stroke="#d8b470"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+              <path
+                d="M18 3.5C21 7.6 22.8 10.6 22.8 13.4C22.8 16.2 20.6 18.2 18 18.2C15.4 18.2 13.2 16.2 13.2 13.4C13.2 10.6 15 7.6 18 3.5Z"
+                fill="#5eead4"
+                stroke="#f5de9d"
+                strokeWidth="1.5"
+              />
+              <circle cx="16.8" cy="11.5" r="1.4" fill="#ffffff" />
+            </svg>
+          </div>
+
+          {/* Antique Gold Corner Filigree Flourishes */}
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" className="pointer-events-none absolute top-0.5 left-0.5 opacity-90">
+            <path d="M2 14V5C2 3.3 3.3 2 5 2H14" stroke="#e4c280" strokeWidth="1.4" />
+            <circle cx="5.5" cy="5.5" r="1.4" fill="#e4c280" />
+          </svg>
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" className="pointer-events-none absolute top-0.5 right-0.5 opacity-90">
+            <path d="M20 14V5C20 3.3 18.7 2 17 2H8" stroke="#e4c280" strokeWidth="1.4" />
+            <circle cx="16.5" cy="5.5" r="1.4" fill="#e4c280" />
+          </svg>
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" className="pointer-events-none absolute bottom-0.5 left-0.5 opacity-90">
+            <path d="M2 8V17C2 18.7 3.3 20 5 20H14" stroke="#e4c280" strokeWidth="1.4" />
+            <circle cx="5.5" cy="16.5" r="1.4" fill="#e4c280" />
+          </svg>
+          <svg aria-hidden="true" width="22" height="22" viewBox="0 0 22 22" fill="none" className="pointer-events-none absolute bottom-0.5 right-0.5 opacity-90">
+            <path d="M20 8V17C20 18.7 18.7 20 17 20H8" stroke="#e4c280" strokeWidth="1.4" />
+            <circle cx="16.5" cy="16.5" r="1.4" fill="#e4c280" />
+          </svg>
+
+          {/* Bottom Centered Hanging Bronze & Glowing Dewdrop Medallion */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -bottom-4 left-1/2 -translate-x-1/2 flex items-center justify-center"
+          >
+            <div className="flex h-7 w-7 items-center justify-center rounded-full border-[2px] border-[#d6b26f] bg-gradient-to-b from-[#5b412c] to-[#2e1d10] shadow-[0_4px_10px_rgba(0,0,0,0.65)]">
+              <svg width="14" height="14" viewBox="0 0 20 20" fill="none">
+                <path
+                  d="M10 2.2C13.4 6.3 15.8 9.6 15.8 12.6C15.8 15.8 13.2 18 10 18C6.8 18 4.2 15.8 4.2 12.6C4.2 9.6 6.6 6.3 10 2.2Z"
+                  fill="#7cfce7"
+                  stroke="#ffe194"
+                  strokeWidth="1.4"
+                />
+                <circle cx="8.5" cy="11.5" r="1.4" fill="#ffffff" />
+              </svg>
+            </div>
+          </div>
+
           {/* Top line: Petals + Level Progress */}
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1" aria-label={`Vitality ${hud.petals} of ${hud.maxPetals}`}>
@@ -650,40 +734,44 @@ export const GameHUD: React.FC<GameHUDProps> = ({
           )}
         </div>
 
-        {/* Top-Right Interactive Actions + Expandable Sound Bar (Desktop) */}
-        <div className="pointer-events-auto flex flex-wrap justify-end shrink-0 items-center gap-1.5 sm:gap-2">
+        {/* Top-Right Carved Wood & Antique Bronze Ornate Filigree Nav Bar (Desktop) */}
+        <div className="pointer-events-auto flex flex-wrap justify-end shrink-0 items-center gap-1.5 sm:gap-2 pt-1">
           {hud.flyingFlowers > 0 && (
             <button
               type="button"
               onClick={onFly}
-              className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#ff9ce3]/55 bg-[#2e0c2b]/80 px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-semibold text-[#ffd6f4] transition-colors hover:border-[#ff9ce3] hover:bg-[#461341]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff9ce3] tabular-nums"
+              className="relative min-h-[38px] whitespace-nowrap shrink-0 rounded-lg border border-[#f2a6d8] bg-gradient-to-b from-[#5e2752] to-[#36122f] px-3 py-1.5 text-[11px] sm:text-xs font-semibold text-[#ffe0f7] shadow-[0_4px_12px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(24,10,20,0.72),inset_0_0_0_3px_rgba(242,166,216,0.28)] transition-all hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ff9ce3] tabular-nums"
             >
+              <ButtonFiligree />
               Fly · {hud.flyingFlowers}
             </button>
           )}
           <button
             type="button"
             onClick={onOpenShop}
-            className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#ffe194]/45 bg-[#081b24]/80 px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-semibold text-[#ffe194] transition-colors hover:border-[#ffe194]/80 hover:bg-[#102d3b]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe194]"
+            className="relative min-h-[38px] whitespace-nowrap shrink-0 rounded-lg border border-[#d9b676] bg-gradient-to-b from-[#66492e] to-[#3c2817] px-3 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-semibold text-[#ffe6a3] shadow-[0_4px_12px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(24,14,7,0.72),inset_0_0_0_3px_rgba(232,202,140,0.3)] transition-all hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#ffe194]"
           >
+            <ButtonFiligree />
             Shop
           </button>
           <button
             type="button"
             onClick={onSaveGame}
-            className={`min-h-[40px] whitespace-nowrap shrink-0 rounded-md border px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7] ${
+            className={`relative min-h-[38px] whitespace-nowrap shrink-0 rounded-lg border px-3 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-medium shadow-[0_4px_12px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(24,14,7,0.72),inset_0_0_0_3px_rgba(225,192,130,0.26)] transition-all hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f5de9d] ${
               justSaved
-                ? 'border-[#56e3cc] bg-[#56e3cc]/25 text-[#9effef] font-semibold'
-                : 'border-[#8cf8e8]/25 bg-[#06131a]/75 text-[#dcf7f3] hover:border-[#8cf8e8]/55 hover:bg-[#0c2330]/90'
+                ? 'border-[#8de2c7] bg-gradient-to-b from-[#237a66] to-[#134c3f] text-[#d1fae5] font-semibold'
+                : 'border-[#c9a66b]/90 bg-gradient-to-b from-[#5b412c] to-[#342316] text-[#f7eed7]'
             }`}
           >
+            <ButtonFiligree />
             {justSaved ? 'Saved!' : 'Save'}
           </button>
           <button
             type="button"
             onClick={onGoHome}
-            className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#8cf8e8]/25 bg-[#06131a]/75 px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-medium text-[#dcf7f3] transition-colors hover:border-[#8cf8e8]/55 hover:bg-[#0c2330]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
+            className="relative min-h-[38px] whitespace-nowrap shrink-0 rounded-lg border border-[#c9a66b]/90 bg-gradient-to-b from-[#5b412c] to-[#342316] px-3 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-medium text-[#f7eed7] shadow-[0_4px_12px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(24,14,7,0.72),inset_0_0_0_3px_rgba(225,192,130,0.26)] transition-all hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f5de9d]"
           >
+            <ButtonFiligree />
             Home
           </button>
 
@@ -696,31 +784,73 @@ export const GameHUD: React.FC<GameHUDProps> = ({
             onSfxVolumeChange={onSfxVolumeChange}
             onPreviewSfx={onPreviewSfx}
             align="right"
+            variant="woodland"
+            ornate
           />
 
           <button
             type="button"
             onClick={onOpenSettings}
-            className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#8cf8e8]/25 bg-[#06131a]/75 px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-medium text-[#dcf7f3] transition-colors hover:border-[#8cf8e8]/55 hover:bg-[#0c2330]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
+            className="relative min-h-[38px] whitespace-nowrap shrink-0 rounded-lg border border-[#c9a66b]/90 bg-gradient-to-b from-[#5b412c] to-[#342316] px-3 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-medium text-[#f7eed7] shadow-[0_4px_12px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(24,14,7,0.72),inset_0_0_0_3px_rgba(225,192,130,0.26)] transition-all hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f5de9d]"
           >
+            <ButtonFiligree />
             Settings
           </button>
 
           <button
             type="button"
             onClick={onPause}
-            className="min-h-[40px] whitespace-nowrap shrink-0 rounded-md border border-[#8cf8e8]/25 bg-[#06131a]/75 px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-medium text-[#dcf7f3] transition-colors hover:border-[#8cf8e8]/55 hover:bg-[#0c2330]/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#7cfce7]"
+            className="relative min-h-[38px] whitespace-nowrap shrink-0 rounded-lg border border-[#c9a66b]/90 bg-gradient-to-b from-[#5b412c] to-[#342316] px-3 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-medium text-[#f7eed7] shadow-[0_4px_12px_rgba(0,0,0,0.55),inset_0_0_0_2px_rgba(24,14,7,0.72),inset_0_0_0_3px_rgba(225,192,130,0.26)] transition-all hover:brightness-110 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f5de9d]"
           >
+            <ButtonFiligree />
             Pause
           </button>
         </div>
       </div>
 
-      {/* Bottom Flat Control Hint Line (Desktop PC only) */}
+      {/* Bottom Weathered Parchment Scroll Control Banner (Desktop PC) */}
       <div className="flex justify-center">
-        <p className="text-xs tracking-wide text-[#cbeae5]/80 drop-shadow-[0_1px_4px_rgba(0,0,0,0.9)]">
-          A D Move · Space Jump &amp; Glide · E Pulse · H Help Animal · F Fly · M Mute · Esc Pause
-        </p>
+        <div className="relative flex items-center max-w-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]">
+          {/* Sleek Tapered Left Scroll Curl */}
+          <svg
+            aria-hidden="true"
+            width="14"
+            height="34"
+            viewBox="0 0 14 34"
+            fill="none"
+            className="-mr-0.5 shrink-0 z-10"
+          >
+            <path
+              d="M12 3C7.5 3 4 5.5 4 9.5V24.5C4 28.5 7.5 31 12 31V3Z"
+              fill="#e4ca92"
+              stroke="#8c6738"
+              strokeWidth="1.2"
+            />
+            <path d="M10 6C8.2 6 7 7.2 7 9V25C7 26.8 8.2 28 10 28" stroke="#b69057" strokeWidth="1.1" />
+          </svg>
+          <div className="border-y border-[#9c7847] bg-gradient-to-b from-[#f3e5c2] via-[#e5cd99] to-[#ceb27a] px-5 sm:px-7 py-1.5 shadow-[inset_0_1px_0_rgba(255,250,235,0.72)]">
+            <p className="font-display text-center text-[11px] sm:text-xs font-medium tracking-wide text-[#311f0d] whitespace-nowrap">
+              A-D Move · Space Jump &amp; Glide · E Pulse · H Help Animal · F Fly · M Mute · Esc Pause
+            </p>
+          </div>
+          {/* Sleek Tapered Right Scroll Curl */}
+          <svg
+            aria-hidden="true"
+            width="14"
+            height="34"
+            viewBox="0 0 14 34"
+            fill="none"
+            className="-ml-0.5 shrink-0 z-10"
+          >
+            <path
+              d="M2 3C6.5 3 10 5.5 10 9.5V24.5C10 28.5 6.5 31 2 31V3Z"
+              fill="#e4ca92"
+              stroke="#8c6738"
+              strokeWidth="1.2"
+            />
+            <path d="M4 6C5.8 6 7 7.2 7 9V25C7 26.8 5.8 28 4 28" stroke="#b69057" strokeWidth="1.1" />
+          </svg>
+        </div>
       </div>
     </div>
   );

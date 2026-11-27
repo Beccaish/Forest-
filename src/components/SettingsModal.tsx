@@ -36,7 +36,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-[#040b12]/88 p-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-5 overflow-y-auto backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-[#030d0b]/84 p-3 pt-[max(0.75rem,env(safe-area-inset-top))] pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:p-5 overflow-y-auto backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="grove-settings-title"
@@ -44,15 +44,15 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="w-full max-w-md max-h-full overflow-y-auto rounded-2xl border border-[#7cfce7]/28 bg-[#071822]/96 p-4 sm:p-6 text-[#eafbf8] shadow-2xl my-auto">
-        <div className="flex items-center justify-between gap-3 border-b border-[#7cfce7]/18 pb-3">
-          <h2 id="grove-settings-title" className="font-display text-xl font-semibold text-[#f0fffc]">
+      <div className="relative w-full max-w-md max-h-full overflow-y-auto rounded-2xl border-[2px] border-[#c4a16a] bg-gradient-to-b from-[#0b231e]/96 to-[#061412]/98 p-4 sm:p-6 text-[#eafbf8] shadow-[0_22px_54px_rgba(0,0,0,0.78),inset_0_0_0_2px_rgba(24,14,7,0.85),inset_0_0_0_3px_rgba(232,202,140,0.28)] my-auto">
+        <div className="flex items-center justify-between gap-3 border-b border-[#c4a16a]/30 pb-3">
+          <h2 id="grove-settings-title" className="font-display text-xl font-semibold text-[#f5eedc]">
             Settings
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[40px] rounded-md border border-[#8cf8e8]/30 bg-[#0d2734] px-4 py-1.5 text-xs font-semibold text-[#e6fffb] transition-colors hover:bg-[#143a4c] focus-visible:outline-2 focus-visible:outline-[#7cfce7]"
+            className="min-h-[40px] rounded-lg border border-[#c9a66b]/90 bg-gradient-to-b from-[#5b412c] to-[#342316] px-4 py-1.5 text-xs font-semibold text-[#f7eed7] shadow-[0_3px_8px_rgba(0,0,0,0.45),inset_0_0_0_2px_rgba(24,14,7,0.72)] transition-all hover:brightness-110 focus-visible:outline-2 focus-visible:outline-[#7cfce7]"
           >
             Done
           </button>
@@ -60,8 +60,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* Mobile Controls Style */}
         <div className="mt-4">
-          <div className="text-sm font-semibold text-[#dffaf5]">Mobile Controls</div>
-          <p className="mt-0.5 text-xs text-[#a5d3cc]">
+          <div className="text-sm font-semibold text-[#f5eedc]">Mobile Controls</div>
+          <p className="mt-0.5 text-xs text-[#b7dad2]">
             Choose how movement controls look and feel on touch screens.
           </p>
 
@@ -69,10 +69,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <button
               type="button"
               onClick={() => onChangeMobileControlStyle('arrows')}
-              className={`flex flex-col items-center gap-2 rounded-xl border-2 p-3 text-center transition-colors focus-visible:outline-2 focus-visible:outline-[#7cfce7] ${
+              className={`flex flex-col items-center gap-2 rounded-xl border-2 p-3 text-center transition-all focus-visible:outline-2 focus-visible:outline-[#7cfce7] ${
                 mobileControlStyle === 'arrows'
-                  ? 'border-[#56e3cc] bg-[#103642] text-[#f0fffc]'
-                  : 'border-[#8cf8e8]/20 bg-[#081d29] text-[#bfe5df] hover:border-[#8cf8e8]/45'
+                  ? 'border-[#8de2c7] bg-[#103831] text-[#f0fffc] shadow-[inset_0_0_0_2px_rgba(12,30,26,0.6)]'
+                  : 'border-[#c4a16a]/45 bg-[#081b18]/90 text-[#bfe5df] hover:border-[#c4a16a]/80'
               }`}
             >
               <div className="flex h-10 w-24 items-center justify-center rounded-full border border-[#8cf8e8]/45 bg-[#06141c] text-sm font-bold text-[#7cfce7]">
@@ -87,10 +87,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <button
               type="button"
               onClick={() => onChangeMobileControlStyle('joystick')}
-              className={`flex flex-col items-center gap-2 rounded-xl border-2 p-3 text-center transition-colors focus-visible:outline-2 focus-visible:outline-[#7cfce7] ${
+              className={`flex flex-col items-center gap-2 rounded-xl border-2 p-3 text-center transition-all focus-visible:outline-2 focus-visible:outline-[#7cfce7] ${
                 mobileControlStyle === 'joystick'
-                  ? 'border-[#56e3cc] bg-[#103642] text-[#f0fffc]'
-                  : 'border-[#8cf8e8]/20 bg-[#081d29] text-[#bfe5df] hover:border-[#8cf8e8]/45'
+                  ? 'border-[#8de2c7] bg-[#103831] text-[#f0fffc] shadow-[inset_0_0_0_2px_rgba(12,30,26,0.6)]'
+                  : 'border-[#c4a16a]/45 bg-[#081b18]/90 text-[#bfe5df] hover:border-[#c4a16a]/80'
               }`}
             >
               <div className="flex h-11 w-11 items-center justify-center rounded-full border-2 border-[#8cf8e8]/45 bg-[#06141c]">
@@ -105,9 +105,9 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Mobile Controls Side Selector */}
-        <div className="mt-4 border-t border-[#7cfce7]/18 pt-4">
-          <div className="text-sm font-semibold text-[#dffaf5]">Controls Side</div>
-          <p className="mt-0.5 text-xs text-[#a5d3cc]">
+        <div className="mt-4 border-t border-[#c4a16a]/25 pt-4">
+          <div className="text-sm font-semibold text-[#f5eedc]">Controls Side</div>
+          <p className="mt-0.5 text-xs text-[#b7dad2]">
             Swap which side of the screen Move and Jump sit on.
           </p>
 
@@ -115,10 +115,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <button
               type="button"
               onClick={() => onChangeMobileHandedness('move-left')}
-              className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 text-center transition-colors focus-visible:outline-2 focus-visible:outline-[#7cfce7] ${
+              className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 text-center transition-all focus-visible:outline-2 focus-visible:outline-[#7cfce7] ${
                 mobileHandedness === 'move-left'
-                  ? 'border-[#56e3cc] bg-[#103642] text-[#f0fffc]'
-                  : 'border-[#8cf8e8]/20 bg-[#081d29] text-[#bfe5df] hover:border-[#8cf8e8]/45'
+                  ? 'border-[#8de2c7] bg-[#103831] text-[#f0fffc] shadow-[inset_0_0_0_2px_rgba(12,30,26,0.6)]'
+                  : 'border-[#c4a16a]/45 bg-[#081b18]/90 text-[#bfe5df] hover:border-[#c4a16a]/80'
               }`}
             >
               <div className="flex w-full items-center justify-between px-2 text-xs font-semibold text-[#7cfce7]">
@@ -132,10 +132,10 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <button
               type="button"
               onClick={() => onChangeMobileHandedness('move-right')}
-              className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 text-center transition-colors focus-visible:outline-2 focus-visible:outline-[#7cfce7] ${
+              className={`flex flex-col items-center gap-1.5 rounded-xl border-2 p-3 text-center transition-all focus-visible:outline-2 focus-visible:outline-[#7cfce7] ${
                 mobileHandedness === 'move-right'
-                  ? 'border-[#56e3cc] bg-[#103642] text-[#f0fffc]'
-                  : 'border-[#8cf8e8]/20 bg-[#081d29] text-[#bfe5df] hover:border-[#8cf8e8]/45'
+                  ? 'border-[#8de2c7] bg-[#103831] text-[#f0fffc] shadow-[inset_0_0_0_2px_rgba(12,30,26,0.6)]'
+                  : 'border-[#c4a16a]/45 bg-[#081b18]/90 text-[#bfe5df] hover:border-[#c4a16a]/80'
               }`}
             >
               <div className="flex w-full items-center justify-between px-2 text-xs font-semibold text-[#7cfce7]">
@@ -149,16 +149,16 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         </div>
 
         {/* Audio Quick Controls */}
-        <div className="mt-5 border-t border-[#7cfce7]/18 pt-4 space-y-3">
+        <div className="mt-5 border-t border-[#c4a16a]/25 pt-4 space-y-3">
           <div className="flex items-center justify-between gap-2">
-            <span className="text-sm font-semibold text-[#dffaf5]">Sound</span>
+            <span className="text-sm font-semibold text-[#f5eedc]">Sound</span>
             <button
               type="button"
               onClick={onToggleMute}
-              className={`min-h-[36px] rounded-md px-3.5 py-1 text-xs font-semibold transition-colors ${
+              className={`min-h-[36px] rounded-lg px-3.5 py-1 text-xs font-semibold transition-all ${
                 muted
-                  ? 'bg-[#56e3cc] text-[#041b1f] hover:bg-[#73f5df]'
-                  : 'border border-[#8cf8e8]/30 bg-[#0d2734] text-[#e6fffb] hover:bg-[#14394c]'
+                  ? 'border border-[#8de2c7] bg-gradient-to-b from-[#237a66] to-[#134c3f] text-white'
+                  : 'border border-[#c9a66b]/90 bg-gradient-to-b from-[#5b412c] to-[#342316] text-[#f7eed7] hover:brightness-110'
               }`}
             >
               {muted ? 'Play Sound' : 'Mute Sound'}
