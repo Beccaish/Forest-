@@ -1599,9 +1599,27 @@ export class ForestGameEngine {
       0,
       Math.max(0, WORLD_WIDTH - virtualW)
     );
-    const targetCamY = p.y - virtualH * 0.79;
+    const camGroundY = getTerrainY(p.x, this.levelId);
+    const heightAboveGround = Math.max(0, camGroundY - p.y);
+    const isFlyingHigh = isFlying && heightAboveGround > virtualH * 0.35;
+    let targetCamY: number;
+    if (isFlyingHigh) {
+      targetCamY = p.y - virtualH * 0.55;
+    } else {
+      const floorAnchorCamY = camGroundY - virtualH * 0.88;
+      const blendedAirCamY = lerp(
+        camGroundY - virtualH * 0.79,
+        p.y - virtualH * 0.79,
+        0.28
+      );
+      const headroomCapCamY = p.y - virtualH * 0.26;
+      targetCamY = Math.min(
+        headroomCapCamY,
+        Math.max(floorAnchorCamY, blendedAirCamY)
+      );
+    }
     this.cameraX = lerp(this.cameraX, targetCamX, Math.min(1, dt * 5.2));
-    this.cameraY = lerp(this.cameraY, targetCamY, Math.min(1, dt * 4.5));
+    this.cameraY = lerp(this.cameraY, targetCamY, Math.min(1, dt * 4.8));
 
     this.hudSyncTimer += dt;
     if (this.hudSyncTimer >= 0.12) {
