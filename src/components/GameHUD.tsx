@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ChevronDown, ChevronUp, Menu, Volume2, VolumeX, X } from 'lucide-react';
 import type { HudSnapshot } from '../game/types';
 import { SoundControl } from './SoundControl';
+import { ParchmentScrollBanner } from './ParchmentScrollBanner';
 
 interface GameHUDProps {
   hud: HudSnapshot;
@@ -809,48 +810,10 @@ export const GameHUD: React.FC<GameHUDProps> = ({
       </div>
 
       {/* Bottom Weathered Parchment Scroll Control Banner (Desktop PC) */}
-      <div className="flex justify-center">
-        <div className="relative flex items-center max-w-full drop-shadow-[0_4px_12px_rgba(0,0,0,0.6)]">
-          {/* Sleek Tapered Left Scroll Curl */}
-          <svg
-            aria-hidden="true"
-            width="14"
-            height="34"
-            viewBox="0 0 14 34"
-            fill="none"
-            className="-mr-0.5 shrink-0 z-10"
-          >
-            <path
-              d="M12 3C7.5 3 4 5.5 4 9.5V24.5C4 28.5 7.5 31 12 31V3Z"
-              fill="#e4ca92"
-              stroke="#8c6738"
-              strokeWidth="1.2"
-            />
-            <path d="M10 6C8.2 6 7 7.2 7 9V25C7 26.8 8.2 28 10 28" stroke="#b69057" strokeWidth="1.1" />
-          </svg>
-          <div className="border-y border-[#9c7847] bg-gradient-to-b from-[#f3e5c2] via-[#e5cd99] to-[#ceb27a] px-5 sm:px-7 py-1.5 shadow-[inset_0_1px_0_rgba(255,250,235,0.72)]">
-            <p className="font-display text-center text-[11px] sm:text-xs font-medium tracking-wide text-[#311f0d] whitespace-nowrap">
-              A-D Move · Space Jump &amp; Glide · E Pulse · H Help Animal · F Fly · M Mute · Esc Pause
-            </p>
-          </div>
-          {/* Sleek Tapered Right Scroll Curl */}
-          <svg
-            aria-hidden="true"
-            width="14"
-            height="34"
-            viewBox="0 0 14 34"
-            fill="none"
-            className="-ml-0.5 shrink-0 z-10"
-          >
-            <path
-              d="M2 3C6.5 3 10 5.5 10 9.5V24.5C10 28.5 6.5 31 2 31V3Z"
-              fill="#e4ca92"
-              stroke="#8c6738"
-              strokeWidth="1.2"
-            />
-            <path d="M4 6C5.8 6 7 7.2 7 9V25C7 26.8 5.8 28 4 28" stroke="#b69057" strokeWidth="1.1" />
-          </svg>
-        </div>
+      <div className="flex justify-center pt-1 pb-1">
+        <ParchmentScrollBanner singleLine>
+          A-D Move &nbsp;·&nbsp; Space Jump &amp; Glide &nbsp;·&nbsp; E Pulse &nbsp;·&nbsp; H Help Animal &nbsp;·&nbsp; F Fly &nbsp;·&nbsp; M Mute &nbsp;·&nbsp; Esc Pause
+        </ParchmentScrollBanner>
       </div>
     </div>
   );

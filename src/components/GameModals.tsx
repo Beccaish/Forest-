@@ -7,6 +7,7 @@ import realmFrozenImg from '../assets/images/realm_card_frozen_peaks_17957749499
 import realmWhisperingImg from '../assets/images/realm_card_whispering_woods_1795774948723.jpg';
 import type { HudSnapshot, LevelId } from '../game/types';
 import { SoundControl } from './SoundControl';
+import { ParchmentScrollBanner } from './ParchmentScrollBanner';
 
 interface GameModalsProps {
   hud: HudSnapshot;
@@ -379,15 +380,13 @@ export const GameModals: React.FC<GameModalsProps> = ({
           </div>
         </div>
 
-        {/* Bottom Weathered Leather & Parchment Scroll Control Banner */}
-        <div className="relative z-10 flex justify-center items-center border-t border-[#8b633c]/70 bg-gradient-to-b from-[#4b311b]/95 to-[#2e1d0f]/98 px-3 pt-1.5 pb-[max(0.45rem,env(safe-area-inset-bottom))] shrink-0">
-          <div className="max-w-full rounded-sm border border-[#9b7644] bg-gradient-to-b from-[#f0e1bc] via-[#e2ca97] to-[#cbb07a] px-4 sm:px-7 py-1.5 shadow-[0_3px_10px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,250,235,0.65)]">
-            <p className="font-display text-center text-[11px] sm:text-xs font-medium tracking-wide text-[#311f0d] leading-snug">
-              {isTouchDevice
-                ? 'Move & Jump  |  Tap Sick Animals to Help (5s Safe Shield!)  |  Pick Up Trash'
-                : 'A-D Move  |  Space Jump  |  E Pulse  |  H Help Sick Animals (5s Safe!)  |  Walk Over Trash'}
-            </p>
-          </div>
+        {/* Bottom Floating Illustrated Parchment Scroll Control Banner */}
+        <div className="relative z-10 pointer-events-none flex justify-center items-center px-3 pt-1.5 pb-[max(0.6rem,env(safe-area-inset-bottom))] shrink-0">
+          <ParchmentScrollBanner>
+            {isTouchDevice
+              ? 'Move & Jump  |  Tap Sick Animals to Help (5s Safe Shield!)  |  Pick Up Trash'
+              : 'A-D Move  |  Space Jump  |  E Pulse  |  H Help Sick Animals (5s Safe!)  |  Walk Over Trash'}
+          </ParchmentScrollBanner>
         </div>
       </div>
     );
