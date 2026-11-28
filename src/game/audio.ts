@@ -118,6 +118,28 @@ const LEVEL_LOFI_THEMES: Record<LevelId, LofiLevelTheme> = {
     baseCutoff: 1520,
     melodyPattern: 'winter',
   },
+  // Level 5 · Sunbeam Dessert Glade (3D Trail): Warm 76 BPM sunlit marimba & celesta groove (Fmaj7 -> G6 -> Em7 -> Am9)
+  5: {
+    bpm: 76,
+    progression: [
+      { notes: [174.61, 220.0, 261.63, 329.63], melodyA: 523.25, melodyB: 659.25, sparkle: 783.99 },
+      { notes: [196.0, 246.94, 293.66, 329.63], melodyA: 587.33, melodyB: 493.88, sparkle: 783.99 },
+      { notes: [164.81, 196.0, 246.94, 293.66], melodyA: 493.88, melodyB: 587.33, sparkle: 659.25 },
+      { notes: [220.0, 261.63, 329.63, 392.0], melodyA: 659.25, melodyB: 523.25, sparkle: 880.0 },
+    ],
+    strumDelay: 0.042,
+    chordDuration: 2.75,
+    kickSteps: [0, 4],
+    kickPitchStart: 94,
+    kickPitchEnd: 42,
+    accentBrushSteps: [2, 6],
+    softBrushSteps: [1, 3, 5, 7],
+    overtoneType: 'triangle',
+    overtoneRatio: 2,
+    overtoneGain: 0.17,
+    baseCutoff: 1780,
+    melodyPattern: 'arp',
+  },
 };
 
 const DEFAULT_WEIGHTS: WeatherWeights = {

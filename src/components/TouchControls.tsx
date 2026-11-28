@@ -7,9 +7,12 @@ interface TouchControlsProps {
   visible: boolean;
   controlStyle: MobileControlStyle;
   handedness?: MobileControlHandedness;
+  mode3d?: boolean;
   flyingFlowers: number;
   onLeftChange: (held: boolean) => void;
   onRightChange: (held: boolean) => void;
+  onForwardChange?: (held: boolean) => void;
+  onBackwardChange?: (held: boolean) => void;
   onJumpDown: () => void;
   onJumpUp: () => void;
   onPulse: () => void;
@@ -23,9 +26,12 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
   visible,
   controlStyle,
   handedness = 'move-left',
+  mode3d = false,
   flyingFlowers,
   onLeftChange,
   onRightChange,
+  onForwardChange,
+  onBackwardChange,
   onJumpDown,
   onJumpUp,
   onPulse,
@@ -38,6 +44,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
   const jumpPointerId = useRef<number | null>(null);
 
   const [activeDir, setActiveDir] = useState<'left' | 'right' | null>(null);
+  const [activeDepth, setActiveDepth] = useState<'forward' | 'backward' | null>(null);
   const [stickOffset, setStickOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
   const [jumpActive, setJumpActive] = useState(false);
   const [pulseActive, setPulseActive] = useState(false);
@@ -49,28 +56,76 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
       jumpPointerId.current = null;
       stickOriginRef.current = null;
       setActiveDir(null);
+      setActiveDepth(null);
       setStickOffset({ x: 0, y: 0 });
       setJumpActive(false);
       onLeftChange(false);
       onRightChange(false);
+      onForwardChange?.(false);
+      onBackwardChange?.(false);
     }
-  }, [visible, controlStyle, handedness, onLeftChange, onRightChange]);
+  }, [
+    visible,
+    controlStyle,
+    handedness,
+    mode3d,
+    onLeftChange,
+    onRightChange,
+    onForwardChange,
+    onBackwardChange,
+  ]);
 
   if (!visible) return null;
 
-  const updateDirFromClientX = (clientX: number) => {
+  const updateDirFromPointer = (clientX: number, clientY: number) => {
     const el = padRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const mid = rect.left + rect.width * 0.5;
-    if (clientX < mid) {
+    if (!mode3d) {
+      const mid = rect.left + rect.width * 0.5;
+      if (clientX < mid) {
+        setActiveDir('left');
+        onLeftChange(true);
+        onRightChange(false);
+      } else {
+        setActiveDir('right');
+        onLeftChange(false);
+        onRightChange(true);
+      }
+      return;
+    }
+
+    const cx = rect.left + rect.width * 0.5;
+    const cy = rect.top + rect.height * 0.5;
+    const dx = clientX - cx;
+    const dy = clientY - cy;
+
+    if (dx < -14) {
       setActiveDir('left');
       onLeftChange(true);
       onRightChange(false);
-    } else {
+    } else if (dx > 14) {
       setActiveDir('right');
       onLeftChange(false);
       onRightChange(true);
+    } else {
+      setActiveDir(null);
+      onLeftChange(false);
+      onRightChange(false);
+    }
+
+    if (dy < -12) {
+      setActiveDepth('forward');
+      onForwardChange?.(true);
+      onBackwardChange?.(false);
+    } else if (dy > 12) {
+      setActiveDepth('backward');
+      onForwardChange?.(false);
+      onBackwardChange?.(true);
+    } else {
+      setActiveDepth(null);
+      onForwardChange?.(false);
+      onBackwardChange?.(false);
     }
   };
 
@@ -78,8 +133,11 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
     stickOriginRef.current = { x: clientX, y: clientY };
     setStickOffset({ x: 0, y: 0 });
     setActiveDir(null);
+    setActiveDepth(null);
     onLeftChange(false);
     onRightChange(false);
+    onForwardChange?.(false);
+    onBackwardChange?.(false);
   };
 
   const updateStickFromPointer = (clientX: number, clientY: number) => {
@@ -122,15 +180,34 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
       onLeftChange(false);
       onRightChange(false);
     }
+
+    if (mode3d) {
+      if (dy < -JOYSTICK_DEADZONE) {
+        setActiveDepth('forward');
+        onForwardChange?.(true);
+        onBackwardChange?.(false);
+      } else if (dy > JOYSTICK_DEADZONE) {
+        setActiveDepth('backward');
+        onForwardChange?.(false);
+        onBackwardChange?.(true);
+      } else {
+        setActiveDepth(null);
+        onForwardChange?.(false);
+        onBackwardChange?.(false);
+      }
+    }
   };
 
   const clearMove = () => {
     movePointerId.current = null;
     stickOriginRef.current = null;
     setActiveDir(null);
+    setActiveDepth(null);
     setStickOffset({ x: 0, y: 0 });
     onLeftChange(false);
     onRightChange(false);
+    onForwardChange?.(false);
+    onBackwardChange?.(false);
   };
 
   const moveControl =
@@ -139,7 +216,7 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
         ref={stickRef}
         role="slider"
         aria-label="Movement Thumbstick"
-        aria-valuetext={activeDir ?? 'center'}
+        aria-valuetext={activeDepth ?? activeDir ?? 'center'}
         onPointerDown={(e) => {
           e.preventDefault();
           movePointerId.current = e.pointerId;
@@ -163,6 +240,26 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
         className="pointer-events-auto relative flex h-24 w-24 items-center justify-center rounded-full border-2 border-[#8cf8e8]/42 bg-[#061620]/56 shadow-lg backdrop-blur-sm"
         style={{ touchAction: 'none' }}
       >
+        {mode3d && (
+          <>
+            <span
+              aria-hidden="true"
+              className={`absolute top-1.5 text-[10px] font-bold transition-colors ${
+                activeDepth === 'forward' ? 'text-[#7cfce7]' : 'text-[#8cf8e8]/45'
+              }`}
+            >
+              ▲
+            </span>
+            <span
+              aria-hidden="true"
+              className={`absolute bottom-1.5 text-[10px] font-bold transition-colors ${
+                activeDepth === 'backward' ? 'text-[#7cfce7]' : 'text-[#8cf8e8]/45'
+              }`}
+            >
+              ▼
+            </span>
+          </>
+        )}
         <span
           aria-hidden="true"
           className={`absolute left-2 text-[11px] font-bold transition-colors ${
@@ -186,11 +283,79 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
             transform: `translate3d(${stickOffset.x}px, ${stickOffset.y}px, 0)`,
           }}
           className={`h-10 w-10 rounded-full border-2 shadow-md transition-colors ${
-            activeDir
+            activeDir || activeDepth
               ? 'border-[#e6fffb] bg-[#56e3cc]/80'
               : 'border-[#8cf8e8]/70 bg-[#123747]/88'
           }`}
         />
+      </div>
+    ) : mode3d ? (
+      <div
+        ref={padRef}
+        role="group"
+        aria-label="3D Trail Movement Pad"
+        onPointerDown={(e) => {
+          e.preventDefault();
+          movePointerId.current = e.pointerId;
+          e.currentTarget.setPointerCapture(e.pointerId);
+          updateDirFromPointer(e.clientX, e.clientY);
+        }}
+        onPointerMove={(e) => {
+          if (movePointerId.current !== e.pointerId) return;
+          e.preventDefault();
+          updateDirFromPointer(e.clientX, e.clientY);
+        }}
+        onPointerUp={(e) => {
+          if (movePointerId.current !== e.pointerId) return;
+          e.preventDefault();
+          clearMove();
+        }}
+        onPointerCancel={(e) => {
+          if (movePointerId.current !== e.pointerId) return;
+          clearMove();
+        }}
+        className="pointer-events-auto relative grid h-28 w-28 grid-cols-3 grid-rows-3 rounded-2xl border border-[#8cf8e8]/35 bg-[#06141c]/78 p-1 shadow-lg backdrop-blur-sm"
+        style={{ touchAction: 'none' }}
+      >
+        <div />
+        <div
+          className={`flex items-center justify-center rounded-lg text-sm font-bold transition-colors ${
+            activeDepth === 'forward' ? 'bg-[#56e3cc]/45 text-white' : 'text-[#dcf7f3]'
+          }`}
+          aria-label="Move Forward"
+        >
+          ▲
+        </div>
+        <div />
+        <div
+          className={`flex items-center justify-center rounded-lg text-sm font-bold transition-colors ${
+            activeDir === 'left' ? 'bg-[#56e3cc]/45 text-white' : 'text-[#dcf7f3]'
+          }`}
+          aria-label="Move Left"
+        >
+          ◀
+        </div>
+        <div className="flex items-center justify-center">
+          <div className="h-2.5 w-2.5 rounded-full bg-[#8cf8e8]/35" />
+        </div>
+        <div
+          className={`flex items-center justify-center rounded-lg text-sm font-bold transition-colors ${
+            activeDir === 'right' ? 'bg-[#56e3cc]/45 text-white' : 'text-[#dcf7f3]'
+          }`}
+          aria-label="Move Right"
+        >
+          ▶
+        </div>
+        <div />
+        <div
+          className={`flex items-center justify-center rounded-lg text-sm font-bold transition-colors ${
+            activeDepth === 'backward' ? 'bg-[#56e3cc]/45 text-white' : 'text-[#dcf7f3]'
+          }`}
+          aria-label="Move Back"
+        >
+          ▼
+        </div>
+        <div />
       </div>
     ) : (
       <div
@@ -201,12 +366,12 @@ export const TouchControls: React.FC<TouchControlsProps> = ({
           e.preventDefault();
           movePointerId.current = e.pointerId;
           e.currentTarget.setPointerCapture(e.pointerId);
-          updateDirFromClientX(e.clientX);
+          updateDirFromPointer(e.clientX, e.clientY);
         }}
         onPointerMove={(e) => {
           if (movePointerId.current !== e.pointerId) return;
           e.preventDefault();
-          updateDirFromClientX(e.clientX);
+          updateDirFromPointer(e.clientX, e.clientY);
         }}
         onPointerUp={(e) => {
           if (movePointerId.current !== e.pointerId) return;

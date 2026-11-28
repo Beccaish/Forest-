@@ -1,6 +1,7 @@
 import { Component, Suspense, lazy, type ErrorInfo, type ReactNode, useCallback, useEffect, useRef, useState } from 'react';
 import { GameHUD } from './components/GameHUD';
 import { GameModals } from './components/GameModals';
+import type { Level5ViewportHandle } from './components/Level5Viewport';
 import { PortraitPrompt } from './components/PortraitPrompt';
 import { SettingsModal } from './components/SettingsModal';
 import { type MobileControlHandedness, type MobileControlStyle, TouchControls } from './components/TouchControls';
@@ -8,10 +9,13 @@ import { audioEngine } from './game/audio';
 import { ForestGameEngine } from './game/engine';
 import { getSavedGameSummary } from './game/save';
 import { loadShopProgress, type SavedShopProgress, type ShopItemId } from './game/shop';
-import type { HudSnapshot } from './game/types';
+import type { GamePhase, HudSnapshot } from './game/types';
 
 const LazyShopModal = lazy(() =>
   import('./components/ShopModal').then((mod) => ({ default: mod.ShopModal }))
+);
+const LazyLevel5Viewport = lazy(() =>
+  import('./components/Level5Viewport').then((mod) => ({ default: mod.Level5Viewport }))
 );
 
 class GameErrorBoundary extends Component<
@@ -128,9 +132,12 @@ function loadMobileHandedness(): MobileControlHandedness {
 function ForestGameView() {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<ForestGameEngine | null>(null);
+  const level5Ref = useRef<Level5ViewportHandle | null>(null);
+  const pendingLevel5SaveRef = useRef(false);
   const autoPausedByPortraitRef = useRef(false);
 
   const [hud, setHud] = useState<HudSnapshot>(INITIAL_HUD);
+  const hudRef = useRef<HudSnapshot>(INITIAL_HUD);
   const [muted, setMuted] = useState(() => !audioEngine.isEnabled());
   const [musicVolume, setMusicVolume] = useState(() => audioEngine.getMusicVolume());
   const [sfxVolume, setSfxVolume] = useState(() => audioEngine.getSfxVolume());
@@ -153,6 +160,11 @@ function ForestGameView() {
   const [engineError, setEngineError] = useState<string | null>(null);
 
   const showPortraitPrompt = isTouchDevice && isPortrait && !portraitDismissed;
+  const isLevel5Active = hud.levelId === 5 && hud.phase !== 'TITLE_MENU';
+
+  useEffect(() => {
+    hudRef.current = hud;
+  }, [hud]);
 
   useEffect(() => {
     shopOpenRef.current = shopOpen;
@@ -238,7 +250,10 @@ function ForestGameView() {
   }, []);
 
   const handleSaveGame = useCallback(() => {
-    const ok = engineRef.current?.saveGame();
+    const ok =
+      hudRef.current.levelId === 5 && hudRef.current.phase !== 'TITLE_MENU'
+        ? Boolean(level5Ref.current?.saveGame())
+        : Boolean(engineRef.current?.saveGame());
     if (!ok) return;
     setJustSaved(true);
     if (saveFeedbackTimerRef.current !== null) {
@@ -252,32 +267,120 @@ function ForestGameView() {
   const handleGoHome = useCallback(() => {
     pausedByShopRef.current = false;
     pausedBySettingsRef.current = false;
+    pendingLevel5SaveRef.current = false;
     setShopOpen(false);
     setSettingsOpen(false);
+    level5Ref.current?.clearHeldInputs();
     engineRef.current?.goHome();
   }, []);
 
+  const handleContinueSaved = useCallback(() => {
+    const summary = getSavedGameSummary();
+    if (summary?.levelId === 5) {
+      pendingLevel5SaveRef.current = true;
+      engineRef.current?.startNewGame(5);
+      return;
+    }
+    pendingLevel5SaveRef.current = false;
+    engineRef.current?.loadSavedGame();
+  }, []);
+
+  const handleRestartLevel = useCallback(() => {
+    if (hudRef.current.levelId === 5 && hudRef.current.phase !== 'TITLE_MENU') {
+      level5Ref.current?.restartLevel();
+      engineRef.current?.setPhaseExternal('PLAYING');
+      return;
+    }
+    engineRef.current?.startNewGame();
+  }, []);
+
+  const handleRespawnAtLantern = useCallback(() => {
+    if (hudRef.current.levelId === 5 && hudRef.current.phase !== 'TITLE_MENU') {
+      level5Ref.current?.respawnAtLantern();
+      engineRef.current?.setPhaseExternal('PLAYING');
+      return;
+    }
+    engineRef.current?.respawnAtLantern();
+  }, []);
+
+  const handleLevel5Mount = useCallback((instance: Level5ViewportHandle | null) => {
+    level5Ref.current = instance;
+    if (instance && pendingLevel5SaveRef.current) {
+      pendingLevel5SaveRef.current = false;
+      instance.loadFromSaved();
+    }
+  }, []);
+
+  const handleLevel5HudUpdate = useCallback((snapshot: HudSnapshot) => {
+    hudRef.current = snapshot;
+    setHud(snapshot);
+  }, []);
+
+  const handleLevel5EarnDewdrops = useCallback((baseAmount: number) => {
+    if (!engineRef.current) return;
+    const next = engineRef.current.grantDewdrops(baseAmount);
+    setShopProgress(next);
+    setHud((curr) => (curr.levelId === 5 ? { ...curr, dewdrops: next.dewdrops } : curr));
+  }, []);
+
+  const handleLevel5PhaseChange = useCallback((nextPhase: GamePhase) => {
+    engineRef.current?.setPhaseExternal(nextPhase);
+    setHud((curr) => ({ ...curr, phase: nextPhase }));
+  }, []);
+
   const handleTouchLeft = useCallback((held: boolean) => {
+    if (hudRef.current.levelId === 5 && hudRef.current.phase !== 'TITLE_MENU') {
+      if (level5Ref.current) level5Ref.current.input.left = held;
+      return;
+    }
     if (engineRef.current) engineRef.current.input.left = held;
   }, []);
 
   const handleTouchRight = useCallback((held: boolean) => {
+    if (hudRef.current.levelId === 5 && hudRef.current.phase !== 'TITLE_MENU') {
+      if (level5Ref.current) level5Ref.current.input.right = held;
+      return;
+    }
     if (engineRef.current) engineRef.current.input.right = held;
   }, []);
 
+  const handleTouchForward = useCallback((held: boolean) => {
+    if (level5Ref.current) level5Ref.current.input.forward = held;
+  }, []);
+
+  const handleTouchBackward = useCallback((held: boolean) => {
+    if (level5Ref.current) level5Ref.current.input.backward = held;
+  }, []);
+
   const handleTouchJumpDown = useCallback(() => {
+    if (hudRef.current.levelId === 5 && hudRef.current.phase !== 'TITLE_MENU') {
+      level5Ref.current?.triggerJump();
+      return;
+    }
     engineRef.current?.triggerJump();
   }, []);
 
   const handleTouchJumpUp = useCallback(() => {
+    if (hudRef.current.levelId === 5 && hudRef.current.phase !== 'TITLE_MENU') {
+      level5Ref.current?.releaseJump();
+      return;
+    }
     engineRef.current?.releaseJump();
   }, []);
 
   const handleTouchPulse = useCallback(() => {
+    if (hudRef.current.levelId === 5 && hudRef.current.phase !== 'TITLE_MENU') {
+      level5Ref.current?.triggerPulse();
+      return;
+    }
     engineRef.current?.triggerPulse();
   }, []);
 
   const handleTouchFly = useCallback(() => {
+    if (hudRef.current.levelId === 5 && hudRef.current.phase !== 'TITLE_MENU') {
+      level5Ref.current?.activateFlyingFlower();
+      return;
+    }
     engineRef.current?.activateFlyingFlower();
   }, []);
 
@@ -343,7 +446,24 @@ function ForestGameView() {
     let engine: ForestGameEngine;
     try {
       engine = new ForestGameEngine(canvas, (snapshot) => {
-        setHud(snapshot);
+        setHud((prev) => {
+          const next =
+            prev.levelId === 5 &&
+            prev.phase !== 'TITLE_MENU' &&
+            snapshot.levelId === 5 &&
+            snapshot.phase !== 'TITLE_MENU' &&
+            (snapshot.phase === 'PAUSED' || snapshot.phase === 'PLAYING' || snapshot.phase === 'GAME_OVER' || snapshot.phase === 'VICTORY')
+              ? {
+                  ...prev,
+                  phase: snapshot.phase,
+                  dewdrops: snapshot.dewdrops,
+                  equipped: snapshot.equipped,
+                  savedGame: snapshot.savedGame,
+                }
+              : snapshot;
+          hudRef.current = next;
+          return next;
+        });
       });
       engineRef.current = engine;
       engine.start();
@@ -371,10 +491,14 @@ function ForestGameView() {
       engine.resize();
     };
 
-    const handleBlur = () => engine.clearHeldInputs();
+    const handleBlur = () => {
+      engine.clearHeldInputs();
+      level5Ref.current?.clearHeldInputs();
+    };
     const handleVisibility = () => {
       if (document.hidden) {
         engine.clearHeldInputs();
+        level5Ref.current?.clearHeldInputs();
       }
     };
 
@@ -417,12 +541,46 @@ function ForestGameView() {
       }
 
       if ((e.code === 'Enter' || e.code === 'Space') && !e.repeat) {
-        setHud((curr) => {
-          if (curr.phase === 'TITLE_MENU') {
-            engine.startNewGame();
-          }
-          return curr;
-        });
+        if (hudRef.current.phase === 'TITLE_MENU') {
+          engine.startNewGame();
+          return;
+        }
+      }
+
+      const inLevel5 = hudRef.current.levelId === 5 && hudRef.current.phase !== 'TITLE_MENU';
+
+      if (inLevel5) {
+        const l5 = level5Ref.current;
+        if (!l5) return;
+        if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+          l5.input.left = true;
+        }
+        if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+          l5.input.right = true;
+        }
+        if (e.code === 'ArrowUp' || e.code === 'KeyW') {
+          l5.input.forward = true;
+        }
+        if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+          l5.input.backward = true;
+        }
+        if (e.code === 'Space') {
+          if (!e.repeat) l5.triggerJump();
+          l5.input.jumpHeld = true;
+        }
+        if (
+          (e.code === 'KeyE' || e.code === 'ShiftLeft' || e.code === 'ShiftRight') &&
+          !e.repeat
+        ) {
+          l5.triggerPulse();
+        }
+        if (e.code === 'KeyF' && !e.repeat) {
+          l5.activateFlyingFlower();
+        }
+        if (e.code === 'KeyH' && !e.repeat) {
+          l5.helpNearbyAnimal();
+        }
+        return;
       }
 
       if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
@@ -452,12 +610,22 @@ function ForestGameView() {
     const handleKeyUp = (e: KeyboardEvent) => {
       if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
         engine.input.left = false;
+        if (level5Ref.current) level5Ref.current.input.left = false;
       }
       if (e.code === 'ArrowRight' || e.code === 'KeyD') {
         engine.input.right = false;
+        if (level5Ref.current) level5Ref.current.input.right = false;
       }
-      if (e.code === 'Space' || e.code === 'ArrowUp' || e.code === 'KeyW') {
+      if (e.code === 'ArrowUp' || e.code === 'KeyW') {
         engine.releaseJump();
+        if (level5Ref.current) level5Ref.current.input.forward = false;
+      }
+      if (e.code === 'ArrowDown' || e.code === 'KeyS') {
+        if (level5Ref.current) level5Ref.current.input.backward = false;
+      }
+      if (e.code === 'Space') {
+        engine.releaseJump();
+        level5Ref.current?.releaseJump();
       }
     };
 
@@ -545,7 +713,7 @@ function ForestGameView() {
     <main className="fixed inset-0 h-full w-full overflow-hidden bg-[#050d14]" style={{ touchAction: 'none' }}>
       <canvas
         ref={canvasRef}
-        className={`block h-full w-full ${canvasCursorPointer ? 'cursor-pointer' : ''}`}
+        className={`block h-full w-full ${isLevel5Active ? 'hidden' : ''} ${canvasCursorPointer ? 'cursor-pointer' : ''}`}
         style={{ touchAction: 'none' }}
         onPointerDown={(e) => {
           audioEngine.unlock();
@@ -561,6 +729,26 @@ function ForestGameView() {
         onContextMenu={(e) => e.preventDefault()}
       />
 
+      {isLevel5Active && (
+        <Suspense
+          fallback={
+            <div className="fixed inset-0 z-0 flex items-center justify-center bg-[#0f2414] text-sm font-semibold text-[#eafbf8]">
+              Entering Sunbeam Dessert Glade (3D)...
+            </div>
+          }
+        >
+          <LazyLevel5Viewport
+            ref={handleLevel5Mount}
+            phase={hud.phase}
+            shopProgress={shopProgress}
+            isTouchDevice={isTouchDevice}
+            onHudUpdate={handleLevel5HudUpdate}
+            onEarnDewdrops={handleLevel5EarnDewdrops}
+            onPhaseChange={handleLevel5PhaseChange}
+          />
+        </Suspense>
+      )}
+
       <GameHUD
         hud={hud}
         muted={muted}
@@ -573,7 +761,7 @@ function ForestGameView() {
         onSfxVolumeChange={handleSfxVolumeChange}
         onPreviewSfx={handlePreviewSfx}
         onPause={() => engineRef.current?.pauseGame()}
-        onFly={() => engineRef.current?.activateFlyingFlower()}
+        onFly={handleTouchFly}
         onSaveGame={handleSaveGame}
         onOpenShop={handleOpenShop}
         onOpenSettings={handleOpenSettings}
@@ -590,13 +778,13 @@ function ForestGameView() {
         justSaved={justSaved}
         onSelectLevel={(lvl) => engineRef.current?.selectLevel(lvl)}
         onStart={() => engineRef.current?.startNewGame()}
-        onContinueSaved={() => engineRef.current?.loadSavedGame()}
+        onContinueSaved={handleContinueSaved}
         onNextLevel={() => engineRef.current?.startNextLevel()}
         onResume={() => engineRef.current?.resumeGame()}
         onSaveGame={handleSaveGame}
         onGoHome={handleGoHome}
-        onRestart={() => engineRef.current?.startNewGame()}
-        onRespawn={() => engineRef.current?.respawnAtLantern()}
+        onRestart={handleRestartLevel}
+        onRespawn={handleRespawnAtLantern}
         onToggleMute={handleToggleMute}
         onMusicVolumeChange={handleMusicVolumeChange}
         onSfxVolumeChange={handleSfxVolumeChange}
@@ -650,9 +838,12 @@ function ForestGameView() {
         }
         controlStyle={mobileControlStyle}
         handedness={mobileHandedness}
+        mode3d={hud.levelId === 5}
         flyingFlowers={hud.flyingFlowers}
         onLeftChange={handleTouchLeft}
         onRightChange={handleTouchRight}
+        onForwardChange={handleTouchForward}
+        onBackwardChange={handleTouchBackward}
         onJumpDown={handleTouchJumpDown}
         onJumpUp={handleTouchJumpUp}
         onPulse={handleTouchPulse}

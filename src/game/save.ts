@@ -55,7 +55,8 @@ export function loadGameState(): SavedGameState | null {
       (parsed.levelId !== 1 &&
         parsed.levelId !== 2 &&
         parsed.levelId !== 3 &&
-        parsed.levelId !== 4) ||
+        parsed.levelId !== 4 &&
+        parsed.levelId !== 5) ||
       typeof parsed.playerX !== 'number' ||
       typeof parsed.playerY !== 'number'
     ) {
@@ -111,10 +112,14 @@ export function loadGameState(): SavedGameState | null {
 export function getSavedGameSummary(): SavedGameSummary | null {
   const saved = loadGameState();
   if (!saved) return null;
+  const progressPct =
+    saved.levelId === 5
+      ? clamp(Math.round((Math.max(0, -saved.playerX) / 170) * 100), 0, 100)
+      : clamp(Math.round(((saved.playerX - 130) / (SANCTUARY_X - 130)) * 100), 0, 100);
   return {
     levelId: saved.levelId,
     levelName: LEVEL_NAMES[saved.levelId],
-    progressPct: clamp(Math.round(((saved.playerX - 130) / (SANCTUARY_X - 130)) * 100), 0, 100),
+    progressPct,
     savedAt: saved.savedAt,
   };
 }

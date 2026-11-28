@@ -3,7 +3,7 @@ import type { SavedGameSummary } from './save';
 
 export type GamePhase = 'TITLE_MENU' | 'PLAYING' | 'PAUSED' | 'VICTORY' | 'GAME_OVER';
 
-export type LevelId = 1 | 2 | 3 | 4;
+export type LevelId = 1 | 2 | 3 | 4 | 5;
 
 export type WeatherKind =
   | 'DRIFTING_LEAVES'

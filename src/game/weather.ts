@@ -65,6 +65,7 @@ const LEAF_PALETTES: Record<LevelId, string[]> = {
   2: ['#ff7b54', '#ffb26b', '#d94854', '#f2a65a', '#ffe08a'],
   3: ['#d6f8ff', '#94e8ff', '#eefbff', '#a8d8ff', '#c7fff0'],
   4: ['#e6faff', '#b8eeff', '#ffffff', '#94dcff', '#d4f6ff'],
+  5: ['#ffe28a', '#98e86b', '#ffb8d8', '#7cfce7', '#f5b855'],
 };
 
 const FLURRY_PALETTES: Record<LevelId, string[]> = {
@@ -72,6 +73,7 @@ const FLURRY_PALETTES: Record<LevelId, string[]> = {
   2: ['#ffe2a8', '#ffc4d6', '#fff5cc', '#e5b8ff'],
   3: ['#ffffff', '#c9f6ff', '#e3baff', '#ffe6a3'],
   4: ['#ffffff', '#b8f4ff', '#8fffe6', '#e0c7ff'],
+  5: ['#fff4b8', '#ffb8e6', '#8cf8e8', '#ffffff'],
 };
 
 export class DynamicWeatherSystem {

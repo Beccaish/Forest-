@@ -110,6 +110,15 @@ export const GameModals: React.FC<GameModalsProps> = ({
         scrim: 'linear-gradient(180deg, rgba(15,28,44,0.44) 0%, rgba(9,20,36,0.76) 100%)',
         glowColor: 'rgba(191, 239, 255, 0.25)',
       },
+      {
+        id: 5,
+        title: 'Level 5 · Sunbeam Dessert Glade (3D Trail)',
+        img: '/assets/aistudio/image_912cc8bc.png',
+        activeBorder: 'border-[#ffd980] ring-2 ring-[#7cfce7]/55',
+        idleBorder: 'border-[#96aa74]/80 hover:border-[#ffd980]',
+        scrim: 'linear-gradient(180deg, rgba(22,38,16,0.34) 0%, rgba(16,28,12,0.72) 100%)',
+        glowColor: 'rgba(255, 217, 128, 0.3)',
+      },
     ];
 
     return (
@@ -265,15 +274,15 @@ export const GameModals: React.FC<GameModalsProps> = ({
               <circle cx="244" cy="103" r="7.5" fill="url(#fireflyOrb)" />
             </svg>
 
-            <p className="mb-2.5 sm:mb-3 text-[11px] sm:text-xs font-medium tracking-[0.2em] text-[#d6ebe4] uppercase">
-              Four Realms · Dynamic Weather · Lumina &amp; Relics
+            <p className="mb-2 sm:mb-2.5 text-[11px] sm:text-xs font-medium tracking-[0.2em] text-[#d6ebe4] uppercase">
+              Five Realms · 2D &amp; 3D Trail · Lumina &amp; Relics
             </p>
 
-            <p className="mb-4 sm:mb-5 text-sm sm:text-[15px] leading-relaxed text-[#eef7f4] max-w-md drop-shadow-[0_1px_6px_rgba(0,0,0,0.85)]">
-              Gather Lumina Orbs, Sun Blossoms, Prism Crystals, and Star Seeds across four forest realms and awaken each ancient sanctuary.
+            <p className="mb-3.5 sm:mb-4 text-sm sm:text-[15px] leading-relaxed text-[#eef7f4] max-w-md drop-shadow-[0_1px_6px_rgba(0,0,0,0.85)]">
+              Gather Lumina Orbs, Sun Blossoms, Prism Crystals, and Star Seeds across five forest realms—including the new 3D Sunbeam Dessert Glade trail.
             </p>
 
-            {/* Illustrated 4-Realm Selector Plaques */}
+            {/* Illustrated 5-Realm Selector Plaques */}
             <div className="mb-4 sm:mb-5 grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-w-[590px]">
               {realms.map((realm) => {
                 const selected = hud.levelId === realm.id;
@@ -287,9 +296,9 @@ export const GameModals: React.FC<GameModalsProps> = ({
                         ? `0 6px 20px rgba(0,0,0,0.55), 0 0 16px ${realm.glowColor}`
                         : '0 4px 14px rgba(0,0,0,0.48)',
                     }}
-                    className={`group relative overflow-hidden min-h-[54px] rounded-lg border px-3.5 py-2.5 text-left transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f5de9d] ${
-                      selected ? realm.activeBorder : realm.idleBorder
-                    }`}
+                    className={`group relative overflow-hidden min-h-[50px] rounded-lg border px-3.5 py-2 text-left transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f5de9d] ${
+                      realm.id === 5 ? 'sm:col-span-2' : ''
+                    } ${selected ? realm.activeBorder : realm.idleBorder}`}
                   >
                     <img
                       src={realm.img}
@@ -459,7 +468,9 @@ export const GameModals: React.FC<GameModalsProps> = ({
                   ? 'Level 3'
                   : hud.levelId === 3
                     ? 'Level 4'
-                    : 'Level 1'}
+                    : hud.levelId === 4
+                      ? 'Level 5 (3D)'
+                      : 'Level 1'}
             </button>
             <button
               type="button"
@@ -557,7 +568,9 @@ export const GameModals: React.FC<GameModalsProps> = ({
               ? 'You conquered the Amber & Crystal Hollows. Soar onward into the Frostbloom Skywoods!'
               : hud.levelId === 3
                 ? 'You soared through the Frostbloom Skywoods. Brave the icy ledges of Frozen Pine Peaks next!'
-                : 'You mastered the slippery ice ridges of Frozen Pine Peaks and awakened the Aurora Summit Sanctuary!'}
+                : hud.levelId === 4
+                  ? 'You mastered Frozen Pine Peaks! Step deep into the 3D Sunbeam Dessert Glade next.'
+                  : 'You walked the Emerald Sunbeam trail and awakened the Grand Crystal Geode Dessert Sanctuary!'}
         </p>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 border-y border-[#c4a16a]/30 py-3 sm:py-4 mb-5 sm:mb-7">
@@ -612,7 +625,7 @@ export const GameModals: React.FC<GameModalsProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-3">
-          {hud.levelId < 4 ? (
+          {hud.levelId < 5 ? (
             <button
               type="button"
               onClick={onNextLevel}
@@ -621,10 +634,12 @@ export const GameModals: React.FC<GameModalsProps> = ({
                   ? 'border-[#ffe2a3] bg-[#ffb86c] text-[#1f0d05]'
                   : hud.levelId === 2
                     ? 'border-[#d6f6ff] bg-[#94e8ff] text-[#051829]'
-                    : 'border-[#e6f9ff] bg-[#bfefff] text-[#041929]'
+                    : hud.levelId === 3
+                      ? 'border-[#e6f9ff] bg-[#bfefff] text-[#041929]'
+                      : 'border-[#ffe18c] bg-gradient-to-b from-[#66d9b8] to-[#349e84] text-[#051d17]'
               }`}
             >
-              Next Level
+              {hud.levelId === 4 ? 'Next · Level 5 (3D)' : 'Next Level'}
             </button>
           ) : (
             <button

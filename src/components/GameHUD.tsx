@@ -161,7 +161,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
                 </div>
 
                 <span className="font-semibold text-[#ffe29a] tabular-nums shrink-0">
-                  L{hud.levelId} · {hud.progressPct}%
+                  L{hud.levelId}{hud.levelId === 5 ? ' 3D' : ''} · {hud.progressPct}%
                 </span>
 
                 <span className="flex items-center gap-1 tabular-nums shrink-0">
@@ -562,7 +562,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({
             </div>
 
             <span className="text-[11px] font-semibold text-[#ffe29a] tabular-nums shrink-0">
-              L{hud.levelId} · {hud.progressPct}%
+              L{hud.levelId}{hud.levelId === 5 ? ' (3D)' : ''} · {hud.progressPct}%
             </span>
           </div>
 
@@ -812,7 +812,15 @@ export const GameHUD: React.FC<GameHUDProps> = ({
       {/* Bottom Weathered Parchment Scroll Control Banner (Desktop PC) */}
       <div className="flex justify-center pt-1 pb-1">
         <ParchmentScrollBanner singleLine>
-          A-D Move &nbsp;·&nbsp; Space Jump &amp; Glide &nbsp;·&nbsp; E Pulse &nbsp;·&nbsp; H Help Animal &nbsp;·&nbsp; F Fly &nbsp;·&nbsp; M Mute &nbsp;·&nbsp; Esc Pause
+          {hud.levelId === 5 ? (
+            <>
+              W-S Forward/Back &nbsp;·&nbsp; A-D Steer &nbsp;·&nbsp; Space Jump &amp; Glide &nbsp;·&nbsp; E Pulse &nbsp;·&nbsp; H Help &nbsp;·&nbsp; F Fly &nbsp;·&nbsp; M Mute &nbsp;·&nbsp; Esc Pause
+            </>
+          ) : (
+            <>
+              A-D Move &nbsp;·&nbsp; Space Jump &amp; Glide &nbsp;·&nbsp; E Pulse &nbsp;·&nbsp; H Help Animal &nbsp;·&nbsp; F Fly &nbsp;·&nbsp; M Mute &nbsp;·&nbsp; Esc Pause
+            </>
+          )}
         </ParchmentScrollBanner>
       </div>
     </div>

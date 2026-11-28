@@ -210,6 +210,19 @@ export class ForestGameEngine {
     saveShopProgress(this.shopProgress);
   }
 
+  grantDewdrops(baseAmount: number): SavedShopProgress {
+    this.earnDewdrops(baseAmount);
+    return cloneProgress(this.shopProgress);
+  }
+
+  setPhaseExternal(phase: GamePhase): void {
+    if (phase !== 'PLAYING') {
+      this.clearHeldInputs();
+    }
+    this.phase = phase;
+    this.emitHudSnapshot();
+  }
+
   start(): void {
     if (this.rafId !== null) return;
     this.lastFrameMs = performance.now();
@@ -282,7 +295,15 @@ export class ForestGameEngine {
 
   startNextLevel(): void {
     const next: LevelId =
-      this.levelId === 1 ? 2 : this.levelId === 2 ? 3 : this.levelId === 3 ? 4 : 1;
+      this.levelId === 1
+        ? 2
+        : this.levelId === 2
+          ? 3
+          : this.levelId === 3
+            ? 4
+            : this.levelId === 4
+              ? 5
+              : 1;
     this.startNewGame(next);
   }
 
@@ -824,6 +845,7 @@ export class ForestGameEngine {
   }
 
   private update(dt: number): void {
+    if (this.levelId === 5 && this.phase !== 'TITLE_MENU') return;
     if (this.phase === 'PAUSED') return;
 
     if (this.hitstopTimer > 0) {
@@ -1635,6 +1657,7 @@ export class ForestGameEngine {
   }
 
   private render(): void {
+    if (this.levelId === 5 && this.phase !== 'TITLE_MENU') return;
     const shakeMag = this.shakeTimer > 0 ? this.shakeIntensity * (this.shakeTimer / 0.25) : 0;
     const shakeX = shakeMag > 0 ? (Math.random() - 0.5) * shakeMag * 2 : 0;
     const shakeY = shakeMag > 0 ? (Math.random() - 0.5) * shakeMag * 2 : 0;

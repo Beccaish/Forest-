@@ -17,6 +17,7 @@ const BACKDROP_PATHS: Record<LevelId, [string, string, string]> = {
   2: [l2AmberDusk, l2CrystalHollow, l2GoldenSummit],
   3: [l3SilverFrostwood, l3FloatingIsles, l3PrismHeartwood],
   4: [l4FrozenPines, l4IcyPeaks, l4FrostSanctuary],
+  5: ['/assets/aistudio/image_912cc8bc.png', l1EmeraldGlade, '/assets/aistudio/image_912cc8bc.png'],
 };
 
 class BackdropCache {
